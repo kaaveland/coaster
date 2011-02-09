@@ -15,17 +15,17 @@ public:
 
 
 private:
-	// Cart constants
-	const double mass = 100;			// Cart mass
-	const double Ix = 100;				// Moment of inertia
-	const double friction_static = 0.1;	// Static coefficient of friction
-	const double friction_glide = 0.1;	// Gliding friction coefficient
+	// Cart "constants"
+	double mass;				// Cart mass
+	double Ix;					// Moment of inertia
+	double friction_static; 	// Static coefficient of friction
+	double friction_glide;		// Gliding friction coefficient
 	
 	// Cart properties
-	double *pos3d;	// Position vector
-	double *norm3d; // Normal/"up" vector
-	double v;		// Track speed
-	double omegax;	// Angular velocity
+	double *pos3d;		// Position vector
+	double *norm3d;		// Normal/"up" vector
+	double v;			// Track speed
+	double omegax;		// Angular velocity
 
 
 	// Track properties
