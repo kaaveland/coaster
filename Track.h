@@ -18,19 +18,19 @@ public:
 	
 	// Gives the coordinates to the point on the track at the given distance from start, possibly
 	// rounded or interpolated between the track's discrete points.
-	void getPos3d(double s, double* const pos3d) const;
+	void getPos3d(double s, double* pos3d) const;
 
 	// Gives the track's unit up vector at the given distance from start.
-	void getUp3d(double s, double* const up3d) const;
+	void getUp3d(double s, double* up3d) const;
 	
-	// Gives the unit tangent vector at the given distance from start.
-	void getTangentVector3d(double s, double* const tangent3d) const;
+	// Gives the unit tangent vector at the given segment from start.
+	void getTangentVector3d(int segment, double* tangent3d) const;
 
-	// Gives the unit normal vector at the given distance from start. The normal vector points 
+	// Gives the unit normal vector at the given segment. The normal vector points 
 	// towards the center of curvature.
-	void getNormalVector3d(double s, double* const normal3d) const;
+	void getNormalVector3d(int segment, double* normal3d) const;
 
-private:
+protected:
 	int nSegments;
 	double *pointsx, *pointsy, *pointsz;
 	double *upx, *upy, *upz;

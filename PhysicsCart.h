@@ -1,4 +1,7 @@
 #pragma once
+
+#include "Track.h"
+
 class PhysicsCart
 {
 public:
@@ -9,9 +12,7 @@ public:
 	double* getPos3d();
 	double* getNorm3d();
 
-	void setTrack(double *x, double *y, double *z,
-					double *normx, double *normy, double *normz,
-					int nElements, double trackLength);
+	void setTrack(Track &track);
 
 
 private:
@@ -31,9 +32,8 @@ private:
 	// Track properties
 	int nPoints;									// Number of discrete points along track
 	double trackLength;								// Track length
-	double *trackposx, *trackposy, trackposz;		// Coordinates to point along track
-	double *tracknormx, *tracknormy, tracknormz;	// Coordinates to normal/"up" vectors along track
-
+	double *trackposx, *trackposy, trackposz;		// Coordinates to points along track
+	double *trackupmx, *trackupy, trackupz;	// Coordinates to up vectors along track
 
 };
 
