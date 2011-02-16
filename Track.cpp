@@ -84,6 +84,18 @@ Vector3d Track::getTangentVector(int index) const
 	return tangent;
 }
 
+double Track::getCurvature(int index) const
+{
+	assert(index >= 0 && index < nPoints-1);
+
+	Vector3d pos0, pos1;
+	pos0 = getPos(index);
+	pos1 = getPos(index+1);
+		
+	Vector3d diff = vectorDiff(pos1, pos0);
+	return vectorLength(diff);
+}
+
 Vector3d Track::getNormalVector(int index) const
 {
 	// TODO: assert that normal is not of inf length!

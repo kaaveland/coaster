@@ -27,8 +27,11 @@ public:
 	// Gives the track's unit up vector at the given segment.
 	Vector3d getUp(int index) const;
 	
-	// Gives the unit tangent vector at the given segment from start.
+	// Gives the unit tangent vector at the given segment.
 	Vector3d getTangentVector(int index) const;
+
+	// Returns the curvature at the given segment.
+	double getCurvature(int index) const;
 
 	// Gives the unit normal vector at the given segment. The normal vector points 
 	// towards the center of curvature.
