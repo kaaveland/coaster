@@ -19,7 +19,7 @@ double inline vectorDot(Vector3d v0, Vector3d v1)
 int main() {
 	
 	// Generate test track 1 [OK]
-	const int nPoints = 10001;
+	const int nPoints = 1000;
 	const double PI = acos(-1.0);
 
 
@@ -29,7 +29,7 @@ int main() {
 	up.resize(nPoints);
 
 	for (int i = 0; i < nPoints; i++) {
-		points[i].x = 1.0*i/(nPoints-1);
+		points[i].x = PI*i/(nPoints-1);
 		points[i].y = sin(PI* 1.0*i/(nPoints-1));
 		points[i].z = 0.0;
 		up[i].x = 0.0;
@@ -37,7 +37,7 @@ int main() {
 		up[i].z = 1.0;
 	}
 
-	int index = nPoints/2;
+	int index = 1;//nPoints/2;
 		
 	// Track tests
 	Track track(points, up);
@@ -51,6 +51,7 @@ int main() {
 
 	tang = track.getTangentVector(index);
 	cout << "Tangent: ";  printVector(tang);; cout << endl;
+	cout << "Curvature: " << track.getCurvature(index) << endl;
 
 	cout << "N dot T: " << vectorDot(norm, tang) << endl;
 
@@ -71,19 +72,18 @@ int main() {
 
 	temp = parallel.getTangentVector(index);
 	cout << "Tangent: "; printVector(temp); cout << endl;
+	cout << "Curvature: " << track.getCurvature(index) << endl;
 
 	temp = parallel.getUp(index);
 	cout << "Up: "; printVector(temp); cout << endl;
 
 	
 	// Cart test 1
-	double initpos[] = {0,2,0};
-	double initup[] = {0,0,1};
+	Vector3d initpos = track.getPos(0);
+	Vector3d initup = track.getUp(0);
 
 	PhysicsCart cart(initpos, initup);
-	Vector3d norm0 = cart.getNorm3d();
-	
-	
+		
 	cin.get();
 
 	return 0;
