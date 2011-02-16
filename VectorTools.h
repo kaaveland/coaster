@@ -10,5 +10,7 @@ Vector3d vectorTimesScalar(Vector3d const &v, double scalar);
 double vectorDot(Vector3d const &v0, Vector3d const &v1);
 Vector3d vectorCross(Vector3d const &v0, Vector3d const &v1);
 
+Vector3d& operator+=(Vector3d v0, Vector3d v1);
+Vector3d operator+(Vector3d v0, Vector3d v1);
 
 #endif

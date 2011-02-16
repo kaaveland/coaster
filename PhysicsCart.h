@@ -45,7 +45,8 @@ private:
 	double friction_static; 	// Static coefficient of friction
 	double friction_glide;		// Gliding friction coefficient
 	double C_x, C_y, C_z;		// Displacements of CG
-	double gravityAccel;
+	
+	double maxThrust;			// Maximum forward thrust [force]
 	double wheelsOffsety;		// Offset sideways of wheels (along y-axis)
 	double wheelsOffsetx;		// Offset of wheels along x axis
 
@@ -54,13 +55,18 @@ private:
 	Vector3d up;				// Normal/"up" vector/z-axis
 	double v;					// Track speed
 	Vector3d velocity;			// Velocity vector
+	Vector3d accel;				// Acceleration vector
 	Vector3d angularVelocity;	// Angular velocities
 	double brakingFactor;
 	double thrustFactor;
+	
+	// Simulation "constants"
+	double gravityAccel;
 
 	// Simulation properties
 	int currentIndex;			// Which Track section index the cart currently is in
 	Track *track;				// Current main (center) track
+	bool isFreefalling;
 	
 
 };
