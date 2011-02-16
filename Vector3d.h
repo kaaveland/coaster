@@ -7,7 +7,7 @@ struct Vector3d {
 
 	Vector3d();
 	Vector3d(double x, double y, double z);
-	double& operator[](unsigned i);
+	double const& operator[](unsigned i) const;
 };
 
 #endif

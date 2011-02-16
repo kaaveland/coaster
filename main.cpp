@@ -1,16 +1,17 @@
 #include <cmath>
 #include <iostream>
+#include <vector>
 #include "Vector3d.h"
 #include "Track.h"
 #include "PhysicsCart.h"
 
 using namespace std;
 
-void printVector(double *v) {
+void printVector(Vector3d v) {
 	cout << "[" << v[0] << ", " << v[1] << ", " << v[2] << "]";
 }
 
-double inline vectorDot(double const *v0, double const *v1)
+double inline vectorDot(Vector3d v0, Vector3d v1)
 {
 	return (v0[0]*v1[0] + v0[1]*v1[1] + v0[2]*v1[2]);
 }
@@ -21,58 +22,58 @@ int main() {
 	const int nPoints = 1000000;
 	const double PI = acos(-1.0);
 
-	double *pointsx = new double[nPoints];
-	double *pointsy = new double[nPoints];
-	double *pointsz = new double[nPoints];
-	double *upx = new double[nPoints];
-	double *upy = new double[nPoints];
-	double *upz = new double[nPoints];
+
+	vector<Vector3d> points;
+	points.resize(nPoints);
+	vector<Vector3d> up;
+	up.resize(nPoints);
+
 	for (int i = 0; i < nPoints; i++) {
-		pointsx[i] = PI*i/(nPoints-1);
-		pointsy[i] = sin(PI * i/(nPoints-1));
-		pointsz[i] = 0.0;
-		upx[i] = 0.0;
-		upy[i] = 0.0;
-		upz[i] = 1.0;
+		points[i].x = PI*i/(nPoints-1);
+		points[i].y = sin(PI * i/(nPoints-1));
+		points[i].z = 0.0;
+		up[i].x = 0.0;
+		up[i].y = 0.0;
+		up[i].z = 1.0;
 	}
 
-	double up[3], tang[3], norm[3], temp[3];
 	int index = 1;
 		
 	// Track tests
-	Track track(pointsx, pointsy, pointsz, upx, upy, upz, nPoints, 1.0);
+	Track track(points, up);
+	Vector3d temp, norm, tang;
 	
-	track.getPos3d(index, temp);
+	temp = track.getPos(index);
 	cout << "Pos: "; printVector(temp); cout << endl;
 		
-	track.getNormalVector3d(index, norm);
-	cout << "Normal: "; printVector(norm); cout << endl;
+	norm = track.getNormalVector(index);
+	cout << "Normal: ";  printVector(temp); cout << endl;
 
-	track.getTangentVector3d(index, tang);
-	cout << "Tangent: "; printVector(tang); cout << endl;
+	tang = track.getTangentVector(index);
+	cout << "Tangent: ";  printVector(temp);; cout << endl;
 
 	cout << "N dot T: " << vectorDot(norm, tang) << endl;
 
-	track.getUp3d(index, up);
-	cout << "Up: "; printVector(up); cout << endl;
+	temp = track.getUp(index);
+	cout << "Up: "; printVector(temp); cout << endl;
 	
 	// Create parallel track test [OK]
 	Track parallel(nPoints);
 	track.getParallelTrack(1.0, parallel);
 
-	parallel.getPos3d(index, temp);
+	temp = parallel.getPos(index);
 	cout << "Pos: "; printVector(temp); cout << endl;
-	parallel.getPos3d(0, temp);
+	temp = parallel.getPos(0);
 	cout << "Pos(i=0): "; printVector(temp); cout << endl;
 
-	parallel.getNormalVector3d(index, norm);
+	temp = parallel.getNormalVector(index);
 	cout << "Normal: "; printVector(norm); cout << endl;
 
-	parallel.getTangentVector3d(index, tang);
+	temp = parallel.getTangentVector(index);
 	cout << "Tangent: "; printVector(tang); cout << endl;
 
-	parallel.getUp3d(index, up);
-	cout << "Up: "; printVector(up); cout << endl;
+	temp = parallel.getUp(index);
+	cout << "Up: "; printVector(temp); cout << endl;
 
 	
 	// Cart test 1
