@@ -6,11 +6,11 @@
 class PhysicsCart
 {
 public:
-	PhysicsCart(double* initpos3d, double* initnorm3d);
+	PhysicsCart(Vector3d initpos, Vector3d initnorm);
 	~PhysicsCart(void);
 	
 	void nextStep(double dt);
-	void setTrack(Track &track);
+	void setTrack(Track *track);
 
 	Vector3d getPos3d() const;
 	Vector3d getNorm3d() const;
@@ -23,6 +23,8 @@ private:
 	double friction_glide;		// Gliding friction coefficient
 	double C_x, C_y, C_z;		// Displacements of CG
 	double gravityAccel;
+	double wheelsOffsety;		// Offset sideways of wheels (along y-axis)
+	double wheelsOffsetx;		// Offset of wheels along x axis
 
 	// Cart properties
 	Vector3d pos;				// Position vector, origin is lower back center (is OK??)
@@ -33,6 +35,7 @@ private:
 
 	// Simulation properties
 	int currentIndex;			// Which Track section index the cart currently is in
+	Track *track;				// Current main (center) track
 	
 
 };
