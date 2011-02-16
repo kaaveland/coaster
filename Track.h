@@ -30,11 +30,7 @@ public:
 	// Gives the unit tangent vector at the given segment.
 	Vector3d getTangentVector(int index) const;
 
-<<<<<<< HEAD
 	// Returns the curvature at the given segment.
-=======
-	// Gives the curvature at the given segment.
->>>>>>> 4d8845339558659fbbbb230d0de44184b26bfa2e
 	double getCurvature(int index) const;
 
 	// Gives the unit normal vector at the given segment. The normal vector points 
