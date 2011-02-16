@@ -6,7 +6,7 @@
 #define NULL 0
 
 
-PhysicsCart::PhysicsCart(Vector3d initpos, Vector3d initnorm)
+PhysicsCart::PhysicsCart(Vector3d initpos, Vector3d initup)
 {
 	// Set "constants"
 	mass = 100;
@@ -21,7 +21,7 @@ PhysicsCart::PhysicsCart(Vector3d initpos, Vector3d initnorm)
 	wheelsOffsety = 0.5;		// Total width of cart becomes 1.0
 
 	pos = initpos;
-	norm = initnorm;
+	up = initup;
 	track = NULL;
 
 
@@ -42,28 +42,24 @@ void PhysicsCart::setTrack(Track *track) {
 void PhysicsCart::nextStep(double dt) {
 	if (track == NULL) track = new Track(0);	// If no track is set, create a blank track
 
-	// Calculate displacement
+	// Calculate displacement if continuing in a straight line
 	Vector3d delta = vectorTimesScalar(velocity, dt);	// ds = v*dt
 
 	// Current ds for the track (perhaps this one will be constant? That would be good...)
 	double ds_estimate = vectorLength( vectorDiff(track->getPos(currentIndex+1), track->getPos(currentIndex)));
 
-	// Check how many segments we will travel during dt, rounded down.
-	int deltaIndex = vectorLength(delta)/ds_estimate;
+	// Check how many segments we will travel during dt, rounded down (using ds estimate).
+	int deltaIndex = (int)(vectorLength(delta)/ds_estimate);
 	currentIndex += deltaIndex;
-
-	// Get position when positioned on the new segment
-	Vector3d newPos = track->getPos(currentIndex);
-
-	double zDisplacement = vectorDiff(newPos, pos).z;	// displacement in gravity-direction, negative is down
-	double zDueToGravity = 0.5*gravityAccel*dt*dt;		// assuming constant acceleration
-	//bool isInPositiveLoop = vectorDot();
-
-
-
+	
+	Vector3d newPos = track->getPos(currentIndex);		// Get position when positioned on the new segment
+	double zDisplacement = vectorDiff(newPos, pos).z;	// Displacement in gravity-direction, negative is down
+	double zDisplacementFreefall = velocity.z*dt + 0.5*gravityAccel*dt*dt;		// z displacement if cart was in free fall
 		
+	bool hasNormalForce = (vectorDot(up, track->getNormalVector(currentIndex)) >= 0);	// true if "inside" curvature
+			
 }
 
-Vector3d PhysicsCart::getNorm3d() const {
-	return norm;
+Vector3d PhysicsCart::getUp() const {
+	return up;
 }
