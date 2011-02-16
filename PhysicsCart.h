@@ -1,18 +1,20 @@
 #pragma once
 
 #include "Track.h"
+#include "Vector3d.h"
 
 class PhysicsCart
 {
 public:
 	PhysicsCart(double* initpos3d, double* initnorm3d);
 	~PhysicsCart(void);
-	void nextStep(double dt);
 	
-	double* getPos3d();
-	double* getNorm3d();
-
+	void nextStep(double dt);
 	void setTrack(Track &track);
+
+	Vector3d getPos3d() const;
+	Vector3d getNorm3d() const;
+
 
 
 private:
@@ -21,19 +23,16 @@ private:
 	double Ix;					// Moment of inertia
 	double friction_static; 	// Static coefficient of friction
 	double friction_glide;		// Gliding friction coefficient
-	
+	double C_x, C_y, C_z;		// Displacements of CG
+	double gravityAccel;
+
 	// Cart properties
-	double *pos3d;		// Position vector
-	double *norm3d;		// Normal/"up" vector
-	double v;			// Track speed
-	double omegax;		// Angular velocity
-
-
-	// Track properties
-	int nPoints;									// Number of discrete points along track
-	double trackLength;								// Track length
-	double *trackposx, *trackposy, trackposz;		// Coordinates to points along track
-	double *trackupmx, *trackupy, trackupz;	// Coordinates to up vectors along track
+	Vector3d pos;				// Position vector, origin is lower back center (is OK??)
+	Vector3d norm;				// Normal/"up" vector/z-axis
+	double v;					// Track speed
+	Vector3d velocity;			// Velocity vector
+	Vector3d angularVelocity;	// Angular velocities
+	
 
 };
 
