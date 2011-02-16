@@ -18,7 +18,7 @@ double inline vectorDot(double const *v0, double const *v1)
 int main() {
 	
 	// Generate test track 1 [OK]
-	const int nPoints = 10001;
+	const int nPoints = 1000000;
 	const double PI = acos(-1.0);
 
 	double *pointsx = new double[nPoints];

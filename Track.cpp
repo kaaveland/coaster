@@ -41,8 +41,6 @@ void inline vectorCross(double const *v0, double const *v1, double *cross) {
 
 Track::Track(double *pointsx, double *pointsy, double *pointsz, double *upx, double *upy, double *upz, int nPoints, double trackLength)
 {
-	isAllocatedDynamically = false;
-
 	this->pointsx = pointsx;
 	this->pointsy = pointsy;
 	this->pointsz = pointsz;
