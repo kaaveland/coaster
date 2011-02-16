@@ -57,7 +57,7 @@ void PhysicsCart::nextStep(double dt) {
 
 	double zDisplacement = vectorDiff(newPos, pos).z;	// displacement in gravity-direction, negative is down
 	double zDueToGravity = 0.5*gravityAccel*dt*dt;		// assuming constant acceleration
-	bool isInPositiveLoop = vectorDot()
+	//bool isInPositiveLoop = vectorDot();
 
 
 
