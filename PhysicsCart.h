@@ -15,8 +15,6 @@ public:
 	Vector3d getPos3d() const;
 	Vector3d getNorm3d() const;
 
-
-
 private:
 	// Cart "constants"
 	double mass;				// Cart mass
@@ -32,6 +30,9 @@ private:
 	double v;					// Track speed
 	Vector3d velocity;			// Velocity vector
 	Vector3d angularVelocity;	// Angular velocities
+
+	// Simulation properties
+	int currentIndex;			// Which Track section index the cart currently is in
 	
 
 };

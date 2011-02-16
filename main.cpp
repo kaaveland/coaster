@@ -19,7 +19,7 @@ double inline vectorDot(Vector3d v0, Vector3d v1)
 int main() {
 	
 	// Generate test track 1 [OK]
-	const int nPoints = 1000000;
+	const int nPoints = 10001;
 	const double PI = acos(-1.0);
 
 
@@ -29,15 +29,15 @@ int main() {
 	up.resize(nPoints);
 
 	for (int i = 0; i < nPoints; i++) {
-		points[i].x = PI*i/(nPoints-1);
-		points[i].y = sin(PI * i/(nPoints-1));
+		points[i].x = 1.0*i/(nPoints-1);
+		points[i].y = sin(PI* 1.0*i/(nPoints-1));
 		points[i].z = 0.0;
 		up[i].x = 0.0;
 		up[i].y = 0.0;
 		up[i].z = 1.0;
 	}
 
-	int index = 1;
+	int index = nPoints/2;
 		
 	// Track tests
 	Track track(points, up);
@@ -47,10 +47,10 @@ int main() {
 	cout << "Pos: "; printVector(temp); cout << endl;
 		
 	norm = track.getNormalVector(index);
-	cout << "Normal: ";  printVector(temp); cout << endl;
+	cout << "Normal: ";  printVector(norm); cout << endl;
 
 	tang = track.getTangentVector(index);
-	cout << "Tangent: ";  printVector(temp);; cout << endl;
+	cout << "Tangent: ";  printVector(tang);; cout << endl;
 
 	cout << "N dot T: " << vectorDot(norm, tang) << endl;
 
@@ -67,10 +67,10 @@ int main() {
 	cout << "Pos(i=0): "; printVector(temp); cout << endl;
 
 	temp = parallel.getNormalVector(index);
-	cout << "Normal: "; printVector(norm); cout << endl;
+	cout << "Normal: "; printVector(temp); cout << endl;
 
 	temp = parallel.getTangentVector(index);
-	cout << "Tangent: "; printVector(tang); cout << endl;
+	cout << "Tangent: "; printVector(temp); cout << endl;
 
 	temp = parallel.getUp(index);
 	cout << "Up: "; printVector(temp); cout << endl;

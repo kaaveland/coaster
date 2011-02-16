@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "PhysicsCart.h"
 #include "Vector3d.h"
+#include "VectorTools.h"
 
 
 PhysicsCart::PhysicsCart(double* pos3d, double* norm3d)
@@ -30,7 +31,10 @@ PhysicsCart::~PhysicsCart(void)
 }
 
 void PhysicsCart::nextStep(double dt) {
-	
+	// Calculate displacement
+	Vector3d delta = vectorTimesScalar(velocity, dt);	// ds = v*dt
+
+		
 }
 
 Vector3d PhysicsCart::getNorm3d() const {

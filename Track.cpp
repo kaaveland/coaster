@@ -2,6 +2,7 @@
 #include <vector>
 #include "Track.h"
 #include "Vector3d.h"
+#include "VectorTools.h"
 #include <cassert>
 
 #define NULL 0
@@ -10,44 +11,6 @@
 #ifdef DEBUG
 #include <iostream>
 #endif
-
-Vector3d inline vectorSum(Vector3d const &v0, Vector3d const &v1)
-{
-	double dx = v0.x+v1.x;	// dx
-	double dy = v0.y+v1.y;	// dy
-	double dz = v0.z+v1.z;	// dz
-	
-	return Vector3d(dx,dy,dz);
-}
-
-// Calculates and returns the vector difference v1-v0 
-Vector3d inline vectorDiff(Vector3d const &v1, Vector3d const &v0)
-{
-	double dx = v1.x-v0.x;	// dx
-	double dy = v1.y-v0.y;	// dy
-	double dz = v1.z-v0.z;	// dz
-	
-	return Vector3d(dx,dy,dz);
-}
-
-double inline vectorLength(Vector3d const &v) {
-	return sqrt( pow(v.x, 2) + pow(v.y, 2) + pow(v.z, 2) );
-}
-
-// Calculates the vector scalar (dot) product of v1 and v2 and returns the scalar
-double inline vectorDot(Vector3d const &v0, Vector3d const &v1)
-{
-	return (v0.x*v1.x + v0.y*v1.y + v0.z*v1.z);
-}
-
-// Calculates the vector cross product of v0 and v1.
-Vector3d inline vectorCross(Vector3d const &v0, Vector3d const &v1) {
-	double x = v0.y*v1.z - v0.z*v1.y;
-	double y = v0.z*v1.x - v0.x*v1.z;
-	double z = v0.x*v1.y - v0.y*v1.x;
-	return Vector3d(x,y,z);
-}
-
 
 Track::Track(vector<Vector3d> const &pos, vector<Vector3d> const &up)
 {
