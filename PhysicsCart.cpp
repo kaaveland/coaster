@@ -55,20 +55,9 @@ void PhysicsCart::nextStep(double dt) {
 	Vector3d newPos = track->getPos(currentIndex);		// Get position when positioned on the new segment
 	double zDisplacement = vectorDiff(newPos, pos).z;	// Displacement in gravity-direction, negative is down
 	double zDisplacementFreefall = velocity.z*dt + 0.5*gravityAccel*dt*dt;		// z displacement if cart was in free fall
-	
-	
+		
 	bool hasNormalForce = (vectorDot(up, track->getNormalVector(currentIndex)) >= 0);	// true if "inside" curvature
-	
-	if (hasNormalForce) {
-		
-	} else {
-
-	}
-
-
-
-
-		
+			
 }
 
 Vector3d PhysicsCart::getUp() const {
