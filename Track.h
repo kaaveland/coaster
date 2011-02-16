@@ -11,12 +11,9 @@ public:
 	// Constructs new Track instance. 
 	// 
 	//	Parameters:
-	//	pointsx, pointsy, pointsz - pointers to arrays of the coordinates to the discrete points along the track.
-	//  upx, upy, upz - pointers to arrays of "up" vectors along the track
-	//  nSegments - number of segments, that is, the number of points will be nSegments+1
-	//  length - total length (distance) of track from beginning to start
+	//	pos - vector containing the points along the curve
+	//  up - vector containing the up vectors along the curve
 	//
-	//  On destruction, these vectors will be deleted - so they must be dynamically allocated
 	Track(vector<Vector3d> const &pos, vector<Vector3d> const &up);
 
 	Track(int nPoints);
@@ -44,7 +41,6 @@ public:
 	void getParallelTrack(double offset, Track& track) const;
 
 protected:
-	// Number of segments ( =number of points-1 )
 	int nPoints;
 	vector<Vector3d> pos;
 	vector<Vector3d> up;
