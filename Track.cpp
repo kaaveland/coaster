@@ -99,10 +99,12 @@ double Track::getCurvature(int index) const
 Vector3d Track::getNormalVector(int index) const
 {
 	// TODO: assert that normal is not of inf length!
+	assert(index >= 0 && index < nPoints);
 
-	// We need one point back and one point forward for the normal vector
-	assert(index >= 1 && index < nPoints-1);
-
+	// We need one point back and one point forward for the normal vector, so on the boundaries we hack.
+	if (index == 0) return getNormalVector(1);
+	if (index == nPoints-1) return getNormalVector(nPoints-2);
+	
 	Vector3d T0, T1;
 	T0 = getTangentVector(index-1);
 	T1 = getTangentVector(index);

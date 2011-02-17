@@ -6,7 +6,7 @@
 #define NULL 0
 
 
-PhysicsCart::PhysicsCart(Vector3d initpos, Vector3d initup)
+PhysicsCart::PhysicsCart()
 {
 	// Set "constants"
 	mass = 1.0;
@@ -17,14 +17,13 @@ PhysicsCart::PhysicsCart(Vector3d initpos, Vector3d initup)
 	maxThrust = 1.0;
 	wheelsOffsetx = 0;
 	wheelsOffsety = 0.5;		// Total width of cart becomes 1.0
+	thrustFactor = brakingFactor = 0.0;
 
 	// Assign initial values
 	v = 0;
 	velocity = Vector3d(0,0,0);
 	accel = Vector3d(0,0,0);
 
-	pos = initpos;
-	up = initup;
 	isFreefalling = false;
 	track = NULL;
 
@@ -40,6 +39,13 @@ PhysicsCart::~PhysicsCart(void)
 
 void PhysicsCart::setTrack(Track *track) {
 	this->track = track;
+	setTrackIndex(0);
+}
+
+void PhysicsCart::setTrackIndex(int index) {
+	currentIndex = index;
+	pos = track->getPos(index);
+	up = track->getUp(index);
 }
 
 void PhysicsCart::nextStep(double dt) {
@@ -56,7 +62,8 @@ void PhysicsCart::nextStep(double dt) {
 
 	// Update position
 	if (!isFreefalling) {
-		pos = track->getPos(currentIndex+deltaIndex);				// We "snap" to the start of the segment
+		//pos = track->getPos(currentIndex+deltaIndex);				// We "snap" to the start of the segment
+		pos = vectorSum(pos, vectorTimesScalar(velocity, dt));		// TESTING
 	} else {
 		pos = vectorSum(pos, vectorTimesScalar(velocity, dt));		// pos = pos + velocity*dt, try this one above aswell
 	}
@@ -77,6 +84,8 @@ void PhysicsCart::nextStep(double dt) {
 
 		// a_N = v^2/r = v^2 * kappa.
 		double a_N = v*v*track->getCurvature(currentIndex);
+
+
 		Vector3d accNormal = vectorTimesScalar(track->getNormalVector(currentIndex), a_N);
 
 		// a_T = thrust - braking + G_N
@@ -93,6 +102,10 @@ void PhysicsCart::nextStep(double dt) {
 	}
 
 	currentIndex += deltaIndex;
+}
+
+Vector3d PhysicsCart::getPos() const {
+	return pos;
 }
 
 Vector3d PhysicsCart::getUp() const {

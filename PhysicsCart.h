@@ -6,7 +6,9 @@
 class PhysicsCart
 {
 public:
-	PhysicsCart(Vector3d initpos, Vector3d initup);
+
+	PhysicsCart();
+
 	~PhysicsCart(void);
 	
 	// Tells the simulation to increase the clock by dt, and such calculate updated properties
@@ -17,6 +19,8 @@ public:
 	// Assign a track to this cart. 
 	//
 	void setTrack(Track *track);
+
+	void setTrackIndex(int index);
 
 	// Sets the braking factor for the cart.
 	//	

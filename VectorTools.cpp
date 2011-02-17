@@ -26,6 +26,8 @@ double vectorLength(Vector3d const &v) {
 }
 
 Vector3d vectorTimesScalar(Vector3d const &v, double scalar) {
+
+
 	return Vector3d(v.x*scalar, v.y*scalar, v.z*scalar);
 }
 

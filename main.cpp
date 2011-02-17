@@ -77,12 +77,19 @@ int main() {
 	temp = parallel.getUp(index);
 	cout << "Up: "; printVector(temp); cout << endl;
 
+	cout << "\nEND TRACK TESTS\n";
 	
 	// Cart test 1
-	Vector3d initpos = track.getPos(0);
-	Vector3d initup = track.getUp(0);
-
-	PhysicsCart cart(initpos, initup);
+	
+	PhysicsCart cart;
+	cart.setTrack(&track);
+	cart.setTrackIndex(nPoints/2+10);
+	for (int i=0; i < 100; i++) {
+		cart.nextStep(0.01);
+		printVector(cart.getPos());
+		cin.get();
+	}
+	
 		
 	cin.get();
 //
