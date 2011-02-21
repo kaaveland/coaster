@@ -25,6 +25,8 @@ Track::Track(int nPoints) {
 	this->nPoints = nPoints;
 	pos.resize(nPoints);
 	up.resize(nPoints);
+
+	this->generateTrack();
 }
 
 Track::~Track(void)
@@ -39,11 +41,29 @@ Vector3d Track::getPos(int index) const
 	return pos[index];
 }
 
+void Track::setPos(int index, Vector3d v)
+{
+	assert(index >= 0 && index < nPoints);
+
+	//TODO: delete old?
+
+	pos[index] = v;
+}
+
 Vector3d Track::getUp(int index) const
 {
 	assert(index >= 0 && index < nPoints);
 
 	return up[index];
+}
+
+void Track::setUp(int index, Vector3d v)
+{
+	assert(index >= 0 && index < nPoints);
+	
+	//TODO: delete old?
+
+	up[index] = v;
 }
 
 int inline Track::getSegmentIndex(double distance) const 
@@ -69,11 +89,11 @@ Vector3d Track::getTangentVector(int index) const
 {
 	assert(index >= 0 && index < nPoints-1);
 
-	Vector3d pos0, pos1;
-	pos0 = getPos(index);
-	pos1 = getPos(index+1);
+	Vector3d *pos0, *pos1;
+	pos0 = &getPos(index);
+	pos1 = &getPos(index+1);
 		
-	Vector3d diff = vectorDiff(pos1, pos0);
+	Vector3d diff = vectorDiff(*pos1, *pos0);
 	double length = vectorLength(diff);
 
 	Vector3d tangent;
@@ -88,11 +108,11 @@ double Track::getCurvature(int index) const
 {
 	assert(index >= 0 && index < nPoints-1);
 
-	Vector3d pos0, pos1;
-	pos0 = getPos(index);
-	pos1 = getPos(index+1);
+	Vector3d *pos0, *pos1;
+	pos0 = &getPos(index);
+	pos1 = &getPos(index+1);
 		
-	Vector3d diff = vectorDiff(pos1, pos0);
+	Vector3d diff = vectorDiff(*pos1, *pos0);
 	return vectorLength(diff);
 }
 
@@ -121,12 +141,34 @@ Vector3d Track::getNormalVector(int index) const
 	return normal;
 }
 
+void Track::generateTrack(void)
+{
+
+	const double PI = acos(-1.0);
+	Vector3d v(0,0,0);
+
+	
+	for (int i = 0; i < this->nPoints; i++) {
+		v.x = 5*i;
+		v.y = 100+100*i;
+		v.z = 50*i;
+		this->setPos(i, v);
+		
+		v.x = 0.0;
+		v.y = 0.0;
+		v.z = 0.0;
+
+		this->setUp(i, v);
+	}
+	
+}
+
 void Track::getParallelTrack(double offset, Track &track) const 
 {
 #ifdef DEBUG
 	std::cout << "Generating data for parallel Track...";
 #endif
-	
+
 	assert(nPoints == track.nPoints);
 	
 	Vector3d perpendicularVector, up, tangent;
@@ -156,8 +198,14 @@ void Track::getParallelTrack(double offset, Track &track) const
 	// Note: copied or referenced???
 	track.up = this->up;
 	
+	
 #ifdef DEBUG
 	std::cout << "Done\n";
 #endif
 
+}
+
+int Track::getNumberOfPoints(void) const
+{
+	return this->nPoints;
 }

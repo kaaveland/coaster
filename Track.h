@@ -1,4 +1,6 @@
-#pragma once
+#ifndef __Track_h_
+#define __Track_h_
+
 #include <vector>
 #include "Vector3d.h"
 
@@ -24,8 +26,12 @@ public:
 	// rounded or interpolated between the track's discrete points.
 	Vector3d getPos(int index) const;
 
+	void setPos(int index, Vector3d v);
+
 	// Gives the track's unit up vector at the given segment.
 	Vector3d getUp(int index) const;
+
+	void setUp(int index, Vector3d v);
 	
 	// Gives the unit tangent vector at the given segment.
 	Vector3d getTangentVector(int index) const;
@@ -37,11 +43,18 @@ public:
 	// towards the center of curvature.
 	Vector3d getNormalVector(int index) const;
 
+
+	// Load and fill the track with points
+	void generateTrack(void);
+
 	// Calculates the data for a track that is parallel to this instance, offset at
 	// the given distance. The new track is offset at the given distance perpendicular both to the Track's up vector
 	// and tangent vector (that is, the width direction). Positive values gives an offset along the positive y axis,
 	// which is the to the left.
 	void getParallelTrack(double offset, Track& track) const;
+
+	// return nPoints;
+	int getNumberOfPoints(void) const;
 
 protected:
 	int nPoints;
@@ -56,5 +69,7 @@ protected:
 	
 	// Returns the distance travelled to the start of the given track section.
 	double inline getDistance(int index) const;	
+	
 };
 
+#endif // __Track_h_

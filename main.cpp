@@ -1,5 +1,7 @@
 #include <cmath>
 #include <iostream>
+#include <string>
+#include <fstream>
 #include <vector>
 #include "Vector3d.h"
 #include "Track.h"
@@ -15,8 +17,9 @@ double inline vectorDot(Vector3d v0, Vector3d v1)
 {
 	return (v0[0]*v1[0] + v0[1]*v1[1] + v0[2]*v1[2]);
 }
+/*
 
-int main() {
+int main2() {
 	
 	// Generate test track 1 [OK]
 	const int nPoints = 1000;
@@ -95,3 +98,5 @@ int main() {
 //
 	return 0;
 }
+
+*/
