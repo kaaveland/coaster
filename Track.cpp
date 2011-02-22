@@ -150,8 +150,8 @@ void Track::generateTrack(void)
 	
 	for (int i = 0; i < this->nPoints; i++) {
 		v.x = 5*i;
-		v.y = 100+100*i;
-		v.z = 50*i;
+		v.y = 100+10*i;
+		v.z = 5*i;
 		this->setPos(i, v);
 		
 		v.x = 0.0;
@@ -160,6 +160,11 @@ void Track::generateTrack(void)
 
 		this->setUp(i, v);
 	}
+
+	v.x = 5;
+	v.y = 100;
+	v.z = 5;
+	this->setPos(this->nPoints-1, v);
 	
 }
 

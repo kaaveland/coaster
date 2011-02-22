@@ -66,10 +66,9 @@ void Coaster::createRailMesh(const Track track, const bool export_mesh)
 
 	const float width = 0.5f;
 	const float height = 1.0f;
-	float length = 100.0f;
 
 	Ogre::ManualObject rail("RailObject");
-	Ogre::Vector3 size(width / 2, height/2, length/2);
+	Ogre::Vector3 size(width / 2, height/2, 0);
 
 	size_t index_count = 8*track.getNumberOfPoints()+2;
 	size_t ver_count = 4*6*track.getNumberOfPoints();
@@ -80,7 +79,7 @@ void Coaster::createRailMesh(const Track track, const bool export_mesh)
 	rail.begin("Rails/RailMetal", Ogre::RenderOperation::OT_TRIANGLE_LIST);
  
 	Vector3d vec_math;
-	Ogre::Vector3 vec;
+	Ogre::Vector3 vec, next_vec;
 
 	printf("Points: %d \n", track.getNumberOfPoints());
 
@@ -95,76 +94,90 @@ void Coaster::createRailMesh(const Track track, const bool export_mesh)
 		printf("i: %d\n", i);
 		vec_math = vectorDiff(next_pos, cur_pos);
 
-		vec.x = cur_pos.x + vec_math.x;
-		vec.y = cur_pos.y + vec_math.y;
-		vec.z = cur_pos.z + vec_math.z;
+		vec.x = cur_pos.x;
+		vec.y = cur_pos.y;
+		vec.z = cur_pos.z;
 
-		printf("Bottom left i: %d, x:%f, y:%f, z:%f \n", i, vec.x + size.x, vec.y - size.y, vec.z + size.z);
+		next_vec.x = cur_pos.x + vec_math.x;
+		next_vec.y = cur_pos.y + vec_math.y;
+		next_vec.z = cur_pos.z + vec_math.z;
+
+		printf("Bottom left i: %d, x:%f, y:%f, z:%f \n", i, vec.x + size.x, vec.y - size.y, vec.z);
 		//bottom
-		rail.position(vec.x + size.x, vec.y - size.y, vec.z + size.z); // 0
+		rail.position(vec.x + size.x, vec.y - size.y, vec.z); // 0
 		rail.textureCoord(1, 0);
-		rail.position(vec.x - size.x, vec.y - size.y, vec.z - size.z); // 1
+		rail.position(next_vec.x - size.x, next_vec.y - size.y, next_vec.z); // 1
 		rail.textureCoord(0, 1);
-		rail.position(vec.x + size.x, vec.y - size.y, vec.z - size.z); // 2
+		rail.position(next_vec.x + size.x, next_vec.y - size.y, next_vec.z); // 2
 		rail.textureCoord(1, 1);
-		rail.position(vec.x - size.x, vec.y - size.y, vec.z + size.z); // 3
+		rail.position(vec.x - size.x, vec.y - size.y, vec.z); // 3
 		rail.textureCoord(0, 0);
 
 		//front
-		rail.position(vec.x + size.x, vec.y + size.y, vec.z + size.z); // 4
+		rail.position(vec.x + size.x, vec.y + size.y, vec.z); // 4
 		rail.textureCoord(1, 0);
-		rail.position(vec.x - size.x, vec.y - size.y, vec.z + size.z); // 5
+		rail.position(vec.x - size.x, vec.y - size.y, vec.z); // 5
 		rail.textureCoord(0, 1);
-		rail.position(vec.x + size.x, vec.y - size.y, vec.z + size.z); // 6
+		rail.position(vec.x + size.x, vec.y - size.y, vec.z); // 6
 		rail.textureCoord(1, 1);
-		rail.position(vec.x - size.x, vec.y + size.y, vec.z + size.z); // 7
+		rail.position(vec.x - size.x, vec.y + size.y, vec.z); // 7
 		rail.textureCoord(0, 0);
 
 		//left
-		rail.position(vec.x - size.x, vec.y + size.y, vec.z - size.z); // 8 
+		rail.position(next_vec.x - size.x, next_vec.y + size.y, next_vec.z); // 8 
 		rail.textureCoord(0, 1);
-		rail.position(vec.x - size.x, vec.y - size.y, vec.z - size.z); // 9
+		rail.position(next_vec.x - size.x, next_vec.y - size.y, next_vec.z); // 9
 		rail.textureCoord(1, 1);
-		rail.position(vec.x - size.x, vec.y - size.y, vec.z + size.z); // 10
+		rail.position(vec.x - size.x, vec.y - size.y, vec.z); // 10
 		rail.textureCoord(1, 0);
-		rail.position(vec.x + size.x, vec.y - size.y, vec.z - size.z); // 11
+		rail.position(next_vec.x + size.x, next_vec.y - size.y, next_vec.z); // 11
 		rail.textureCoord(0, 1);
 
 		//right
-		rail.position(vec.x + size.x, vec.y + size.y, vec.z - size.z); // 12
+		rail.position(next_vec.x + size.x, next_vec.y + size.y, next_vec.z); // 12
 		rail.textureCoord(1, 1);
-		rail.position(vec.x + size.x, vec.y - size.y, vec.z + size.z); // 13
+		rail.position(vec.x + size.x, vec.y - size.y, vec.z); // 13
 		rail.textureCoord(0, 0);
-		rail.position(vec.x + size.x, vec.y - size.y, vec.z - size.z); // 14
+		rail.position(next_vec.x + size.x, next_vec.y - size.y, next_vec.z); // 14
 		rail.textureCoord(1, 0);
-		rail.position(vec.x - size.x, vec.y - size.y, vec.z - size.z); // 15
+		rail.position(next_vec.x - size.x, next_vec.y - size.y, next_vec.z); // 15
 		rail.textureCoord(0, 0);
 
 		//back
-		rail.position(vec.x - size.x, vec.y + size.y, vec.z + size.z); // 16
+		rail.position(vec.x - size.x, vec.y + size.y, vec.z); // 16
 		rail.textureCoord(1, 0);
-		rail.position(vec.x + size.x, vec.y + size.y, vec.z - size.z); // 17
+		rail.position(next_vec.x + size.x, next_vec.y + size.y, next_vec.z); // 17
 		rail.textureCoord(0, 1);
-		rail.position(vec.x - size.x, vec.y + size.y, vec.z - size.z); // 18
+		rail.position(next_vec.x - size.x, next_vec.y + size.y, next_vec.z); // 18
 		rail.textureCoord(1, 1);
-		rail.position(vec.x + size.x, vec.y + size.y, vec.z + size.z); // 19
+		rail.position(vec.x + size.x, vec.y + size.y, vec.z); // 19
 		rail.textureCoord(0, 0);
 	
 		int offset = i*20;
+
+		// 0 = 6 = 13
+		// 3 = 5 = 10
+		// 1 = 9 = 15
+		// 8 = 18
+		// 12 = 17
+		// 2 = 11 = 14
+		// 7 = 16
+		// 4 = 19
+
+		//top
+		rail.triangle(offset+16, offset+17, offset+18);	rail.triangle(offset+16, offset+19, offset+17);
 		//bottom
 		rail.triangle(offset+0, offset+1, offset+2);	rail.triangle(offset+3, offset+1, offset+0);
-		//front
-		rail.triangle(offset+4, offset+5, offset+6);	rail.triangle(offset+4, offset+7, offset+5);
 
 		//left
 		rail.triangle(offset+8, offset+9, offset+10);	rail.triangle(offset+10, offset+7, offset+8);
 		//right
 		rail.triangle(offset+4, offset+11, offset+12);	rail.triangle(offset+4, offset+13, offset+11);
 
+		//front
+		//rail.triangle(offset+4, offset+5, offset+6);	rail.triangle(offset+4, offset+7, offset+5);
 		//back
-		rail.triangle(offset+14, offset+8, offset+12);	rail.triangle(offset+14, offset+15, offset+8);
-		//top
-		rail.triangle(offset+16, offset+17, offset+18);	rail.triangle(offset+16, offset+19, offset+17);
+		//rail.triangle(offset+14, offset+8, offset+12);	rail.triangle(offset+14, offset+15, offset+8);
 
 	}
 
