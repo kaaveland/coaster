@@ -17,11 +17,10 @@ double inline vectorDot(Vector3d v0, Vector3d v1)
 {
 	return (v0[0]*v1[0] + v0[1]*v1[1] + v0[2]*v1[2]);
 }
-/*
 
-int main2() {
-	
-	// Generate test track 1 [OK]
+void test1() {
+
+// Generate test track 1 [OK]
 	const int nPoints = 1000;
 	const double PI = acos(-1.0);
 
@@ -95,8 +94,21 @@ int main2() {
 	
 		
 	cin.get();
-//
-	return 0;
+
+
 }
 
-*/
+int main() {
+	Vector3d x(1,0,0);
+	Vector3d y(0,1,0);
+	cout << "Dot: " << x*y << endl;
+	cout << "Cross: "; printVector(x.cross(y));
+	cout << "\nSum: "; printVector(x+y);
+	cout << "\nDiff: "; printVector(x-y);
+	cout << "\nx * 2.5 = "; printVector(x * 2.5);
+	cout << "\n2.5 * x = "; printVector(2.5 * x);
+	//cout << "\nx * 2.5 = "; printVector(2.5
+	cin.get();
+	
+
+}
