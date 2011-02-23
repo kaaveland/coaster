@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include "PhysicsCart.h"
 #include "Vector3d.h"
-#include "VectorTools.h"
 
 #define NULL 0
 
@@ -21,8 +20,8 @@ PhysicsCart::PhysicsCart()
 
 	// Assign initial values
 	v = 0;
-	velocity = Vector3d(0,0,0);
-	accel = Vector3d(0,0,0);
+	vVelocity = Vector3d(0,0,0);
+	vAccel = Vector3d(0,0,0);
 
 	isFreefalling = false;
 	track = NULL;
@@ -44,8 +43,8 @@ void PhysicsCart::setTrack(Track *track) {
 
 void PhysicsCart::setTrackIndex(int index) {
 	currentIndex = index;
-	pos = track->getPos(index);
-	up = track->getUp(index);
+	vPos = track->getPos(index);
+	vUp = track->getUp(index);
 }
 
 void PhysicsCart::nextStep(double dt) {
@@ -54,60 +53,66 @@ void PhysicsCart::nextStep(double dt) {
 	// TODO: TEST THIS FUNCTION OMG AND IMPLEMENT OPERATOR OVERLOADS FOR VECTOR OMGOMG
 
 	// Find the current ds for the track (perhaps this one will be constant? That would be good...)
-	Vector3d delta = vectorTimesScalar(velocity, dt);	// ds = v*dt
-	double ds_estimate = vectorLength( vectorDiff(track->getPos(currentIndex+1), track->getPos(currentIndex)));
+	double ds_estimate = (track->getPos(currentIndex+1) - track->getPos(currentIndex)).length();
 
-	// Calculate how many segments we will travel during dt, rounded down (using ds estimate). TODO: interpolate
-	int deltaIndex = (int)(vectorLength(delta)/ds_estimate);
-
+	// Calculate how many segments we will travel during dt. TODO: interpolate
+	Vector3d vDeltaPos = dt * vVelocity;						// ds = v*dt
+	double deltaIndex = vDeltaPos.length()/ds_estimate;			// We use a float as index in order to interpolate later
+	
 	// Update position
 	if (!isFreefalling) {
 		//pos = track->getPos(currentIndex+deltaIndex);				// We "snap" to the start of the segment. NO!
-		pos = vectorSum(pos, vectorTimesScalar(velocity, dt));		// TESTING
+		this->vPos += dt * vVelocity;		// TESTING
 	} else {
-		pos = vectorSum(pos, vectorTimesScalar(velocity, dt));		// pos = pos + velocity*dt, try this one above aswell
+		this->vPos += dt * vVelocity;		// pos = pos + velocity*dt, try this one above aswell
 	}
 
 	// Update velocity
-	velocity = vectorSum(velocity, vectorTimesScalar(accel, dt));	// velocity = velocity + accel*dt
-	v = vectorLength(velocity);
+	vVelocity += dt * vAccel;	// velocity = velocity + accel*dt
+	v = vVelocity.length();
 
 	Vector3d gvector(0,0,-gravityAccel);
 
 	if (!isFreefalling) {
 
 		// Check if the cart loses normal force (contact), in which case it will detach from the track
-		//bool hasNormalForce = (vectorDot(up, track->getNormalVector(currentIndex)) >= 0);	// true if "inside" curvature
-		Vector3d displacementIfFrefall = vectorSum(vectorTimesScalar(velocity, dt), vectorTimesScalar(gvector,dt*dt));	// Accuracy?
+		
+		Vector3d displacementIfFrefall = dt * vVelocity +  dt*dt*gvector;		// Accuracy?
 		// If this point is not above the track in any way, the cart will stay on the track
-		isFreefalling = (vectorDot(displacementIfFrefall, track->getUp(currentIndex)) > 0.0); 
+		isFreefalling = (displacementIfFrefall * track->getUp(currentIndex) > 0.0); 
 
-		// a_N = v^2/r = v^2 * kappa.
-		double a_N = v*v*track->getCurvature(currentIndex);
+		bool hasNormalForce = (vUp * track->getNormalVector(currentIndex) >= 0.0);	// true if "inside" curvature
+		double a_N;
+		if (hasNormalForce) {
+			// a_N = v^2/r = v^2 * kappa.
+			a_N = v*v*track->getCurvature(currentIndex);
+		} else {
+			a_N = 1.0;
+		}
 
 
-		Vector3d accNormal = vectorTimesScalar(track->getNormalVector(currentIndex), a_N);
+		Vector3d accNormal = a_N * track->getNormalVector(currentIndex);
 
 		// a_T = thrust - braking + G_N
 		double a_T = thrustFactor*maxThrust/mass 
 			- brakingFactor*friction_static*a_N/mass
-			+ vectorDot(gvector, track->getTangentVector(currentIndex));
-		Vector3d accTangential = vectorTimesScalar(track->getTangentVector(currentIndex), a_T);
+			+ gvector * track->getTangentVector(currentIndex);
+		Vector3d accTangential = a_T * track->getTangentVector(currentIndex);
 
 		// Update acceleration vector (state)
-		accel = vectorSum(accNormal, accTangential);
+		vAccel = accNormal + accTangential;
 
 	} else {
-		accel = gvector;
+		vAccel = gvector;
 	}
 
-	currentIndex += deltaIndex;
+	currentIndex += (int)deltaIndex;
 }
 
 Vector3d PhysicsCart::getPos() const {
-	return pos;
+	return vPos;
 }
 
 Vector3d PhysicsCart::getUp() const {
-	return up;
+	return vUp;
 }

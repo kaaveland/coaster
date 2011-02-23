@@ -55,12 +55,12 @@ private:
 	double wheelsOffsetx;		// Offset of wheels along x axis
 
 	// Cart properties
-	Vector3d pos;				// Position vector, origin is lower back center (is OK??)
-	Vector3d up;				// Normal/"up" vector/z-axis
+	Vector3d vPos;				// Position vector, origin is lower back center (is OK??)
+	Vector3d vUp;				// Normal/"up" vector/z-axis
 	double v;					// Track speed
-	Vector3d velocity;			// Velocity vector
-	Vector3d accel;				// Acceleration vector
-	Vector3d angularVelocity;	// Angular velocities
+	Vector3d vVelocity;			// Velocity vector
+	Vector3d vAccel;				// Acceleration vector
+	Vector3d vAngularVelocity;	// Angular velocities
 	double brakingFactor;
 	double thrustFactor;
 	

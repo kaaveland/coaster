@@ -2,7 +2,6 @@
 #include <vector>
 #include "Track.h"
 #include "Vector3d.h"
-#include "VectorTools.h"
 #include <cassert>
 
 #define NULL 0
@@ -144,14 +143,10 @@ Vector3d Track::getTangentVector(int index) const
 	pos0 = &getPos(index);
 	pos1 = &getPos(index+1);
 		
-	Vector3d diff = *pos1 - *pos0;
-	double length = vectorLength(diff);
-
-	Vector3d tangent;
-	tangent.x = diff.x/length;
-	tangent.y = diff.y/length;
-	tangent.z = diff.z/length;
-
+	Vector3d tangent = *pos1 - *pos0;
+	double length = tangent.length();
+	tangent /= length;
+	
 	return tangent;
 }
 
@@ -163,8 +158,8 @@ double Track::getCurvature(int index) const
 	pos0 = &getPos(index);
 	pos1 = &getPos(index+1);
 		
-	Vector3d diff = vectorDiff(*pos1, *pos0);
-	return vectorLength(diff);
+	Vector3d diff = *pos1 - *pos0;
+	return diff.length();
 }
 
 Vector3d Track::getNormalVector(int index) const
@@ -181,14 +176,10 @@ Vector3d Track::getNormalVector(int index) const
 	T1 = getTangentVector(index);
 		
 	// The normal vector points towards T1-T0
-	Vector3d diff = vectorDiff(T1, T0);
-	double length = vectorLength(diff);
-
-	Vector3d normal;
-	normal.x = diff.x/length;
-	normal.y = diff.y/length;
-	normal.z = diff.z/length;
-
+	Vector3d normal = T1 - T0;
+	double length = normal.length();
+	normal /= length;
+	
 	return normal;
 }
 
@@ -262,26 +253,22 @@ void Track::getParallelTrack(double offset, Track &track) const
 		tangent = getTangentVector(i);
 		
 		// Calculate the cross product betwen these. This vector will point "to the left".
-		perpendicularVector = vectorCross(up, tangent);
+		perpendicularVector = up.cross(tangent);
 
-		// Divide by current length and multiply by offset to get correct length
-		double length = vectorLength(perpendicularVector);
-		perpendicularVector.x *= offset/length;
-		perpendicularVector.y *= offset/length;
-		perpendicularVector.z *= offset/length;
-
+		// Divide by current length and multiply by the offset to get correct length
+		double length = perpendicularVector.length();
+		perpendicularVector *= offset/length;
+	
 		// Calculate point coordinates for parallel track
-		Vector3d newPoint = vectorSum(pos[i], perpendicularVector);
+		Vector3d newPoint = this->pos[i] + perpendicularVector;
 
 		// Insert new point into array
 		track.pos[i] = newPoint;
-	}
 
-	// Up, normal and tangent vectors are assumed to be equal to this track. (Correct?)
-	// Note: copied or referenced???
-	track.up = this->up;
-	
-	
+		// Up, normal and tangent vectors are assumed to be equal to this track. (Correct?)
+		track.up[i] = this->up[i];
+	}
+		
 #ifdef DEBUG
 	std::cout << "Done\n";
 #endif
