@@ -62,7 +62,7 @@ void PhysicsCart::nextStep(double dt) {
 
 	// Update position
 	if (!isFreefalling) {
-		//pos = track->getPos(currentIndex+deltaIndex);				// We "snap" to the start of the segment
+		//pos = track->getPos(currentIndex+deltaIndex);				// We "snap" to the start of the segment. NO!
 		pos = vectorSum(pos, vectorTimesScalar(velocity, dt));		// TESTING
 	} else {
 		pos = vectorSum(pos, vectorTimesScalar(velocity, dt));		// pos = pos + velocity*dt, try this one above aswell
@@ -90,7 +90,7 @@ void PhysicsCart::nextStep(double dt) {
 
 		// a_T = thrust - braking + G_N
 		double a_T = thrustFactor*maxThrust/mass 
-			- brakingFactor*friction_static*a_N*mass
+			- brakingFactor*friction_static*a_N/mass
 			+ vectorDot(gvector, track->getTangentVector(currentIndex));
 		Vector3d accTangential = vectorTimesScalar(track->getTangentVector(currentIndex), a_T);
 
