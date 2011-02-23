@@ -24,6 +24,8 @@ struct Vector3d {
 	bool Vector3d::operator!=(const Vector3d &v) const;
 	Vector3d& Vector3d::operator=(const Vector3d &v);
 
+	double Vector3d::length() const;
+
 };
 
 // Non-member functions

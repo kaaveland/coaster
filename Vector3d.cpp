@@ -1,4 +1,5 @@
 #include "Vector3d.h"
+#include <math.h>
 #include <exception>
 
 Vector3d::Vector3d()
@@ -122,4 +123,9 @@ const Vector3d operator*(double d, Vector3d &v)
 const Vector3d operator/(double d, Vector3d &v)
 {
 	return v / d;
+}
+
+double Vector3d::length() const
+{
+	return sqrt( pow(this->x, 2) + pow(this->y, 2) + pow(this->z, 2) );
 }

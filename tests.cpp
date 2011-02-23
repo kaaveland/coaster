@@ -98,7 +98,7 @@ void test1() {
 
 }
 
-int main() {
+void testVector3d() {
 	Vector3d x(1,0,0);
 	Vector3d y(0,1,0);
 	cout << "Dot: " << x*y << endl;
@@ -107,8 +107,6 @@ int main() {
 	cout << "\nDiff: "; printVector(x-y);
 	cout << "\nx * 2.5 = "; printVector(x * 2.5);
 	cout << "\n2.5 * x = "; printVector(2.5 * x);
-	//cout << "\nx * 2.5 = "; printVector(2.5
 	cin.get();
 	
-
 }

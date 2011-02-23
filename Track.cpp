@@ -144,7 +144,7 @@ Vector3d Track::getTangentVector(int index) const
 	pos0 = &getPos(index);
 	pos1 = &getPos(index+1);
 		
-	Vector3d diff = vectorDiff(*pos1, *pos0);
+	Vector3d diff = *pos1 - *pos0;
 	double length = vectorLength(diff);
 
 	Vector3d tangent;
