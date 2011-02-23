@@ -1,10 +1,5 @@
 #ifndef __Coaster_h_
 #define __Coaster_h_
- 
-#include "BaseApplication.h"
-#include "Track.h"
-#include "VectorTools.h"
-#include "Vector3d.h"
 
 #include <iostream>
 #include <string>
@@ -12,6 +7,12 @@
 #include <io.h>
 #include <stdio.h>
 #include <fcntl.h>
+
+#include "BaseApplication.h"
+#include "Track.h"
+#include "VectorTools.h"
+#include "Vector3d.h"
+#include "GraphicTrack.h"
  
 #include <CEGUISystem.h>
 #include <CEGUISchemeManager.h>
@@ -56,7 +57,7 @@ protected:
 
 	void showWin32Console(void);
 
-	void createRailMesh(const Track track, const bool export_mesh);
+	//void createRailMesh(const Track track, const bool export_mesh);
 };
  
 #endif // #ifndef __Coaster_h_

@@ -74,6 +74,57 @@ int inline Track::getSegmentIndex(double distance) const
 	// int index = (int)(distance/ds * nPoints) - 1;
 	// if (index >= nPoints || index < 0) return -1;	// The distance lies before or after the track
 
+	//Interpolation code from: http://www.mvps.org/directx/articles/catmull/
+
+	//http://www.ogre3d.org/docs/api/html/classOgre_1_1SimpleSpline.html#_details
+
+	/*D3DXVECTOR3 CHighway::GetPos(float dist, BOOL bLinearInterpolate)
+{
+	// determine which segment we are on
+
+	int segmentNum=(int) (dist/HIGHWAY_STRIP_LEN);
+
+	// get position within that segment
+
+	float pos=(dist-segmentNum*HIGHWAY_STRIP_LEN)/HIGHWAY_STRIP_LEN;
+
+	// get control points p0,p1,p2,p3, where desired point between p1 and p2
+	// allows for wraparound in both directions
+
+	D3DXVECTOR3 p[4];
+	for (int i=0;i<4;i++) {
+		int s=segmentNum+i-1;
+		D3DXVECTOR3 offset(0.0f,0.0f,0.0f);
+		if (s<0) {
+			offset=-m_endPos;
+			s+=HIGHWAY_STRIPS-1;
+		} else if (s>HIGHWAY_STRIPS-1) {
+			offset=m_endPos;
+			s-=HIGHWAY_STRIPS-1;
+		}
+		p[i]=m_centerVerts[s]+offset;
+	}
+
+	// interpolate position, using requested method
+
+	D3DXVECTOR3 v;
+	if (bLinearInterpolate) {
+		D3DXVec3Lerp(&v,&p[1],&p[2],pos);
+	} else {
+		D3DXVec3CatmullRom(&v,
+						   &p[0],
+						   &p[1],
+						   &p[2],
+						   &p[3],
+						   pos);
+	}
+
+	// return interpolated position
+
+	return v;
+}*/
+
+
 	return -1;
 }
 
@@ -146,25 +197,52 @@ void Track::generateTrack(void)
 
 	const double PI = acos(-1.0);
 	Vector3d v(0,0,0);
+	Vector3d v_0(0,0,0);
 
-	
+	v.x = 0;
+	v.z = 20;
+	this->setPos(0, v);
+	this->setUp(0, v_0);
+
+	v.x = 20;
+	v.z = 0;
+	this->setPos(1, v);
+	this->setUp(0, v_0);
+
+	v.x = 0;
+	v.z = -20;
+	this->setPos(2, v);
+	this->setUp(0, v_0);
+
+	v.x = -20;
+	v.y = 20;
+	v.z = 0;
+	this->setPos(3, v);
+	this->setUp(0, v_0);
+
+	v.x = 10;
+	v.y = -20;
+	v.z = 20;
+	this->setPos(4, v);
+	this->setUp(0, v_0);
+
+	v.x = 40;
+	v.y = -60;
+	v.z = 40;
+	this->setPos(5, v);
+	this->setUp(0, v_0);
+
+
+	/*
 	for (int i = 0; i < this->nPoints; i++) {
 		v.x = 5*i;
-		v.y = 100+10*i;
-		v.z = 5*i;
+		v.y = 100;
+		v.z = v.z*2;
 		this->setPos(i, v);
-		
-		v.x = 0.0;
-		v.y = 0.0;
-		v.z = 0.0;
 
-		this->setUp(i, v);
+		this->setUp(i, v_0);
 	}
-
-	v.x = 5;
-	v.y = 100;
-	v.z = 5;
-	this->setPos(this->nPoints-1, v);
+	*/
 	
 }
 

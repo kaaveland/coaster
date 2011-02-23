@@ -22,18 +22,18 @@ void Coaster::createScene(void)
 
 
 	cout << "=================== Make track " << endl;
-	Track track(10);
+	Track track(6);
 	for(int i = 0; i<track.getNumberOfPoints()-1; i++){
 		Vector3d pos = track.getPos(i);
 		printf("i: %d   x:%f, y:%f, z:%f \n",i, pos.x, pos.y, pos.z);
 	}
 
 	// make graphical track mesh
-	this->createRailMesh(track, false);
+	GraphicTrack::createRailMesh(&track, false);
 	// add rails to scene
 	Ogre::Entity* ent = mSceneMgr->createEntity("Rails","RailMesh");
     Ogre::SceneNode *node = mSceneMgr->getRootSceneNode()->createChildSceneNode("RailsNode",
-        Ogre::Vector3(125, 40, 500));
+        Ogre::Vector3(90, 60, 520));
     node->attachObject(ent);
 
 	
@@ -57,15 +57,15 @@ void Coaster::createScene(void)
 	CEGUI::MouseCursor::getSingleton().setImage("TaharezLook", "MouseArrow");
 }
 
-
+#if 0
 // generate and export railmesh (only run when rail has changed)
 void Coaster::createRailMesh(const Track track, const bool export_mesh)
 {
 
 	if(track.getNumberOfPoints() < 2) return;
 
-	const float width = 0.5f;
-	const float height = 1.0f;
+	const float width = 1.0f;
+	const float height = 2.0f;
 
 	Ogre::ManualObject rail("RailObject");
 	Ogre::Vector3 size(width / 2, height/2, 0);
@@ -103,6 +103,7 @@ void Coaster::createRailMesh(const Track track, const bool export_mesh)
 		next_vec.z = cur_pos.z + vec_math.z;
 
 		printf("Bottom left i: %d, x:%f, y:%f, z:%f \n", i, vec.x + size.x, vec.y - size.y, vec.z);
+		/*
 		//bottom
 		rail.position(vec.x + size.x, vec.y - size.y, vec.z); // 0
 		rail.textureCoord(1, 0);
@@ -152,7 +153,59 @@ void Coaster::createRailMesh(const Track track, const bool export_mesh)
 		rail.textureCoord(1, 1);
 		rail.position(vec.x + size.x, vec.y + size.y, vec.z); // 19
 		rail.textureCoord(0, 0);
-	
+		*/
+		
+		//bottom
+		rail.position(next_vec.x + size.x, next_vec.y - size.y, next_vec.z); // 0
+		rail.textureCoord(1, 0);
+		rail.position(vec.x - size.x, vec.y - size.y, vec.z); // 1
+		rail.textureCoord(0, 1);
+		rail.position(vec.x + size.x, vec.y - size.y, vec.z); // 2
+		rail.textureCoord(1, 1);
+		rail.position(next_vec.x - size.x, next_vec.y - size.y, next_vec.z); // 3
+		rail.textureCoord(0, 0);
+
+		//front
+		rail.position(next_vec.x + size.x, next_vec.y + size.y, next_vec.z); // 4
+		rail.textureCoord(1, 0);
+		rail.position(next_vec.x - size.x, next_vec.y - size.y, next_vec.z); // 5
+		rail.textureCoord(0, 1);
+		rail.position(next_vec.x + size.x, next_vec.y - size.y, next_vec.z); // 6
+		rail.textureCoord(1, 1);
+		rail.position(next_vec.x - size.x, next_vec.y + size.y, next_vec.z); // 7
+		rail.textureCoord(0, 0);
+
+		//left
+		rail.position(vec.x - size.x, vec.y + size.y, vec.z); // 8 
+		rail.textureCoord(0, 1);
+		rail.position(vec.x - size.x, vec.y - size.y, vec.z); // 9
+		rail.textureCoord(1, 1);
+		rail.position(next_vec.x - size.x, next_vec.y - size.y, next_vec.z); // 10
+		rail.textureCoord(1, 0);
+		rail.position(vec.x + size.x, vec.y - size.y, vec.z); // 11
+		rail.textureCoord(0, 1);
+
+		//right
+		rail.position(vec.x + size.x, vec.y + size.y, vec.z); // 12
+		rail.textureCoord(1, 1);
+		rail.position(next_vec.x + size.x, next_vec.y - size.y, next_vec.z); // 13
+		rail.textureCoord(0, 0);
+		rail.position(vec.x + size.x, vec.y - size.y, vec.z); // 14
+		rail.textureCoord(1, 0);
+		rail.position(vec.x - size.x, vec.y - size.y, vec.z); // 15
+		rail.textureCoord(0, 0);
+
+		//back
+		rail.position(next_vec.x - size.x, next_vec.y + size.y, next_vec.z); // 16
+		rail.textureCoord(1, 0);
+		rail.position(vec.x + size.x, vec.y + size.y, vec.z); // 17
+		rail.textureCoord(0, 1);
+		rail.position(vec.x - size.x, vec.y + size.y, vec.z); // 18
+		rail.textureCoord(1, 1);
+		rail.position(next_vec.x + size.x, next_vec.y + size.y, next_vec.z); // 19
+		rail.textureCoord(0, 0);
+		
+
 		int offset = i*20;
 
 		// 0 = 6 = 13
@@ -163,22 +216,23 @@ void Coaster::createRailMesh(const Track track, const bool export_mesh)
 		// 2 = 11 = 14
 		// 7 = 16
 		// 4 = 19
-
-		//top
-		rail.triangle(offset+16, offset+17, offset+18);	rail.triangle(offset+16, offset+19, offset+17);
+		
 		//bottom
 		rail.triangle(offset+0, offset+1, offset+2);	rail.triangle(offset+3, offset+1, offset+0);
-
+		
+		//front
+		//rail.triangle(offset+4, offset+5, offset+6);	rail.triangle(offset+4, offset+7, offset+5);
+		
 		//left
 		rail.triangle(offset+8, offset+9, offset+10);	rail.triangle(offset+10, offset+7, offset+8);
 		//right
 		rail.triangle(offset+4, offset+11, offset+12);	rail.triangle(offset+4, offset+13, offset+11);
-
-		//front
-		//rail.triangle(offset+4, offset+5, offset+6);	rail.triangle(offset+4, offset+7, offset+5);
+		
 		//back
 		//rail.triangle(offset+14, offset+8, offset+12);	rail.triangle(offset+14, offset+15, offset+8);
 
+		//top
+		rail.triangle(offset+16, offset+17, offset+18);	rail.triangle(offset+16, offset+19, offset+17);
 	}
 
 	rail.end();
@@ -193,6 +247,8 @@ void Coaster::createRailMesh(const Track track, const bool export_mesh)
 	}
 
 }
+
+#endif
  
 void Coaster::chooseSceneManager(void)
 {
