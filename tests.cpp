@@ -61,7 +61,7 @@ void test1() {
 	cout << "Up: "; printVector(temp); cout << endl;
 	
 	// Create parallel track test [OK]
-	Track parallel(nPoints);
+	/* Track parallel(nPoints);
 	track.getParallelTrack(1.0, parallel);
 
 	temp = parallel.getPos(index);
@@ -80,15 +80,17 @@ void test1() {
 	cout << "Up: "; printVector(temp); cout << endl;
 
 	cout << "\nEND TRACK TESTS\n";
-	
+	*/
+
 	// Cart test 1
 	
 	PhysicsCart cart;
 	cart.setTrack(&track);
-	cart.setTrackIndex(nPoints/2+10);
-	for (int i=0; i < 100; i++) {
+	cart.setTrackIndex(nPoints/2+100);
+	for (int i=0; i < 1000; i++) {	// 10 seconds of simulation
+
 		cart.nextStep(0.01);
-		printVector(cart.getPos());
+		cout << cart.toString() << endl;
 		cin.get();
 	}
 	

@@ -2,6 +2,9 @@
 
 #include "Track.h"
 #include "Vector3d.h"
+#include <string>
+
+using std::string;
 
 class PhysicsCart
 {
@@ -42,6 +45,9 @@ public:
 	Vector3d getPos() const;
 	Vector3d getUp() const;
 
+	// Debugging/testing functions
+	string toString() const;	
+
 private:
 	// Cart "constants"
 	double mass;				// Cart mass
@@ -69,9 +75,10 @@ private:
 
 	// Simulation properties
 	int currentIndex;			// Which Track section index the cart currently is in
-	Track *track;				// Current main (center) track
+	double accumDeltaPos;		// Used in cases where the time step is too small  BLA BLA BLA BLA MS VS SUCKS
+
+	Track *track;					// Current main (center) track
 	bool isFreefalling;
-	
 
 };
 
