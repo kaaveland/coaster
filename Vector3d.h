@@ -31,5 +31,8 @@ struct Vector3d {
 // Non-member functions
 const Vector3d operator*(double d, Vector3d &v);
 const Vector3d operator/(double d, Vector3d &v);
+Vector3d operator+(const Vector3d &v);
+Vector3d operator-(const Vector3d &v);
+
 
 #endif

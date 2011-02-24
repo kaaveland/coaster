@@ -23,7 +23,7 @@ public:
 	//
 	void setTrack(Track *track);
 
-	void setTrackIndex(int index);
+	void moveToIndex(int index);
 
 	// Sets the braking factor for the cart.
 	//	
@@ -41,6 +41,9 @@ public:
 	//
 	// Values outside the range [0.0, 1.0] will cause the thrust to be set to 0.0 and 1.0, respectively.
 	void setThrust(double thrust);
+
+	void setSpeed(double v);
+
 
 	Vector3d getPos() const;
 	Vector3d getUp() const;

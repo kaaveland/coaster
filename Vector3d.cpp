@@ -114,6 +114,11 @@ const Vector3d Vector3d::cross(const Vector3d &v) const
 	return Vector3d(x,y,z);
 }
 
+double Vector3d::length() const
+{
+	return sqrt( pow(this->x, 2) + pow(this->y, 2) + pow(this->z, 2) );
+}
+
 
 const Vector3d operator*(double d, Vector3d &v)
 {
@@ -125,7 +130,13 @@ const Vector3d operator/(double d, Vector3d &v)
 	return v / d;
 }
 
-double Vector3d::length() const
+Vector3d operator+(const Vector3d &v)
 {
-	return sqrt( pow(this->x, 2) + pow(this->y, 2) + pow(this->z, 2) );
+	return v;
 }
+Vector3d operator-(const Vector3d &v)
+{
+	return Vector3d(-v.x, -v.y, -v.z);
+}
+
+

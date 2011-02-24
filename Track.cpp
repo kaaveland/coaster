@@ -35,6 +35,8 @@ Track::~Track(void)
 
 Vector3d Track::getPos(int index) const
 {
+	if (index < 0) index = 0;
+	else if (index >= nPoints) index = nPoints-1;
 	assert(index >= 0 && index < nPoints);
 
 	return pos[index];
@@ -137,13 +139,15 @@ double Track::getDistance(int index) const
 }
 Vector3d Track::getTangentVector(int index) const
 {
+	if (index < 0) index = 0;
+	else if (index >= nPoints-1) index = nPoints-2;
 	assert(index >= 0 && index < nPoints-1);
 
-	Vector3d *pos0, *pos1;
-	pos0 = &getPos(index);
-	pos1 = &getPos(index+1);
+	Vector3d pos0, pos1;
+	pos0 = getPos(index);
+	pos1 = getPos(index+1);
 		
-	Vector3d tangent = *pos1 - *pos0;
+	Vector3d tangent = pos1 - pos0;
 	double length = tangent.length();
 	tangent /= length;
 	
@@ -152,14 +156,19 @@ Vector3d Track::getTangentVector(int index) const
 
 double Track::getCurvature(int index) const
 {
+	if (index < 0 || index >= nPoints-1) return 0.0;
 	assert(index >= 0 && index < nPoints-1);
 
-	Vector3d *pos0, *pos1;
-	pos0 = &getPos(index);
-	pos1 = &getPos(index+1);
-		
-	Vector3d diff = *pos1 - *pos0;
-	return diff.length();
+	Vector3d pos0, pos1;
+	pos0 = getPos(index);
+	pos1 = getPos(index+1);
+	double ds = (pos1 - pos0).length();
+	
+	Vector3d dT = getTangentVector(index-1) - getTangentVector(index);
+	dT /= ds;
+
+	return dT.length();
+
 }
 
 Vector3d Track::getNormalVector(int index) const
@@ -279,3 +288,4 @@ int Track::getNumberOfPoints(void) const
 {
 	return this->nPoints;
 }
+
