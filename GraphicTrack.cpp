@@ -40,14 +40,17 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 
 	Vector3d cur_pos;
 	Vector3d next_pos = track.getPos(0);
-
-	for(int i=0; i<track.getNumberOfPoints()-1; i++){
-
+	int rounding = track.getSmoothValue();
+	double t = track.getDelta()/rounding;
+	for(int i=0; i<(track.getNumberOfPoints()*rounding)-1; i++){
+	
 		cur_pos = next_pos;
-		next_pos = track.getPos(i+1);
+		//next_pos = track.getPos(i+1);
+		next_pos = track.getInterpolatedSplinePoint(t);
+		t += (track.getDelta()/rounding);
 
 		printf("i: %d\n", i);
-		vec_math = vectorDiff(next_pos, cur_pos);
+		vec_math = next_pos-cur_pos;
 
 		vec.x = cur_pos.x;
 		vec.y = cur_pos.y;
@@ -177,5 +180,5 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 	} else {
 		rail.convertToMesh("RailMesh");
 	}
-
+	
 }

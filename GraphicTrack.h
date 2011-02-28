@@ -3,7 +3,6 @@
 
 #include "BaseApplication.h"
 #include "Track.h"
-#include "VectorTools.h"
 #include "Vector3d.h"
 
 class GraphicTrack

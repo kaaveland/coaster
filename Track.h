@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "Vector3d.h"
+#include "Spline.h"
 
 using std::vector;
 
@@ -24,12 +25,12 @@ public:
 	
 	// Gives the coordinates to the point on the track at the given segment, possibly
 	// rounded or interpolated between the track's discrete points.
-	Vector3d getPos(int index) const;
+	Vector3d& getPos(int index);
 
 	void setPos(int index, Vector3d v);
 
 	// Gives the track's unit up vector at the given segment.
-	Vector3d getUp(int index) const;
+	Vector3d& getUp(int index);
 
 	void setUp(int index, Vector3d v);
 	
@@ -56,16 +57,27 @@ public:
 	// return nPoints;
 	int getNumberOfPoints(void) const;
 
+	 // Operations
+    void AddSplinePoint(const Vector3d& v);
+	Vector3d getInterpolatedSplinePoint(double t);   // t = 0...1; 0=pos[0] ... 1=pos[max]
+
+    // Static method for computing the Catmull-Rom parametric equation
+    // given a time (t) and a vector quadruple (p1,p2,p3,p4).
+    static Vector3d Eq(double t, const Vector3d& p1, const Vector3d& p2, const Vector3d& p3, const Vector3d& p4);
+
+	double getDelta(void);
+	int getSmoothValue(void);
+
 protected:
 	int nPoints;
-	vector<Vector3d> pos;
-	vector<Vector3d> up;
+	std::vector<Vector3d> pos;
+	std::vector<Vector3d> up;
+	double delta_t;
+	int smoothValue = 50;
 	//double trackLength, ds;
 
-	// Returns the index of the section where given distance ends up.
-	// Range of getSectionIndex is [-1, nSegments]. -1 is returned if the distance is out
-	// of track range.
-	int inline getSegmentIndex(double distance) const;
+	// returns vector at distance [0,1]
+	Vector3d inline getVectorAt(double distance) const;
 	
 	// Returns the distance travelled to the start of the given track section.
 	double inline getDistance(int index) const;	

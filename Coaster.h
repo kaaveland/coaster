@@ -10,9 +10,9 @@
 
 #include "BaseApplication.h"
 #include "Track.h"
-#include "VectorTools.h"
 #include "Vector3d.h"
 #include "GraphicTrack.h"
+#include "Spline.h"
  
 #include <CEGUISystem.h>
 #include <CEGUISchemeManager.h>
