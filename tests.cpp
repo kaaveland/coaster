@@ -18,6 +18,7 @@ double inline vectorDot(Vector3d v0, Vector3d v1)
 	return (v0[0]*v1[0] + v0[1]*v1[1] + v0[2]*v1[2]);
 }
 
+
 void test1() {
 
 	// Generate test track 1 [OK]

@@ -37,17 +37,17 @@ Track::~Track(void)
 		
 }
 
-double Track::getDelta(void)
+double Track::getDelta(void) const
 {
 	return this->delta_t;
 }
 
-int Track::getSmoothValue(void)
+int Track::getSmoothValue(void) const
 {
 	return this->smoothValue;
 }
 
-Vector3d& Track::getPos(int index)
+Vector3d Track::getPos(int index) const
 {
 	if (index < 0) index = 0;
 	else if (index >= nPoints) index = nPoints-1;
@@ -65,7 +65,7 @@ void Track::setPos(int index, Vector3d v)
 	pos[index] = v;
 }
 
-Vector3d& Track::getUp(int index)
+Vector3d Track::getUp(int index) const
 {
 	assert(index >= 0 && index < nPoints);
 
@@ -76,8 +76,6 @@ void Track::setUp(int index, Vector3d v)
 {
 	assert(index >= 0 && index < nPoints);
 	
-	//TODO: delete old?
-
 	up[index] = v;
 }
 
@@ -116,7 +114,7 @@ Vector3d Track::getInterpolatedSplinePoint(double t)
 	// Interpolate
     return Track::Eq(lt, pos[p0], pos[p1], pos[p2], pos[p3]);
 }
-/*
+
 double Track::getDistance(int index) const
 {
 	assert(index >= 0 && index < nPoints);
@@ -180,7 +178,7 @@ Vector3d Track::getNormalVector(int index) const
 	
 	return normal;
 }
-*/
+
 void Track::generateTrack(void)
 {
 

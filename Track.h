@@ -3,7 +3,6 @@
 
 #include <vector>
 #include "Vector3d.h"
-#include "Spline.h"
 
 using std::vector;
 
@@ -25,12 +24,12 @@ public:
 	
 	// Gives the coordinates to the point on the track at the given segment, possibly
 	// rounded or interpolated between the track's discrete points.
-	Vector3d& getPos(int index);
+	Vector3d getPos(int index) const;
 
 	void setPos(int index, Vector3d v);
 
 	// Gives the track's unit up vector at the given segment.
-	Vector3d& getUp(int index);
+	Vector3d getUp(int index) const;
 
 	void setUp(int index, Vector3d v);
 	
@@ -65,15 +64,15 @@ public:
     // given a time (t) and a vector quadruple (p1,p2,p3,p4).
     static Vector3d Eq(double t, const Vector3d& p1, const Vector3d& p2, const Vector3d& p3, const Vector3d& p4);
 
-	double getDelta(void);
-	int getSmoothValue(void);
+	double getDelta(void) const;
+	int getSmoothValue(void) const;
 
 protected:
 	int nPoints;
 	std::vector<Vector3d> pos;
 	std::vector<Vector3d> up;
 	double delta_t;
-	int smoothValue = 50;
+	static int const smoothValue = 50;
 	//double trackLength, ds;
 
 	// returns vector at distance [0,1]
