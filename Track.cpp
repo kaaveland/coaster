@@ -54,7 +54,8 @@ int Track::getSmoothValue(void) const
 	return this->smoothValue;
 }
 
-Vector3d Track::getPos(int index) const
+
+Vector3d Track::getTrackPoint(int index) const
 {
 	if (index < 0) index = 0;
 	else if (index >= nPoints) index = nPoints-1;
@@ -63,7 +64,7 @@ Vector3d Track::getPos(int index) const
 	return pos[index];
 }
 
-void Track::setPos(int index, Vector3d v)
+void Track::setTrackPoint(int index, Vector3d v)
 {
 	assert(index >= 0 && index < nPoints);
 
@@ -120,10 +121,10 @@ void Track::addPos(const Vector3d v)
 	delta_t = (double)1 / (double)nPoints;
 	//printf("Add point x:%f y:%f z:%f \n", v.x, v.y, v.z);
     pos.push_back(v);
-	//printf("Added point x:%f, y:%f, z:%f \n", getPos(nPoints-1));
+	//printf("Added point x:%f, y:%f, z:%f \n", getTrackPoint(nPoints-1));
 }
 
-Vector3d Track::getInterpolatedSplinePoint(double t) const
+Vector3d Track::getPos(double t) const
 {
     // Find out in which interval we are on the spline
     int p = (int)(t / delta_t);
@@ -137,7 +138,7 @@ Vector3d Track::getInterpolatedSplinePoint(double t) const
 	double lt = (t - delta_t*(double)p) / delta_t;
 	// Interpolate
 	//printf("lt: %f, p: %d, p0:%d, p1:%d, p2:%d, p3:%d \n", lt, p, p0, p1, p2, p3);
-    return Track::Eq(lt, getPos(p0), getPos(p1), getPos(p2), getPos(p3));
+	return Track::Eq(lt, getTrackPoint(p0), getTrackPoint(p1), getTrackPoint(p2), getTrackPoint(p3));
 }
 
 double Track::getDistance(int index) const
@@ -159,8 +160,8 @@ Vector3d Track::getTangentVector(double index) const
 
 
 	Vector3d pos0, pos1;
-	pos0 = getInterpolatedSplinePoint(index);
-	pos1 = getInterpolatedSplinePoint(index+getDelta());
+	pos0 = getPos(index);
+	pos1 = getPos(index+getDelta());
 		
 	Vector3d tangent = pos1 - pos0;
 	double length = tangent.length();
@@ -179,8 +180,8 @@ double Track::getCurvature(double index) const
 	printf("GetCurvature t: %f \n", index);
 
 	Vector3d pos0, pos1;
-	pos0 = this->getInterpolatedSplinePoint(index);
-	pos1 = this->getInterpolatedSplinePoint(index+getDelta());
+	pos0 = this->getPos(index);
+	pos1 = this->getPos(index+getDelta());
 	double ds = (pos1 - pos0).length();
 	
 	Vector3d dT = getTangentVector(index-getDelta()) - getTangentVector(index);
@@ -224,35 +225,35 @@ void Track::generateTrack(void)
 
 	v.x = 0;
 	v.z = 20;
-	this->setPos(0, v);
+	this->setTrackPoint(0, v);
 	this->setUp(0, v_0);
 
 	v.x = 20;
 	v.z = 0;
-	this->setPos(1, v);
+	this->setTrackPoint(1, v);
 	this->setUp(0, v_0);
 
 	v.x = 0;
 	v.z = -20;
-	this->setPos(2, v);
+	this->setTrackPoint(2, v);
 	this->setUp(0, v_0);
 
 	v.x = -20;
 	v.y = 20;
 	v.z = 0;
-	this->setPos(3, v);
+	this->setTrackPoint(3, v);
 	this->setUp(0, v_0);
 
 	v.x = 10;
 	v.y = -20;
 	v.z = 20;
-	this->setPos(4, v);
+	this->setTrackPoint(4, v);
 	this->setUp(0, v_0);
 
 	v.x = 40;
 	v.y = -60;
 	v.z = 40;
-	this->setPos(5, v);
+	this->setTrackPoint(5, v);
 	this->setUp(0, v_0);
 
 
@@ -261,7 +262,7 @@ void Track::generateTrack(void)
 		v.x = 5*i;
 		v.y = 100;
 		v.z = v.z*2;
-		this->setPos(i, v);
+		this->setTrackPoint(i, v);
 
 		this->setUp(i, v_0);
 	}

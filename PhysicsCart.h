@@ -23,7 +23,7 @@ public:
 	//
 	void setTrack(Track *track);
 
-	void moveToIndex(int index);
+	void moveTo(double distance);
 
 	// Sets the braking factor for the cart.
 	//	
@@ -51,6 +51,8 @@ public:
 	// Debugging/testing functions
 	string toString() const;	
 
+	bool hasTrack() const;
+
 private:
 	// Cart "constants"
 	double mass;				// Cart mass
@@ -77,7 +79,7 @@ private:
 	double gravityAccel;
 
 	// Simulation properties
-	int currentIndex;			// Which Track section index the cart currently is in
+	double currentDistance;			// Which Track section index the cart currently is in
 	double accumDeltaPos;		// Used in cases where the time step is too small  BLA BLA BLA BLA MS VS SUCKS
 
 	Track *track;					// Current main (center) track

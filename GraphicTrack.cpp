@@ -43,7 +43,7 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 
 	Vector3d last_pos = track.getPos(0);
 	Vector3d cur_pos = track.getPos(0);
-	Vector3d next_pos = track.getInterpolatedSplinePoint(t);
+	Vector3d next_pos = track.getPos(t);
 	
 	Vector3d diff, norm, last_norm;
 	double norm_scale, norm_length;
@@ -68,7 +68,7 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 		last_pos = cur_pos;
 		cur_pos = next_pos;
 		if(t > 1) t = 1;
-		next_pos = track.getInterpolatedSplinePoint(t);
+		next_pos = track.getPos(t);
 		last_norm = norm;
 		norm = track.getNormalVector(t);
 		t += td;

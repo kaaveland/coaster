@@ -29,9 +29,20 @@ void Coaster::createScene(void)
 	// add rails to scene
 	Ogre::Entity* rail = mSceneMgr->createEntity("Rails","RailMesh");
 	*/
+
+	physicsCart = PhysicsCart();
+
     railNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("RailsNode", Ogre::Vector3(0, 0, 0));
     //railNode->attachObject(rail);
 	
+	//Add cart 
+	cartNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("cartNode", Ogre::Vector3(0, 0, 0));
+    
+	Ogre::Entity* cartEnt = mSceneMgr->createEntity("Cart", "vogn.mesh");
+				  cartEnt->setQueryFlags(CART_MASK);
+	cartNode->attachObject(cartEnt);
+
+
 	
 	//Scene setup
 	mSceneMgr->setAmbientLight(Ogre::ColourValue(0.5f, 0.5f, 0.5f));
@@ -70,6 +81,15 @@ void Coaster::createFrameListener(void)
  
 bool Coaster::frameRenderingQueued(const Ogre::FrameEvent& arg)
 {
+	//delta time
+	Ogre::Real dt = arg.timeSinceLastFrame;
+	if(physicsCart.hasTrack()){
+		Vector3d pos = physicsCart.getPos();
+		Ogre::Vector3 ogre_pos= Ogre::Vector3(pos.x, pos.y, pos.z);
+		cartNode->setPosition(ogre_pos);
+		physicsCart.nextStep(dt);
+	}
+
 	//we want to run everything in the previous frameRenderingQueued call
 	//but we also want to do something afterwards, so lets  start off with this
 	if(!BaseApplication::frameRenderingQueued(arg))
@@ -232,16 +252,23 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 			}
 
 			for(double t = 0; t<1; t+=track.getDelta()){
-				printf("t:%f x:%f \n", track.getInterpolatedSplinePoint(t).x);
+				printf("t:%f x:%f \n", track.getPos(t).x);
 			}
 
 			// make graphical track mesh
 			GraphicTrack::createRailMesh(&track, false);
 			
+			physicsCart.setTrack(&track);
+
 			// add rails to scene
 			Ogre::Entity* rail = mSceneMgr->createEntity("Rails","RailMesh");
 			rail->setQueryFlags(RAIL_MASK);
 			railNode->attachObject(rail);
+
+			physicsCart.moveTo(0);
+			Vector3d start_pos = physicsCart.getPos();
+			Ogre::Vector3 start_pos_ogre = Ogre::Vector3(start_pos.x, start_pos.y, start_pos.z);
+			cartNode->setPosition(start_pos_ogre);
 			
 		}
  

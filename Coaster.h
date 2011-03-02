@@ -12,6 +12,7 @@
 #include "Track.h"
 #include "Vector3d.h"
 #include "GraphicTrack.h"
+#include "PhysicsCart.h"
  
 #include <CEGUISystem.h>
 #include <CEGUISchemeManager.h>
@@ -29,7 +30,8 @@ public:
 	{
 		NINJA_MASK = 1<<0,
 		ROBOT_MASK = 1<<1,
-		RAIL_MASK  = 1<<2
+		RAIL_MASK  = 1<<2,
+		CART_MASK  = 1<<3
 	};
  
 protected:
@@ -58,6 +60,9 @@ protected:
 	void showWin32Console(void);
 	Track track;
 	Ogre::SceneNode *railNode;
+	Ogre::SceneNode *cartNode;
+
+	PhysicsCart physicsCart;
 
 	//void createRailMesh(const Track track, const bool export_mesh);
 };
