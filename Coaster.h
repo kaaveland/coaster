@@ -12,7 +12,6 @@
 #include "Track.h"
 #include "Vector3d.h"
 #include "GraphicTrack.h"
-#include "Spline.h"
  
 #include <CEGUISystem.h>
 #include <CEGUISchemeManager.h>
@@ -29,7 +28,8 @@ public:
 	enum QueryFlags
 	{
 		NINJA_MASK = 1<<0,
-		ROBOT_MASK = 1<<1
+		ROBOT_MASK = 1<<1,
+		RAIL_MASK  = 1<<2
 	};
  
 protected:
@@ -56,6 +56,8 @@ protected:
 	bool bRobotMode;				//if true we place robots in the world
 
 	void showWin32Console(void);
+	Track track;
+	Ogre::SceneNode *railNode;
 
 	//void createRailMesh(const Track track, const bool export_mesh);
 };

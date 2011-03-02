@@ -25,6 +25,7 @@ This source file is part of the
 #include <OgreSceneManager.h>
 #include <OgreRenderWindow.h>
 #include <OgreConfigFile.h>
+#include <OgreMeshManager.h>
 
 #include <OISEvents.h>
 #include <OISInputManager.h>

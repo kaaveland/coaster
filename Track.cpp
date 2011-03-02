@@ -23,13 +23,20 @@ Track::Track(vector<Vector3d> const &pos, vector<Vector3d> const &up)
 
 }
 
+Track::Track(void) {
+	this->nPoints = 0;
+	this->delta_t = 1;
+
+	//this->generateTrack();
+}
+
 Track::Track(int nPoints) {
 	this->nPoints = nPoints;
 	pos.resize(nPoints);
 	up.resize(nPoints);
 	this->delta_t = (double)1 / (double)nPoints;
 
-	this->generateTrack();
+	//this->generateTrack();
 }
 
 Track::~Track(void)
@@ -37,17 +44,17 @@ Track::~Track(void)
 		
 }
 
-double Track::getDelta(void)
+double Track::getDelta(void) const
 {
-	return this->delta_t;
+	return this->delta_t/this->smoothValue;
 }
 
-int Track::getSmoothValue(void)
+int Track::getSmoothValue(void) const
 {
 	return this->smoothValue;
 }
 
-Vector3d& Track::getPos(int index)
+Vector3d Track::getPos(int index) const
 {
 	if (index < 0) index = 0;
 	else if (index >= nPoints) index = nPoints-1;
@@ -65,7 +72,7 @@ void Track::setPos(int index, Vector3d v)
 	pos[index] = v;
 }
 
-Vector3d& Track::getUp(int index)
+Vector3d Track::getUp(int index) const
 {
 	assert(index >= 0 && index < nPoints);
 
@@ -76,32 +83,47 @@ void Track::setUp(int index, Vector3d v)
 {
 	assert(index >= 0 && index < nPoints);
 	
-	//TODO: delete old?
-
 	up[index] = v;
 }
 
 // Solve the Catmull-Rom parametric equation for a given time(t) and vector quadruple (p1,p2,p3,p4)
-Vector3d Track::Eq(double t, const Vector3d& p1, const Vector3d& p2, const Vector3d& p3, const Vector3d& p4)
+Vector3d Track::Eq(double t, const Vector3d p1, const Vector3d p2, const Vector3d p3, const Vector3d p4) const
 {
+	//printf("P1 x:%e y:%e z:%e \n", p3.x, p3.y, p3.z);
+	//printf("P2 x:%e y:%e z:%e \n", p3.x, p3.y, p3.z);
+	//printf("P3 x:%e y:%e z:%e \n", p3.x, p3.y, p3.z);
+	//printf("P4 x:%e y:%e z:%e \n", p3.x, p3.y, p3.z);
+
     double t2 = t * t;
     double t3 = t2 * t;
 
-    double b1 = .5 * (  -t3 + 2*t2 - t);
-    double b2 = .5 * ( 3*t3 - 5*t2 + 2);
-    double b3 = .5 * (-3*t3 + 4*t2 + t);
-    double b4 = .5 * (   t3 -   t2    );
+    double b1 = 0.5 * (  -t3 + 2*t2 - t);
+    double b2 = 0.5 * ( 3*t3 - 5*t2 + 2);
+    double b3 = 0.5 * (-3*t3 + 4*t2 + t);
+    double b4 = 0.5 * (   t3 -   t2    );
 
-    return (p1*b1 + p2*b2 + p3*b3 + p4*b4); 
+	
+
+	//double x = p1.x*b1 + p2.x*b2 + p3.x*b3 + p4.x*b4;
+	//double y = p1.y*b1 + p2.y*b2 + p3.y*b3 + p4.y*b4;
+	//double z = p1.z*b1 + p2.z*b2 + p3.z*b3 + p4.z*b4;
+
+	//printf("New x:%e y:%e z:%e \n", x, y, z);
+
+    //return Vector3d(x, y, z); 
+	return (p1*b1 + p2*b2 + p3*b3 + p4*b4);
 }
 
-void Track::AddSplinePoint(const Vector3d& v)
+void Track::addPos(const Vector3d v)
 {
-    up.push_back(v);
-    delta_t = (double)1 / (double)pos.size();
+	nPoints += 1;
+	delta_t = (double)1 / (double)nPoints;
+	//printf("Add point x:%f y:%f z:%f \n", v.x, v.y, v.z);
+    pos.push_back(v);
+	//printf("Added point x:%f, y:%f, z:%f \n", getPos(nPoints-1));
 }
 
-Vector3d Track::getInterpolatedSplinePoint(double t)
+Vector3d Track::getInterpolatedSplinePoint(double t) const
 {
     // Find out in which interval we are on the spline
     int p = (int)(t / delta_t);
@@ -114,9 +136,10 @@ Vector3d Track::getInterpolatedSplinePoint(double t)
     // Relative (local) time 
 	double lt = (t - delta_t*(double)p) / delta_t;
 	// Interpolate
-    return Track::Eq(lt, pos[p0], pos[p1], pos[p2], pos[p3]);
+	//printf("lt: %f, p: %d, p0:%d, p1:%d, p2:%d, p3:%d \n", lt, p, p0, p1, p2, p3);
+    return Track::Eq(lt, getPos(p0), getPos(p1), getPos(p2), getPos(p3));
 }
-/*
+
 double Track::getDistance(int index) const
 {
 	assert(index >= 0 && index < nPoints);
@@ -126,61 +149,72 @@ double Track::getDistance(int index) const
 	return -1.0;
 }
 
-Vector3d Track::getTangentVector(int index) const
+Vector3d Track::getTangentVector(double index) const
 {
 	if (index < 0) index = 0;
-	else if (index >= nPoints-1) index = nPoints-2;
-	assert(index >= 0 && index < nPoints-1);
+	else if (index >= 1-getDelta()) index = 1-getDelta();
+	assert(index >= 0 && index <= 1);
+
+	printf("GetTangent t: %f \n", index);
+
 
 	Vector3d pos0, pos1;
-	pos0 = getPos(index);
-	pos1 = getPos(index+1);
+	pos0 = getInterpolatedSplinePoint(index);
+	pos1 = getInterpolatedSplinePoint(index+getDelta());
 		
 	Vector3d tangent = pos1 - pos0;
 	double length = tangent.length();
-	tangent /= length;
+	if(length != 0){
+		tangent /= length;
+	}
 	
 	return tangent;
 }
 
-double Track::getCurvature(int index) const
+double Track::getCurvature(double index) const
 {
-	if (index < 0 || index >= nPoints-1) return 0.0;
-	assert(index >= 0 && index < nPoints-1);
+	if (index < 0 || index >= 1) return 0.0;
+	assert(index >= 0 && index <= 1);
+
+	printf("GetCurvature t: %f \n", index);
 
 	Vector3d pos0, pos1;
-	pos0 = getPos(index);
-	pos1 = getPos(index+1);
+	pos0 = this->getInterpolatedSplinePoint(index);
+	pos1 = this->getInterpolatedSplinePoint(index+getDelta());
 	double ds = (pos1 - pos0).length();
 	
-	Vector3d dT = getTangentVector(index-1) - getTangentVector(index);
+	Vector3d dT = getTangentVector(index-getDelta()) - getTangentVector(index);
 	dT /= ds;
 
 	return dT.length();
 
 }
 
-Vector3d Track::getNormalVector(int index) const
+Vector3d Track::getNormalVector(double index) const
 {
 	// TODO: assert that normal is not of inf length!
-	assert(index >= 0 && index < nPoints);
+	assert(index >= 0 && index <= 1);
+
+	printf("GetNormal t: %f \n", index);
 
 	// We need one point back and one point forward for the normal vector, so on the boundaries we hack.
-	if (index == 0) return getNormalVector(1);
-	if (index == nPoints-1) return getNormalVector(nPoints-2);
+	if (index <= 0) return getNormalVector(getDelta());
+	if (index >= 1) return getNormalVector(1-getDelta());
 	
 	Vector3d T0, T1;
-	T0 = getTangentVector(index-1);
+	T0 = getTangentVector(index-getDelta());
 	T1 = getTangentVector(index);
 		
 	// The normal vector points towards T1-T0
 	Vector3d normal = T1 - T0;
 	double length = normal.length();
-	normal /= length;
+	if(length != 0){
+		normal /= length;
+	}
 	
 	return normal;
 }
-*/
+
 void Track::generateTrack(void)
 {
 

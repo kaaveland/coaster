@@ -7,7 +7,8 @@ mCurrentObject(0),
 bLMouseDown(false),
 bRMouseDown(false),
 mRotateSpeed(0.1f),
-bRobotMode(true)
+bRobotMode(true),
+track()
 {
 }
 //-------------------------------------------------------------------------------------
@@ -22,20 +23,15 @@ void Coaster::createScene(void)
 
 
 	cout << "=================== Make track " << endl;
-	Track track(6);
-	for(int i = 0; i<track.getNumberOfPoints()-1; i++){
-		Vector3d pos = track.getPos(i);
-		printf("i: %d   x:%f, y:%f, z:%f \n",i, pos.x, pos.y, pos.z);
-	}
-
+	/*
 	// make graphical track mesh
 	GraphicTrack::createRailMesh(&track, false);
 	// add rails to scene
-	Ogre::Entity* ent = mSceneMgr->createEntity("Rails","RailMesh");
-    Ogre::SceneNode *node = mSceneMgr->getRootSceneNode()->createChildSceneNode("RailsNode",
-        Ogre::Vector3(90, 60, 520));
-    node->attachObject(ent);
-
+	Ogre::Entity* rail = mSceneMgr->createEntity("Rails","RailMesh");
+	*/
+    railNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("RailsNode", Ogre::Vector3(0, 0, 0));
+    //railNode->attachObject(rail);
+	
 	
 	//Scene setup
 	mSceneMgr->setAmbientLight(Ogre::ColourValue(0.5f, 0.5f, 0.5f));
@@ -179,6 +175,10 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 		*/
 		Ogre::RaySceneQueryResult& result = mRayScnQuery->execute();
 		Ogre::RaySceneQueryResult::iterator iter = result.begin();
+
+		Ogre::MeshManager *meshManager = mRoot->getMeshManager();
+
+		bool position_added = false;
  
 		for(iter; iter != result.end(); iter++)
 		{
@@ -212,11 +212,37 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 				//attach the object to a scene node
 				mCurrentObject = mSceneMgr->getRootSceneNode()->createChildSceneNode(std::string(name) + "Node", iter->worldFragment->singleIntersection);
 				mCurrentObject->attachObject(ent);
+
+				//add track 20 over the ground
+				track.addPos(Vector3d(iter->worldFragment->singleIntersection.x, iter->worldFragment->singleIntersection.y+20, iter->worldFragment->singleIntersection.z));
+				position_added = true;
  
 				//lets shrink the object, only because the terrain is pretty small
 				mCurrentObject->setScale(0.1f, 0.1f, 0.1f);
 				break;
 			}
+		}
+		if(position_added && track.getNumberOfPoints() > 3){
+
+			railNode->detachAllObjects();
+			if(mSceneMgr->hasEntity("Rails")){
+				mSceneMgr->destroyEntity("Rails");
+				mSceneMgr->destroyManualObject("RailMesh");
+				meshManager->remove("RailMesh");
+			}
+
+			for(double t = 0; t<1; t+=track.getDelta()){
+				printf("t:%f x:%f \n", track.getInterpolatedSplinePoint(t).x);
+			}
+
+			// make graphical track mesh
+			GraphicTrack::createRailMesh(&track, false);
+			
+			// add rails to scene
+			Ogre::Entity* rail = mSceneMgr->createEntity("Rails","RailMesh");
+			rail->setQueryFlags(RAIL_MASK);
+			railNode->attachObject(rail);
+			
 		}
  
 		//now we show the bounding box so the user can see that this object is selected
