@@ -74,7 +74,7 @@ protected:
 	std::vector<Vector3d> pos;
 	std::vector<Vector3d> up;
 	double delta_t;
-	static int const smoothValue = 1;
+	static int const smoothValue = 50;
 	//double trackLength, ds;
 
 	// returns vector at distance [0,1]
