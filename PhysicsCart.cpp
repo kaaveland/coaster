@@ -88,7 +88,7 @@ void PhysicsCart::nextStep(double dT) {
 				
 		// Find the current ds for the track (perhaps this one will be constant? That would be good...)
 		ds_estimate = (track->getPos(currentDistance + forward) - track->getPos(currentDistance)).length();
-		cout << "ds is " << ds_estimate << "\n";
+		//cout << "ds is " << ds_estimate << "\n";
 
 		// Update velocity
 		vVelocity += dT * vAccel;	// velocity = velocity + accel*dT. Align with tangent vector here too?
@@ -115,12 +115,12 @@ void PhysicsCart::nextStep(double dT) {
 	assert (deltaIndex >= 0);
 	//if (deltaIndex < 1) accumDeltaPos += ds_estimate;
 
-	cout << "deltaIndex is " << deltaIndex << "\n";
+	//cout << "deltaIndex is " << deltaIndex << "\n";
 		
 	// ---- Not free-falling --- //
 	bool insideCurve = (vUp * track->getNormalVector(currentDistance) >= 0.0);	// true if "inside" curvature
 	double a_N = v*v*track->getCurvature(currentDistance);
-	cout << "a_N is " << a_N << "\n";
+	//cout << "a_N is " << a_N << "\n";
 
 
 
@@ -146,7 +146,7 @@ void PhysicsCart::nextStep(double dT) {
 		- brakingFactor*friction_static*a_N/mass
 		+ gvector * (*track).getTangentVector(currentDistance);	// Possibly air resistance
 	Vector3d accTangential = a_T * track->getTangentVector(currentDistance);	// When going backwards, perhaps currentDistance-1?
-	cout << "a_T is " << a_T << "\n";
+	//cout << "a_T is " << a_T << "\n";
 
 	// Update acceleration vector (state)
 	vAccel = accNormal + accTangential;

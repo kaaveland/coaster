@@ -48,11 +48,18 @@ void Coaster::createScene(void)
 	mSceneMgr->setAmbientLight(Ogre::ColourValue(0.5f, 0.5f, 0.5f));
 	mSceneMgr->setSkyDome(true, "Examples/CloudySky", 5, 8);
  
-	//World geometry
-	mSceneMgr->setWorldGeometry("terrain.cfg");
+	//world geometry
+	mSceneMgr->setWorldGeometry("island.cfg");
+
+    // Set ambient light
+    mSceneMgr->setAmbientLight(Ogre::ColourValue(0.9, 0.9, 0.9));
+ 
+    // Create a light
+    Ogre::Light* l = mSceneMgr->createLight("MainLight");
+    l->setPosition(20,80,50);
  
 	//camera setup
-	mCamera->setPosition(40, 100, 580);
+	mCamera->setPosition(670, 860, 4570);
 	mCamera->pitch(Ogre::Degree(-30));
 	mCamera->yaw(Ogre::Degree(-45));
  
@@ -83,12 +90,14 @@ bool Coaster::frameRenderingQueued(const Ogre::FrameEvent& arg)
 {
 	//delta time
 	Ogre::Real dt = arg.timeSinceLastFrame;
+	/*
 	if(physicsCart.hasTrack()){
 		Vector3d pos = physicsCart.getPos();
 		Ogre::Vector3 ogre_pos= Ogre::Vector3(pos.x, pos.y, pos.z);
 		cartNode->setPosition(ogre_pos);
 		physicsCart.nextStep(dt);
 	}
+	*/
 
 	//we want to run everything in the previous frameRenderingQueued call
 	//but we also want to do something afterwards, so lets  start off with this
@@ -233,8 +242,8 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 				mCurrentObject = mSceneMgr->getRootSceneNode()->createChildSceneNode(std::string(name) + "Node", iter->worldFragment->singleIntersection);
 				mCurrentObject->attachObject(ent);
 
-				//add track 20 over the ground
-				track.addPos(Vector3d(iter->worldFragment->singleIntersection.x, iter->worldFragment->singleIntersection.y+20, iter->worldFragment->singleIntersection.z));
+				//add track 120 over the ground
+				track.addPos(Vector3d(iter->worldFragment->singleIntersection.x, iter->worldFragment->singleIntersection.y+120, iter->worldFragment->singleIntersection.z));
 				position_added = true;
  
 				//lets shrink the object, only because the terrain is pretty small
@@ -249,10 +258,6 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 				mSceneMgr->destroyEntity("Rails");
 				mSceneMgr->destroyManualObject("RailMesh");
 				meshManager->remove("RailMesh");
-			}
-
-			for(double t = 0; t<1; t+=track.getDelta()){
-				printf("t:%f x:%f \n", track.getPos(t).x);
 			}
 
 			// make graphical track mesh

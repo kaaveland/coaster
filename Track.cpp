@@ -77,7 +77,8 @@ Vector3d Track::getUp(int index) const
 {
 	assert(index >= 0 && index < nPoints);
 
-	return up[index];
+	return Vector3d(0,1,0);
+	//return up[index];
 }
 
 void Track::setUp(int index, Vector3d v)
@@ -156,7 +157,7 @@ Vector3d Track::getTangentVector(double index) const
 	else if (index >= 1-getDelta()) index = 1-getDelta();
 	assert(index >= 0 && index <= 1);
 
-	printf("GetTangent t: %f \n", index);
+	//printf("GetTangent t: %f \n", index);
 
 
 	Vector3d pos0, pos1;
@@ -177,7 +178,7 @@ double Track::getCurvature(double index) const
 	if (index < 0 || index >= 1) return 0.0;
 	assert(index >= 0 && index <= 1);
 
-	printf("GetCurvature t: %f \n", index);
+	//printf("GetCurvature t: %f \n", index);
 
 	Vector3d pos0, pos1;
 	pos0 = this->getPos(index);
@@ -196,7 +197,7 @@ Vector3d Track::getNormalVector(double index) const
 	// TODO: assert that normal is not of inf length!
 	assert(index >= 0 && index <= 1);
 
-	printf("GetNormal t: %f \n", index);
+	//printf("GetNormal t: %f \n", index);
 
 	// We need one point back and one point forward for the normal vector, so on the boundaries we hack.
 	if (index <= 0) return getNormalVector(getDelta());
@@ -209,8 +210,9 @@ Vector3d Track::getNormalVector(double index) const
 	// The normal vector points towards T1-T0
 	Vector3d normal = T1 - T0;
 	double length = normal.length();
-	if(length != 0){
-		normal /= length;
+	if(length < 0.0001){
+		//WARNING: Should not happen
+		normal = Vector3d(0, 1, 0);
 	}
 	
 	return normal;
