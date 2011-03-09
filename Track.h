@@ -24,12 +24,13 @@ public:
 	
 	~Track(void);
 	
-	void setTrackPoint(int index, Vector3d v);
-
-	// Gives the track's unit up vector at the given segment.
-	Vector3d getUp(int index) const;
+	/* void setTrackPoint(double index, Vector3d v); */
 
 	void setUp(int index, Vector3d v);
+
+	// Gives the track's unit up vector at the given t value.
+	Vector3d getControlUp(int index) const;
+	Vector3d getUp(double t) const;
 	
 	// Gives the unit tangent vector at the given segment.
 	Vector3d getTangentVector(double index) const;
@@ -43,7 +44,7 @@ public:
 
 
 	// Load and fill the track with points
-	void generateTrack(void);
+	/* void generateTrack(void); */
 
 	// Calculates the data for a track that is parallel to this instance, offset at
 	// the given distance. The new track is offset at the given distance perpendicular both to the Track's up vector
@@ -57,6 +58,7 @@ public:
 	 // Operations
     void addPos(const Vector3d v);
 	Vector3d getPos(double t) const;   // t = 0...1; 0=pos[0] ... 1=pos[max]
+	double metersToT(double meters) const;	// meters = [0, trackLength];
 
     // Static method for computing the Catmull-Rom parametric equation
     // given a time (t) and a vector quadruple (p1,p2,p3,p4).
@@ -65,12 +67,18 @@ public:
 	double getDelta(void) const;
 	int getSmoothValue(void) const;
 
+
+	// Set the (dimensional/in meters) length of the track
+	void setTrackLength(double length);
+	double getTrackLength() const;
+
 protected:
 	int nPoints;
 	std::vector<Vector3d> pos;
 	std::vector<Vector3d> up;
 	double delta_t;
 	static int const smoothValue = 50;
+	double trackLength;
 	//double trackLength, ds;
 
 	// returns vector at distance [0,1]
@@ -80,8 +88,10 @@ protected:
 	double inline getDistance(int index) const;	
 	
 private:
-	Vector3d getTrackPoint(int index) const;
-
+	Vector3d getControlPoint(int n) const;
+	void generateTrack();
+	void initValues();
+	
 };
 
 #endif // __Track_h_

@@ -11,9 +11,18 @@
 #include <iostream>
 #endif
 
+void Track::initValues() {
+	this->trackLength = 1;
+	this->nPoints = 0;
+	this->delta_t = 1;
+
+
+}
+
 Track::Track(vector<Vector3d> const &pos, vector<Vector3d> const &up)
 {
 	assert(pos.size() == up.size());
+	initValues();
 
 	this->nPoints = pos.size();
 	this->pos = pos;
@@ -26,16 +35,18 @@ Track::Track(vector<Vector3d> const &pos, vector<Vector3d> const &up)
 Track::Track(void) {
 	this->nPoints = 0;
 	this->delta_t = 1;
-
+	this->trackLength = 1.0;
+	
 	//this->generateTrack();
 }
 
 Track::Track(int nPoints) {
+	Track();
 	this->nPoints = nPoints;
 	pos.resize(nPoints);
 	up.resize(nPoints);
 	this->delta_t = (double)1 / (double)nPoints;
-
+	
 	//this->generateTrack();
 }
 
@@ -55,7 +66,7 @@ int Track::getSmoothValue(void) const
 }
 
 
-Vector3d Track::getTrackPoint(int index) const
+Vector3d Track::getControlPoint(int index) const
 {
 	if (index < 0) index = 0;
 	else if (index >= nPoints) index = nPoints-1;
@@ -64,20 +75,35 @@ Vector3d Track::getTrackPoint(int index) const
 	return pos[index];
 }
 
-void Track::setTrackPoint(int index, Vector3d v)
+/*void Track::setTrackPoint(double index, Vector3d v)
 {
 	assert(index >= 0 && index < nPoints);
-
-	//TODO: delete old?
 
 	pos[index] = v;
+}*/
+
+void Track::setTrackLength(double length) {
+	trackLength = length;
 }
 
-Vector3d Track::getUp(int index) const
+double Track::getTrackLength() const
+{
+	return trackLength;
+}
+
+Vector3d Track::getControlUp(int index) const
 {
 	assert(index >= 0 && index < nPoints);
+	return Vector3d(0,1,0);
 
-	return up[index];
+	//return up[index];
+}
+
+Vector3d Track::getUp(double t) const
+{
+	// TODO: interpolate up vectors
+	// return this->up[something];
+	return Vector3d(0,1,0);
 }
 
 void Track::setUp(int index, Vector3d v)
@@ -138,7 +164,13 @@ Vector3d Track::getPos(double t) const
 	double lt = (t - delta_t*(double)p) / delta_t;
 	// Interpolate
 	//printf("lt: %f, p: %d, p0:%d, p1:%d, p2:%d, p3:%d \n", lt, p, p0, p1, p2, p3);
-	return Track::Eq(lt, getTrackPoint(p0), getTrackPoint(p1), getTrackPoint(p2), getTrackPoint(p3));
+	return Track::Eq(lt, getControlPoint(p0), getControlPoint(p1), getControlPoint(p2), getControlPoint(p3));
+}
+
+double Track::metersToT(double meters) const 
+{
+	assert(meters >= 0.0 && meters <= trackLength);
+	return meters/trackLength;
 }
 
 double Track::getDistance(int index) const
@@ -156,7 +188,7 @@ Vector3d Track::getTangentVector(double index) const
 	else if (index >= 1-getDelta()) index = 1-getDelta();
 	assert(index >= 0 && index <= 1);
 
-	printf("GetTangent t: %f \n", index);
+	// printf("GetTangent t: %f \n", index);
 
 
 	Vector3d pos0, pos1;
@@ -177,14 +209,14 @@ double Track::getCurvature(double index) const
 	if (index < 0 || index >= 1) return 0.0;
 	assert(index >= 0 && index <= 1);
 
-	printf("GetCurvature t: %f \n", index);
+	// printf("GetCurvature t: %f \n", index);
 
 	Vector3d pos0, pos1;
 	pos0 = this->getPos(index);
 	pos1 = this->getPos(index+getDelta());
 	double ds = (pos1 - pos0).length();
 	
-	Vector3d dT = getTangentVector(index-getDelta()) - getTangentVector(index);
+	Vector3d dT = getTangentVector(index+getDelta()) - getTangentVector(index);
 	dT /= ds;
 
 	return dT.length();
@@ -194,9 +226,9 @@ double Track::getCurvature(double index) const
 Vector3d Track::getNormalVector(double index) const
 {
 	// TODO: assert that normal is not of inf length!
-	assert(index >= 0 && index <= 1);
+	// assert(index >= 0 && index <= 1);
 
-	printf("GetNormal t: %f \n", index);
+	// printf("GetNormal t: %f \n", index);
 
 	// We need one point back and one point forward for the normal vector, so on the boundaries we hack.
 	if (index <= 0) return getNormalVector(getDelta());
@@ -209,66 +241,34 @@ Vector3d Track::getNormalVector(double index) const
 	// The normal vector points towards T1-T0
 	Vector3d normal = T1 - T0;
 	double length = normal.length();
-	if(length != 0){
-		normal /= length;
-	}
-	
+	normal /= length;
+		
 	return normal;
 }
+
 
 void Track::generateTrack(void)
 {
 
+	// Generate test track 2
+	// Loop/circle radius 50.0 with center in origo.
+	const int nPoints = 1000;
 	const double PI = acos(-1.0);
-	Vector3d v(0,0,0);
-	Vector3d v_0(0,0,0);
 
-	v.x = 0;
-	v.z = 20;
-	this->setTrackPoint(0, v);
-	this->setUp(0, v_0);
+	this->pos.clear();
+	this->up.clear();
+	pos.resize(nPoints);
+	up.resize(nPoints);
 
-	v.x = 20;
-	v.z = 0;
-	this->setTrackPoint(1, v);
-	this->setUp(0, v_0);
-
-	v.x = 0;
-	v.z = -20;
-	this->setTrackPoint(2, v);
-	this->setUp(0, v_0);
-
-	v.x = -20;
-	v.y = 20;
-	v.z = 0;
-	this->setTrackPoint(3, v);
-	this->setUp(0, v_0);
-
-	v.x = 10;
-	v.y = -20;
-	v.z = 20;
-	this->setTrackPoint(4, v);
-	this->setUp(0, v_0);
-
-	v.x = 40;
-	v.y = -60;
-	v.z = 40;
-	this->setTrackPoint(5, v);
-	this->setUp(0, v_0);
-
-
-	/*
-	for (int i = 0; i < this->nPoints; i++) {
-		v.x = 5*i;
-		v.y = 100;
-		v.z = v.z*2;
-		this->setTrackPoint(i, v);
-
-		this->setUp(i, v_0);
+	for (int i = 0; i < nPoints; i++) {
+		Vector3d p(50.0*cos(1.0*i/nPoints *2*PI - PI/2), 50.0*sin(1.0*i/nPoints *2*PI - PI/2), 0.0);
+		up[i] = -p/p.length();
+		
+		p += Vector3d(0,100,0);	// move up 100 units
+		pos[i] = p;
 	}
-	*/
 	
-}
+} 
 
 /*
 void Track::getParallelTrack(double offset, Track &track) const 
