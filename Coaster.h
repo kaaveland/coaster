@@ -18,6 +18,9 @@
 #include <CEGUISchemeManager.h>
 #include <RendererModules/Ogre/CEGUIOgreRenderer.h>
 
+#include <Terrain/OgreTerrain.h>
+#include <Terrain/OgreTerrainGroup.h>
+
 using namespace std;
  
 class Coaster : public BaseApplication
@@ -31,7 +34,8 @@ public:
 		NINJA_MASK = 1<<0,
 		ROBOT_MASK = 1<<1,
 		RAIL_MASK  = 1<<2,
-		CART_MASK  = 1<<3
+		CART_MASK  = 1<<3,
+		ISLAND_MASK = 1<<4
 	};
  
 protected:

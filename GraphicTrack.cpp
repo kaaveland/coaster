@@ -10,15 +10,14 @@ GraphicTrack::~GraphicTrack(void)
 }
 */
 
-
 // generate and export railmesh (only run when rail has changed)
 void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 {
 
 	Track track = *track2;
 
-	const float width = 10.0f;
-	const float height = 2.0f;
+	const float width = 50.0f;
+	const float height = 20.0f;
 
 	Ogre::ManualObject rail("RailObject");
 	Ogre::Vector3 size(width / 2, height/2, 0);
@@ -45,11 +44,13 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 	Vector3d cur_pos = track.getPos(0);
 	Vector3d next_pos = track.getPos(t);
 	
-	Vector3d diff, norm, last_norm;
+	Vector3d diff, norm, last_norm, tangent, last_tangent, up, last_up;
 	double norm_scale, norm_length;
 
 	//normal in crosspoint
-	norm = track.getNormalVector(0);
+	norm = Vector3d(1,0,0);
+	tangent = Vector3d(0,0,1);
+	up = Vector3d(0, 1, 0);
 
 	//temp var
 	Ogre::Vector3 
@@ -70,12 +71,20 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 		if(t > 1) t = 1;
 		next_pos = track.getPos(t);
 		last_norm = norm;
-		norm = track.getNormalVector(t);
+		last_tangent = tangent;
+		last_up = up;
+
+		tangent = track.getTangentVector(t);
+		up = track.getUp(t);
+		norm = up.cross(tangent);
+
+		// Divide by current length and multiply by the offset to get correct length
+		norm_length = norm.length();
+		norm *= size.x/norm_length;
+		norm.y = 0;
 		t += td;
 
 		//scale up, so its wider
-		norm *= size.x;
-		norm_length = norm.length();
 
 		printf("normal x:%f y:%f z:%f length: %f \n", norm.x, norm.y, norm.z, norm_length);
 
@@ -232,7 +241,7 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 		//int offset = i*20;
 		int offset = i*4;
 		//top
-		rail.triangle(offset+2, offset+0, offset+1);	rail.triangle(offset+3, offset+2, offset+1);
+		rail.triangle(offset+1, offset+0, offset+2);	rail.triangle(offset+1, offset+2, offset+3);
 		
 		//front
 		//rail.triangle(offset+4, offset+5, offset+6);	rail.triangle(offset+4, offset+7, offset+5);

@@ -15,8 +15,6 @@ void Track::initValues() {
 	this->trackLength = 1;
 	this->nPoints = 0;
 	this->delta_t = 1;
-
-
 }
 
 Track::Track(vector<Vector3d> const &pos, vector<Vector3d> const &up)
@@ -95,14 +93,13 @@ Vector3d Track::getControlUp(int index) const
 {
 	assert(index >= 0 && index < nPoints);
 	return Vector3d(0,1,0);
-
 	//return up[index];
 }
 
 Vector3d Track::getUp(double t) const
 {
-	// TODO: interpolate up vectors
-	// return this->up[something];
+	//assert
+	//interpol
 	return Vector3d(0,1,0);
 }
 
@@ -188,8 +185,8 @@ Vector3d Track::getTangentVector(double index) const
 	else if (index >= 1-getDelta()) index = 1-getDelta();
 	assert(index >= 0 && index <= 1);
 
-	// printf("GetTangent t: %f \n", index);
 
+	//printf("GetTangent t: %f \n", index);
 
 	Vector3d pos0, pos1;
 	pos0 = getPos(index);
@@ -241,8 +238,15 @@ Vector3d Track::getNormalVector(double index) const
 	// The normal vector points towards T1-T0
 	Vector3d normal = T1 - T0;
 	double length = normal.length();
+
 	normal /= length;
 		
+	if(length < 0.0001){
+		//WARNING: Should not happen
+		normal = Vector3d(0, 1, 0);
+	}
+	
+
 	return normal;
 }
 
