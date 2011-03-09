@@ -13,8 +13,9 @@
 
 void Track::initValues() {
 	this->trackLength = 1;
-	this->nPoints = 0;
+	this->nControlPoints = 0;
 	this->delta_t = 1;
+	this->smoothingValue = 50;
 }
 
 Track::Track(vector<Vector3d> const &pos, vector<Vector3d> const &up)
@@ -22,67 +23,69 @@ Track::Track(vector<Vector3d> const &pos, vector<Vector3d> const &up)
 	assert(pos.size() == up.size());
 	initValues();
 
-	this->nPoints = pos.size();
+	this->nControlPoints = pos.size();
 	this->pos = pos;
 	this->up = up;
+	this->arcDistances = vector<double>(pos.size());
 
 	this->delta_t = (double)1 / (double)pos.size();
+	calculateArcDistances();
 
 }
 
 Track::Track(void) {
-	this->nPoints = 0;
+	this->nControlPoints = 0;
 	this->delta_t = 1;
 	this->trackLength = 1.0;
 	
 	//this->generateTrack();
 }
 
-Track::Track(int nPoints) {
+/*Track::Track(int nControlPoints) {
 	Track();
-	this->nPoints = nPoints;
-	pos.resize(nPoints);
-	up.resize(nPoints);
-	this->delta_t = (double)1 / (double)nPoints;
+	this->nControlPoints = nControlPoints;
+	pos.resize(nControlPoints);
+	up.resize(nControlPoints);
+	this->delta_t = (double)1 / (double)nControlPoints;
 	
 	//this->generateTrack();
-}
+}*/
 
 Track::~Track(void)
 {
 		
 }
 
-double Track::getDelta(void) const
+double Track::getSmoothedDelta(void) const
 {
-	return this->delta_t/this->smoothValue;
+	return this->delta_t/this->smoothingValue;
 }
 
-int Track::getSmoothValue(void) const
+int Track::getSmoothingValue(void) const
 {
-	return this->smoothValue;
+	return this->smoothingValue;
 }
 
 
 Vector3d Track::getControlPoint(int index) const
 {
 	if (index < 0) index = 0;
-	else if (index >= nPoints) index = nPoints-1;
-	assert(index >= 0 && index < nPoints);
+	else if (index >= nControlPoints) index = nControlPoints-1;
+	assert(index >= 0 && index < nControlPoints);
 
 	return pos[index];
 }
 
 /*void Track::setTrackPoint(double index, Vector3d v)
 {
-	assert(index >= 0 && index < nPoints);
+	assert(index >= 0 && index < nControlPoints);
 
 	pos[index] = v;
 }*/
 
-void Track::setTrackLength(double length) {
+/*void Track::setTrackLength(double length) {
 	trackLength = length;
-}
+}*/
 
 double Track::getTrackLength() const
 {
@@ -91,7 +94,7 @@ double Track::getTrackLength() const
 
 Vector3d Track::getControlUp(int index) const
 {
-	assert(index >= 0 && index < nPoints);
+	assert(index >= 0 && index < nControlPoints);
 	return Vector3d(0,1,0);
 	//return up[index];
 }
@@ -105,7 +108,7 @@ Vector3d Track::getUp(double t) const
 
 void Track::setUp(int index, Vector3d v)
 {
-	assert(index >= 0 && index < nPoints);
+	assert(index >= 0 && index < nControlPoints);
 	
 	up[index] = v;
 }
@@ -138,14 +141,15 @@ Vector3d Track::Eq(double t, const Vector3d p1, const Vector3d p2, const Vector3
 	return (p1*b1 + p2*b2 + p3*b3 + p4*b4);
 }
 
-void Track::addPos(const Vector3d v)
+// Not going to work now. Need to recalculate distance array
+/*void Track::addPos(const Vector3d v)
 {
-	nPoints += 1;
-	delta_t = (double)1 / (double)nPoints;
+	nControlPoints += 1;
+	delta_t = (double)1 / (double)nControlPoints;
 	//printf("Add point x:%f y:%f z:%f \n", v.x, v.y, v.z);
     pos.push_back(v);
-	//printf("Added point x:%f, y:%f, z:%f \n", getTrackPoint(nPoints-1));
-}
+	//printf("Added point x:%f, y:%f, z:%f \n", getTrackPoint(nControlPoints-1));
+}*/
 
 Vector3d Track::getPos(double t) const
 {
@@ -170,19 +174,24 @@ double Track::metersToT(double meters) const
 	return meters/trackLength;
 }
 
-double Track::getDistance(int index) const
+double Track::getDistanceTo(double t) const
 {
-	assert(index >= 0 && index < nPoints);
+	assert(t >= 0.0 && t <= 1.0);
+	
+	int index = t*(nControlPoints-1);
+	double start_t = index * delta_t;
+	double local_t = t - start_t;
 
-	// Possibly other calculation?
-	// return ds*index;
-	return -1.0;
+	double distance = arcDistances[index];		// This is the arc distance to the start of the segment that contains the point with parameter t
+	distance += (arcDistances[index+1]-arcDistances[index]) * (local_t/delta_t);	// Linear interpolation between this and next control point
+
+	return distance;
 }
 
 Vector3d Track::getTangentVector(double index) const
 {
 	if (index < 0) index = 0;
-	else if (index >= 1-getDelta()) index = 1-getDelta();
+	else if (index >= 1-getSmoothedDelta()) index = 1-getSmoothedDelta();
 	assert(index >= 0 && index <= 1);
 
 
@@ -190,7 +199,7 @@ Vector3d Track::getTangentVector(double index) const
 
 	Vector3d pos0, pos1;
 	pos0 = getPos(index);
-	pos1 = getPos(index+getDelta());
+	pos1 = getPos(index+getSmoothedDelta());
 		
 	Vector3d tangent = pos1 - pos0;
 	double length = tangent.length();
@@ -210,10 +219,10 @@ double Track::getCurvature(double index) const
 
 	Vector3d pos0, pos1;
 	pos0 = this->getPos(index);
-	pos1 = this->getPos(index+getDelta());
+	pos1 = this->getPos(index+getSmoothedDelta());
 	double ds = (pos1 - pos0).length();
 	
-	Vector3d dT = getTangentVector(index+getDelta()) - getTangentVector(index);
+	Vector3d dT = getTangentVector(index+getSmoothedDelta()) - getTangentVector(index);
 	dT /= ds;
 
 	return dT.length();
@@ -228,11 +237,11 @@ Vector3d Track::getNormalVector(double index) const
 	// printf("GetNormal t: %f \n", index);
 
 	// We need one point back and one point forward for the normal vector, so on the boundaries we hack.
-	if (index <= 0) return getNormalVector(getDelta());
-	if (index >= 1) return getNormalVector(1-getDelta());
+	if (index <= 0) return getNormalVector(getSmoothedDelta());
+	if (index >= 1) return getNormalVector(1-getSmoothedDelta());
 	
 	Vector3d T0, T1;
-	T0 = getTangentVector(index-getDelta());
+	T0 = getTangentVector(index-getSmoothedDelta());
 	T1 = getTangentVector(index);
 		
 	// The normal vector points towards T1-T0
@@ -256,16 +265,16 @@ void Track::generateTrack(void)
 
 	// Generate test track 2
 	// Loop/circle radius 50.0 with center in origo.
-	const int nPoints = 1000;
+	const int nControlPoints = 1000;
 	const double PI = acos(-1.0);
 
 	this->pos.clear();
 	this->up.clear();
-	pos.resize(nPoints);
-	up.resize(nPoints);
+	pos.resize(nControlPoints);
+	up.resize(nControlPoints);
 
-	for (int i = 0; i < nPoints; i++) {
-		Vector3d p(50.0*cos(1.0*i/nPoints *2*PI - PI/2), 50.0*sin(1.0*i/nPoints *2*PI - PI/2), 0.0);
+	for (int i = 0; i < nControlPoints; i++) {
+		Vector3d p(50.0*cos(1.0*i/nControlPoints *2*PI - PI/2), 50.0*sin(1.0*i/nControlPoints *2*PI - PI/2), 0.0);
 		up[i] = -p/p.length();
 		
 		p += Vector3d(0,100,0);	// move up 100 units
@@ -281,11 +290,11 @@ void Track::getParallelTrack(double offset, Track &track) const
 	std::cout << "Generating data for parallel Track...";
 #endif
 
-	assert(nPoints == track.nPoints);
+	assert(nControlPoints == track.nControlPoints);
 	
 	Vector3d perpendicularVector, up, tangent;
 	
-	for (int i = 0; i < nPoints-1; i++) {	
+	for (int i = 0; i < nControlPoints-1; i++) {	
 		// Get the up and tangential vector for this section
 		up *= getUp(i);
 		tangent = getTangentVector(i);
@@ -314,8 +323,26 @@ void Track::getParallelTrack(double offset, Track &track) const
 }
 */
 
+void Track::calculateArcDistances()
+{
+	assert(arcDistances.size() == nControlPoints);
+	
+	arcDistances[0] = 0.0;
+	for (int i=1; i<nControlPoints; i++) {
+		
+		arcDistances[i] = arcDistances[i-1];
+		double tstart = (double)i/nControlPoints;
+
+		// Step throug this segment and accumulate arc lengths
+		for (double dt = 0.0; dt < 1.0/nControlPoints; dt += delta_t/smoothingValue)
+			arcDistances[i] += (getPos(dt + delta_t/smoothingValue) - getPos(dt)).length(); 
+	}
+
+	this->trackLength = arcDistances[nControlPoints-1];
+}
+
 int Track::getNumberOfPoints(void) const
 {
-	return this->nPoints;
+	return this->nControlPoints;
 }
 

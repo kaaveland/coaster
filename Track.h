@@ -56,7 +56,7 @@ public:
 	int getNumberOfPoints(void) const;
 
 	 // Operations
-    void addPos(const Vector3d v);
+    void addPos(const Vector3d v);	// should be removed??
 	Vector3d getPos(double t) const;   // t = 0...1; 0=pos[0] ... 1=pos[max]
 	double metersToT(double meters) const;	// meters = [0, trackLength];
 
@@ -64,33 +64,34 @@ public:
     // given a time (t) and a vector quadruple (p1,p2,p3,p4).
     Vector3d Eq(double t, const Vector3d p1, const Vector3d p2, const Vector3d p3, const Vector3d p4) const;
 
-	double getDelta(void) const;
-	int getSmoothValue(void) const;
+	double getSmoothedDelta(void) const;
+	int getSmoothingValue(void) const;
 
-
+	// Returns the arc distance from start to the point of the given track parameter.
+	double getDistanceTo(double t) const;	
+	
 	// Set the (dimensional/in meters) length of the track
-	void setTrackLength(double length);
+	// void setTrackLength(double length);
 	double getTrackLength() const;
 
 protected:
-	int nPoints;
+	int nControlPoints;
 	std::vector<Vector3d> pos;
 	std::vector<Vector3d> up;
+	std::vector<double> arcDistances;	// A vector that contains the (accumulative) arc distances to each of the control points.
 	double delta_t;
-	static int const smoothValue = 50;
+	int smoothingValue;
 	double trackLength;
 	//double trackLength, ds;
 
 	// returns vector at distance [0,1]
-	Vector3d inline getVectorAt(double distance) const;
-	
-	// Returns the distance travelled to the start of the given track section.
-	double inline getDistance(int index) const;	
-	
+	//Vector3d inline getVectorAt(double distance) const;
+		
 private:
 	Vector3d getControlPoint(int n) const;
 	void generateTrack();
 	void initValues();
+	void calculateArcDistances();
 	
 };
 

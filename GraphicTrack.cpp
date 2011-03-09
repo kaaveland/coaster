@@ -22,8 +22,8 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 	Ogre::ManualObject rail("RailObject");
 	Ogre::Vector3 size(width / 2, height/2, 0);
 
-	size_t index_count =  track.getSmoothValue()*(8*track.getNumberOfPoints())+2;
-	size_t ver_count = 4*6*track.getNumberOfPoints()*track.getSmoothValue();
+	size_t index_count =  track.getSmoothingValue()*(8*track.getNumberOfPoints())+2;
+	size_t ver_count = 4*6*track.getNumberOfPoints()*track.getSmoothingValue();
 
 	rail.estimateIndexCount(index_count);
 	rail.estimateVertexCount(ver_count);
@@ -37,7 +37,7 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 
 	printf("Points: %d \n", track.getNumberOfPoints());
 
-	double td = track.getDelta();
+	double td = track.getSmoothedDelta();
 	double t = td;
 
 	Vector3d last_pos = track.getPos(0);
@@ -64,7 +64,7 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 		back_bottom_left;
 
 	t += td;
-	for(int i=0; i<(track.getNumberOfPoints()*track.getSmoothValue())-1; i++){
+	for(int i=0; i<(track.getNumberOfPoints()*track.getSmoothingValue())-1; i++){
 	
 		last_pos = cur_pos;
 		cur_pos = next_pos;

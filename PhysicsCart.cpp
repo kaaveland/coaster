@@ -14,8 +14,8 @@
 using std::stringstream;
 using std::cout;
 
-double inline signum(double d) {
-	return ((d > 0) - (d < 0));
+int inline signum(double d) {
+	return (int)((d > 0) - (d < 0));
 }
 
 PhysicsCart::PhysicsCart()
@@ -36,6 +36,7 @@ PhysicsCart::PhysicsCart()
 	vVelocity = Vector3d(0,0,0);
 	vAccel = Vector3d(0,0,0);
 	currentDistance = 0;
+	current_t = 0;
 
 	gvector = Vector3d(0,-10,0);
 	
@@ -64,13 +65,14 @@ bool PhysicsCart::hasTrack() const
 	return this->track != NULL;
 }
 
-void PhysicsCart::moveTo(double distance) {
+void PhysicsCart::moveTo(double t) {
 	assert(track != NULL);
-	assert(distance >= 0 && distance <= 1);
+	assert(t >= 0 && t <= 1);
 
-	currentDistance = distance;
-	vPos = track->getPos(distance);	// FIX
-	vUp = track->getUp((int)distance);	// FIX
+	// Not going to work,  unless iterate over track's get
+	//currentDistance = distance;
+	vPos = track->getPos(t);	// FIX
+	vUp = track->getUp((int)t);	// FIX
 	
 	vVelocity = Vector3d(0,0,0);
 	v = 0;
@@ -84,8 +86,9 @@ void PhysicsCart::moveTo(double distance) {
 double PhysicsCart::calculate_a_T(double deltaDistance) const
 {	
 	double new_t = track->metersToT(currentDistance + deltaDistance);
+	int direction = signum(track->getTangentVector(new_t) * this->vVelocity);	// Positive if going forward on track
 	double a_T = thrustFactor*maxThrust/mass 
-		- brakingFactor*friction_static/mass
+		- direction*brakingFactor*friction_static/mass
 		+ gvector * track->getTangentVector(new_t);	// Possibly air resistance
 
 	return a_T;
@@ -117,10 +120,12 @@ void PhysicsCart::nextStep(double dT) {
 	}
 
 	//const double trackDeltaDistance = track->getDelta();
-	const double current_t = track->metersToT(currentDistance);
+	//const double current_t = track->metersToT(currentDistance);
+
 
 	int direction = 1; //signum(vVelocity * track->getTangentVector(current_t));
 	double delta_distance_predicted = dT * v;
+	assert (delta_distance_predicted < track->getSmoothedDelta());	// If not, we will get varying speeds etc.
 	
 	if (currentDistance + direction*delta_distance_predicted < 0.0 || 
 		currentDistance + direction*delta_distance_predicted > track->getTrackLength()) { 
@@ -135,7 +140,7 @@ void PhysicsCart::nextStep(double dT) {
 	
 	// Snap to track (direction and position)
 	vVelocity = v * track->getTangentVector(currentDistance + delta_distance_corrected);
-	vPos = track->getPos(currentDistance + delta_distance_corrected);
+	vPos = track->getPos(track->metersToT(currentDistance + delta_distance_corrected));
 	currentDistance += delta_distance_corrected;
 			
 	bool insideCurve = (vUp * track->getNormalVector(currentDistance) >= 0.0);	// true if "inside" curvature
@@ -175,7 +180,7 @@ Vector3d PhysicsCart::getUp() const {
 string PhysicsCart::toString() const {
 	stringstream res;
 	res << "--PhysicsCart info--\n" << 
-		"Currently on segment with index: " << currentDistance << "\n" <<
+		"Currently on distance: " << currentDistance << "\n" <<
 		"isFreefalling = " << isFreefalling << "\n" <<
 		"Position = [ " << vPos.x << ", " << vPos.y << ", " << vPos.z << "]\n" <<
 		"Up vecto = [" << vUp.x << ", " << vUp.y << ", " << vUp.z << "]\n" << 

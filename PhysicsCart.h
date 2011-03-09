@@ -79,7 +79,8 @@ private:
 	Vector3d gvector;
 
 	// Simulation properties
-	double currentDistance;			// Which Track section index the cart currently is in
+	double currentDistance;			// Which distance the cart has travelled
+	double current_t;				// jepp
 	
 	// Helper functions
 	double calculate_a_T(double deltaDistance) const;
