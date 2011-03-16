@@ -189,7 +189,7 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 		this->track = test3();
 		//track.setTrackLength(1000);
 		physicsCart.setTrack(&track);
-		physicsCart.moveTo(0.0);
+		physicsCart.moveTo(1.0);
 			
 
 		//show that the current object has been deselected by removing the bounding box visual
@@ -256,7 +256,7 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 				position_added = true;
  
 				//lets shrink the object, only because the terrain is pretty small
-				mCurrentObject->setScale(0.1f, 0.1f, 0.1f);
+				mCurrentObject->setScale(0.01f, 0.01f, 0.01f);
 				break;
 			}
 		}

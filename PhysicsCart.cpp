@@ -8,8 +8,10 @@
 #include <cassert>
 
 #define NULL 0
-#define WILLFLYTOLERANCE 1d-12
-#define MAXDELTATIME 1.0
+#define WILLFLYTOLERANCE 1e-12
+#define MAXDELTATIME 1e-1
+#define MAXDELTATIME_LAG 1.0
+#define SPEEDCUTOFF_FRICTION 1e-12
 
 using std::stringstream;
 using std::cout;
@@ -29,7 +31,7 @@ PhysicsCart::PhysicsCart()
 	wheelsOffsetx = 0;
 	wheelsOffsety = 0.5;		// Total widTh of cart becomes 1.0
 	thrustFactor = brakingFactor = 0.0;
-	brakingFactor = 0.01;
+	brakingFactor = 10.0;
 
 	// Assign initial values
 	v = 0;
@@ -65,14 +67,15 @@ bool PhysicsCart::hasTrack() const
 	return this->track != NULL;
 }
 
-void PhysicsCart::moveTo(double t) {
+void PhysicsCart::moveTo(double distance) {
 	assert(track != NULL);
-	assert(t >= 0 && t <= 1);
+	if (distance < 0.0) moveTo(0.0);
+	if (distance > track->getTrackLength()) moveTo(track->getTrackLength());
 
 	// Not going to work,  unless iterate over track's get
-	//currentDistance = distance;
-	vPos = track->getPos(t);	// FIX
-	vUp = track->getUp((int)t);	// FIX
+	currentDistance = distance;
+	vPos = track->getPos(track->distanceToT(distance));	// FIX
+	vUp = track->getUp(track->distanceToT(distance));	// FIX
 	
 	vVelocity = Vector3d(0,0,0);
 	v = 0;
@@ -85,10 +88,12 @@ void PhysicsCart::moveTo(double t) {
 // a_T will be calculated at the PhysicsCart's current distance.
 double PhysicsCart::calculate_a_T(double deltaDistance) const
 {	
-	double new_t = track->metersToT(currentDistance + deltaDistance);
-	int direction = signum(track->getTangentVector(new_t) * this->vVelocity);	// Positive if going forward on track
+	double new_t = track->distanceToT(currentDistance + deltaDistance);
+	int direction = 0;
+	if (abs(v) > SPEEDCUTOFF_FRICTION ) direction = (int)v/abs(v);	// Positive if going forward on track
+	
 	double a_T = thrustFactor*maxThrust/mass 
-		- direction*brakingFactor*friction_static/mass
+		- 0.0*direction*brakingFactor
 		+ gvector * track->getTangentVector(new_t);	// Possibly air resistance
 
 	return a_T;
@@ -96,19 +101,27 @@ double PhysicsCart::calculate_a_T(double deltaDistance) const
 
 double PhysicsCart::calculate_a_N(double deltaDistance) const
 {
-	double new_t = track->metersToT(currentDistance + deltaDistance);
+	double new_t = track->distanceToT(currentDistance + deltaDistance);
 	return v*v*track->getCurvature(new_t);
 }
 
-void PhysicsCart::nextStep(double dT) {
+void PhysicsCart::nextStep(double dT)
+{
 	assert(track != NULL);
-	if (dT >= MAXDELTATIME) return;
-	cout << toString() << "\n";
 
+	if (dT > MAXDELTATIME_LAG) return;
 
+	int repeats = (int)(dT / MAXDELTATIME) + 1;
+	for (double i = 1; i <= repeats; i++)
+		calculateNextStep(dT * (i/repeats));
+}
+
+void PhysicsCart::calculateNextStep(double dT) {
+		
+	cout << toString() << "Moving " << dT << " seconds.\nCurrent distance: " << currentDistance << " / " << track->getTrackLength() << "\n";
+	
 	if (currentDistance < 0.0 || currentDistance >= track->getTrackLength())
-		isFreefalling = true;			// We have gone outside of the track, set to free fall mode
-
+	isFreefalling = true;			// We have gone outside of the track, set to free fall mode
 
 	if (isFreefalling) {
 		vAccel = gvector;
@@ -122,10 +135,10 @@ void PhysicsCart::nextStep(double dT) {
 	//const double trackDeltaDistance = track->getDelta();
 	//const double current_t = track->metersToT(currentDistance);
 
-
 	int direction = 1; //signum(vVelocity * track->getTangentVector(current_t));
 	double delta_distance_predicted = dT * v;
-	assert (delta_distance_predicted < track->getSmoothedDelta());	// If not, we will get varying speeds etc.
+	//assert (delta_distance_predicted < track->getSmoothedDelta() * track->getSmoothingValue());	
+	// If not, we will get varying speeds etc. TODO: use minimum segment length or max possible distance per time step to get smoot response
 	
 	if (currentDistance + direction*delta_distance_predicted < 0.0 || 
 		currentDistance + direction*delta_distance_predicted > track->getTrackLength()) { 
@@ -140,7 +153,7 @@ void PhysicsCart::nextStep(double dT) {
 	
 	// Snap to track (direction and position)
 	vVelocity = v * track->getTangentVector(currentDistance + delta_distance_corrected);
-	vPos = track->getPos(track->metersToT(currentDistance + delta_distance_corrected));
+	vPos = track->getPos(track->distanceToT(currentDistance + delta_distance_corrected));
 	currentDistance += delta_distance_corrected;
 			
 	bool insideCurve = (vUp * track->getNormalVector(currentDistance) >= 0.0);	// true if "inside" curvature

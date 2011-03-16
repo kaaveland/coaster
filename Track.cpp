@@ -3,6 +3,7 @@
 #include "Track.h"
 #include "Vector3d.h"
 #include <cassert>
+#include <math.h>
 
 #define NULL 0
 #define DEBUG
@@ -16,6 +17,8 @@ void Track::initValues() {
 	this->nControlPoints = 0;
 	this->delta_t = 1;
 	this->smoothingValue = 50;
+	this->lastAccessedTrackIndex = 0;
+
 }
 
 Track::Track(vector<Vector3d> const &pos, vector<Vector3d> const &up)
@@ -27,9 +30,11 @@ Track::Track(vector<Vector3d> const &pos, vector<Vector3d> const &up)
 	this->pos = pos;
 	this->up = up;
 	this->arcDistances = vector<double>(pos.size());
+	this->section_dS = vector<double>(pos.size());
 
 	this->delta_t = (double)1 / (double)pos.size();
 	calculateArcDistances();
+	calculateSections_dS();
 
 }
 
@@ -168,19 +173,51 @@ Vector3d Track::getPos(double t) const
 	return Track::Eq(lt, getControlPoint(p0), getControlPoint(p1), getControlPoint(p2), getControlPoint(p3));
 }
 
-double Track::metersToT(double meters) const 
+double Track::distanceToT(double distance) const 
 {
-	assert(meters >= 0.0 && meters <= trackLength);
-	return meters/trackLength;
+	// Check bounds
+	if (distance <= 0.0) return 0.0;
+	if (distance >= trackLength) return 1.0;
+
+	bool searchForward = (distance >= arcDistances[lastAccessedTrackIndex]);
+	int searchIndex = lastAccessedTrackIndex;
+
+	// Find the segment that meters will "land on"
+	bool found = false;
+	while (!found) {
+		if (searchForward) {
+			if (arcDistances[searchIndex+1] > distance)
+				found = true;
+			else 
+				searchIndex += searchForward;
+		}
+		else {
+			if (arcDistances[searchIndex-1] < distance)
+				found = true;
+			else
+				searchIndex--;
+			
+		}
+	}
+
+	assert(distance - arcDistances[searchIndex] >= 0.0);
+	double t = (double)searchIndex / (double)nControlPoints + 1.0/nControlPoints * (distance - arcDistances[searchIndex]) / section_dS[searchIndex];
+
+	return t;
 }
 
 double Track::getDistanceTo(double t) const
 {
+	assert(false);
+	return 0.0;
+
 	assert(t >= 0.0 && t <= 1.0);
 	
-	int index = t*(nControlPoints-1);
+	int index = (int)(t*nControlPoints);
 	double start_t = index * delta_t;
 	double local_t = t - start_t;
+
+	if (index == nControlPoints-1) return arcDistances[nControlPoints-1];
 
 	double distance = arcDistances[index];		// This is the arc distance to the start of the segment that contains the point with parameter t
 	distance += (arcDistances[index+1]-arcDistances[index]) * (local_t/delta_t);	// Linear interpolation between this and next control point
@@ -255,7 +292,6 @@ Vector3d Track::getNormalVector(double index) const
 		normal = Vector3d(0, 1, 0);
 	}
 	
-
 	return normal;
 }
 
@@ -339,6 +375,19 @@ void Track::calculateArcDistances()
 	}
 
 	this->trackLength = arcDistances[nControlPoints-1];
+}
+
+void Track::calculateSections_dS() {
+	assert (section_dS.size() == nControlPoints);
+	for (int i=0; i < nControlPoints - 1; i++) {
+		section_dS[i] = (arcDistances[i+1]-arcDistances[i]);
+	}
+	section_dS[nControlPoints-1] = 0.0;
+}
+
+double Track::getSection_dS(double t) const 
+{
+	return section_dS[(int)(nControlPoints*t)];
 }
 
 int Track::getNumberOfPoints(void) const

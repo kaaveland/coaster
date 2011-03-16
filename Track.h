@@ -58,7 +58,7 @@ public:
 	 // Operations
     void addPos(const Vector3d v);	// should be removed??
 	Vector3d getPos(double t) const;   // t = 0...1; 0=pos[0] ... 1=pos[max]
-	double metersToT(double meters) const;	// meters = [0, trackLength];
+	double distanceToT(double distance) const;	// meters = [0, trackLength];
 
     // Static method for computing the Catmull-Rom parametric equation
     // given a time (t) and a vector quadruple (p1,p2,p3,p4).
@@ -69,6 +69,7 @@ public:
 
 	// Returns the arc distance from start to the point of the given track parameter.
 	double getDistanceTo(double t) const;	
+	double getSection_dS(double t) const;
 	
 	// Set the (dimensional/in meters) length of the track
 	// void setTrackLength(double length);
@@ -79,6 +80,7 @@ protected:
 	std::vector<Vector3d> pos;
 	std::vector<Vector3d> up;
 	std::vector<double> arcDistances;	// A vector that contains the (accumulative) arc distances to each of the control points.
+	std::vector<double> section_dS;		// A vector that contains the dS values for each segment
 	double delta_t;
 	int smoothingValue;
 	double trackLength;
@@ -92,6 +94,9 @@ private:
 	void generateTrack();
 	void initValues();
 	void calculateArcDistances();
+	void calculateSections_dS();
+
+	int lastAccessedTrackIndex;
 	
 };
 

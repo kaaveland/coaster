@@ -16,7 +16,7 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 
 	Track track = *track2;
 
-	const float width = 50.0f;
+	const float width = 5.0f;
 	const float height = 20.0f;
 
 	Ogre::ManualObject rail("RailObject");

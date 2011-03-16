@@ -86,6 +86,8 @@ private:
 	double calculate_a_T(double deltaDistance) const;
 	double calculate_a_N(double deltaDistance) const;
 
+	void calculateNextStep(double dT);
+
 	Track *track;					// Current main (center) track
 	bool isFreefalling;
 
