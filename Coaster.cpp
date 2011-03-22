@@ -62,6 +62,7 @@ void Coaster::createScene(void)
 	mCamera->setPosition(670, 860, 4570);
 	mCamera->pitch(Ogre::Degree(-30));
 	mCamera->yaw(Ogre::Degree(-45));
+	mCamera->setNearClipDistance(0.5f);
  
 	//CEGUI setup
 	mGUIRenderer = &CEGUI::OgreRenderer::bootstrapSystem();
@@ -247,7 +248,7 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 				position_added = true;
  
 				//lets shrink the object, only because the terrain is pretty small
-				mCurrentObject->setScale(0.1f, 0.1f, 0.1f);
+				//mCurrentObject->setScale(0.1f, 0.1f, 0.1f);
 				break;
 			}
 		}

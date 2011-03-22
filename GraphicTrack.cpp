@@ -16,8 +16,9 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 
 	Track track = *track2;
 
-	const float width = 50.0f;
-	const float height = 20.0f;
+	const float width = 0.15f;
+	const float height = 0.3f;
+	const float length_between_rails = 1.0f;
 
 	Ogre::ManualObject rail("RailObject");
 	Ogre::Vector3 size(width / 2, height/2, 0);
@@ -35,7 +36,7 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 	Vector3d vec_math, vec_math2;
 	Ogre::Vector3 vec, next_vec;
 
-	printf("Points: %d \n", track.getNumberOfPoints());
+	//printf("Points: %d \n", track.getNumberOfPoints());
 
 	double td = track.getDelta();
 	double t = td;
@@ -44,27 +45,59 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 	Vector3d cur_pos = track.getPos(0);
 	Vector3d next_pos = track.getPos(t);
 	
-	Vector3d diff, norm, last_norm, tangent, last_tangent, up, last_up;
+	Vector3d diff, norm, last_norm, tangent, last_tangent, up, last_up, norm_parallel;
 	double norm_scale, norm_length;
 
 	//normal in crosspoint
 	norm = Vector3d(1,0,0);
 	tangent = Vector3d(0,0,1);
 	up = Vector3d(0, 1, 0);
+	norm_parallel = norm*length_between_rails;
 
 	//temp var
 	Ogre::Vector3 
-		front_top_right,
-		front_top_left,
-		front_bottom_right,
-		front_bottom_left,
-		back_top_right,
-		back_top_left,
-		back_bottom_right,
-		back_bottom_left;
+		left_front_top_right,
+		left_front_top_left,
+		left_front_bottom_right,
+		left_front_bottom_left,
+		left_back_top_right,
+		left_back_top_left,
+		left_back_bottom_right,
+		left_back_bottom_left,
+
+		right_front_top_right,
+		right_front_top_left,
+		right_front_bottom_right,
+		right_front_bottom_left,
+		right_back_top_right,
+		right_back_top_left,
+		right_back_bottom_right,
+		right_back_bottom_left;
+
+	//first point calculation
+	tangent = track.getTangentVector(0);
+	up = track.getUp(0);
+	norm = up.cross(tangent);
+
+	// Divide by current length and multiply by the offset to get correct length
+	norm_length = norm.length();
+	norm *= size.x/norm_length;
+	norm.y = 0;
+		
+	norm_parallel = norm*length_between_rails;
+
+	left_front_top_right	= Ogre::Vector3(cur_pos.x - norm.x + norm_parallel.x, cur_pos.y + size.y, cur_pos.z - norm.z + norm_parallel.z);
+	left_front_top_left		= Ogre::Vector3(cur_pos.x + norm.x + norm_parallel.x, cur_pos.y + size.y, cur_pos.z + norm.z + norm_parallel.z);
+	left_front_bottom_right	= Ogre::Vector3(cur_pos.x - norm.x + norm_parallel.x, cur_pos.y - size.y, cur_pos.z - norm.z + norm_parallel.z);
+	left_front_bottom_left	= Ogre::Vector3(cur_pos.x + norm.x + norm_parallel.x, cur_pos.y - size.y, cur_pos.z + norm.z + norm_parallel.z);
+
+	right_front_top_right		= Ogre::Vector3(cur_pos.x - norm.x - norm_parallel.x, cur_pos.y + size.y, cur_pos.z - norm.z - norm_parallel.z);
+	right_front_top_left		= Ogre::Vector3(cur_pos.x + norm.x - norm_parallel.x, cur_pos.y + size.y, cur_pos.z + norm.z - norm_parallel.z);
+	right_front_bottom_right	= Ogre::Vector3(cur_pos.x - norm.x - norm_parallel.x, cur_pos.y - size.y, cur_pos.z - norm.z - norm_parallel.z);
+	right_front_bottom_left		= Ogre::Vector3(cur_pos.x + norm.x - norm_parallel.x, cur_pos.y - size.y, cur_pos.z + norm.z - norm_parallel.z);
 
 	t += td;
-	for(int i=0; i<(track.getNumberOfPoints()*track.getSmoothValue())-1; i++){
+	for(int i=0; i<(track.getNumberOfPoints()-2)*track.getSmoothValue(); i++){
 	
 		last_pos = cur_pos;
 		cur_pos = next_pos;
@@ -83,180 +116,104 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 		norm *= size.x/norm_length;
 		norm.y = 0;
 		t += td;
+		
+		norm_parallel = norm*5;
 
-		//scale up, so its wider
+		//left rail
+		//left_back_top_right		= Ogre::Vector3(cur_pos.x - last_norm.x + norm_parallel.x, cur_pos.y + size.y, cur_pos.z - last_norm.z + norm_parallel.z);
+		//left_back_top_left		= Ogre::Vector3(cur_pos.x + last_norm.x + norm_parallel.x, cur_pos.y + size.y, cur_pos.z + last_norm.z + norm_parallel.z);
+		//left_back_bottom_left	= Ogre::Vector3(cur_pos.x + last_norm.x + norm_parallel.x, cur_pos.y - size.y, cur_pos.z + last_norm.z + norm_parallel.z);
+		//left_back_bottom_right	= Ogre::Vector3(cur_pos.x - last_norm.x + norm_parallel.x, cur_pos.y - size.y, cur_pos.z - last_norm.z + norm_parallel.z);
+		left_back_top_right		= left_front_top_right;
+		left_back_top_left		= left_front_top_left;
+		left_back_bottom_left	= left_front_bottom_left;
+		left_back_bottom_right	= left_front_bottom_right;
 
-		printf("normal x:%f y:%f z:%f length: %f \n", norm.x, norm.y, norm.z, norm_length);
-
-		front_top_right		= Ogre::Vector3(next_pos.x + norm.x, next_pos.y + size.y, next_pos.z + norm.z),
-		front_top_left		= Ogre::Vector3(next_pos.x - norm.x, next_pos.y + size.y, next_pos.z - norm.z),
-		front_bottom_right	= Ogre::Vector3(next_pos.x + norm.x, next_pos.y - size.y, next_pos.z + norm.z),
-		front_bottom_left	= Ogre::Vector3(next_pos.x - norm.x, next_pos.y - size.y, next_pos.z - norm.z);
-			
-		back_top_right		= Ogre::Vector3(cur_pos.x + last_norm.x, cur_pos.y + size.y, cur_pos.z + last_norm.z),
-		back_top_left		= Ogre::Vector3(cur_pos.x - last_norm.x, cur_pos.y + size.y, cur_pos.z - last_norm.z),
-		back_bottom_right	= Ogre::Vector3(cur_pos.x + last_norm.x, cur_pos.y - size.y, cur_pos.z + last_norm.z),
-		back_bottom_left	= Ogre::Vector3(cur_pos.x - last_norm.x, cur_pos.y - size.y, cur_pos.z - last_norm.z);
-
+		left_front_top_right	= Ogre::Vector3(next_pos.x - norm.x + norm_parallel.x, next_pos.y + size.y, next_pos.z - norm.z + norm_parallel.z);
+		left_front_top_left		= Ogre::Vector3(next_pos.x + norm.x + norm_parallel.x, next_pos.y + size.y, next_pos.z + norm.z + norm_parallel.z);
+		left_front_bottom_right	= Ogre::Vector3(next_pos.x - norm.x + norm_parallel.x, next_pos.y - size.y, next_pos.z - norm.z + norm_parallel.z);
+		left_front_bottom_left	= Ogre::Vector3(next_pos.x + norm.x + norm_parallel.x, next_pos.y - size.y, next_pos.z + norm.z + norm_parallel.z);
 
 		//top
-		rail.position(front_top_right); // 0
+		rail.position(left_front_top_right); // 0
 		rail.textureCoord(1, 0);
-		rail.position(front_top_left); // 1
+		rail.position(left_front_top_left); // 1
 		rail.textureCoord(0, 1);
-		rail.position(back_top_right); // 2
+		rail.position(left_back_top_right); // 2
 		rail.textureCoord(1, 1);
-		rail.position(back_top_left); // 3
+		rail.position(left_back_top_left); // 3
 		rail.textureCoord(0, 0);
-
-
-#if 0
-		/*
-		//printf("i: %d\n", i);
-		vec_math = next_pos-cur_pos;
-		vec_math2 = end_pos-next_pos;
-
-		vec.x = cur_pos.x;
-		vec.y = cur_pos.y;
-		vec.z = cur_pos.z;
-
-		next_vec.x = cur_pos.x + vec_math.x;
-		next_vec.y = cur_pos.y + vec_math.y;
-		next_vec.z = cur_pos.z + vec_math.z;
-		*/
-
-		Ogre::Real temp;
-		bool flip = false;
-
-		/*
-		if( next_vec.z < vec.z ){
-			temp = next_vec.x;
-			next_vec.x = vec.x;
-			vec.x = temp;
-			
-			temp = next_vec.y;
-			next_vec.y = vec.y;
-			vec.y = temp;
-
-			temp = next_vec.z;
-			next_vec.z = vec.z;
-			vec.z = temp;
-			flip = true;
-
-		}
-		*/
-
-		// flip -/+ size?
-		
-
-		//printf("Vec i: %d, x:%f, y:%f, z:%f \n", i, vec.x, vec.y, vec.z);
-		//printf("Next_vec left i: %d, x:%f, y:%f, z:%f \n", i, next_vec.x, next_vec.y, next_vec.z);
-		
-		Ogre::Real size_x_pos = (flip) ? -size.x : size.x;
-		Ogre::Real size_x_neg = (flip) ? size.x : -size.x;
-
-		Ogre::Real size_y_pos = (flip) ? -size.y : size.y;
-		Ogre::Real size_y_neg = (flip) ? size.y : -size.y;
-
-		//top
-		rail.position(next_vec.x + size_x_pos, next_vec.y + size_y_neg, next_vec.z); // 0
-		rail.textureCoord(1, 0);
-		rail.position(vec.x + size_x_neg, vec.y + size_y_neg, vec.z); // 1
-		rail.textureCoord(0, 1);
-		rail.position(vec.x + size_x_pos, vec.y + size_y_neg, vec.z); // 2
-		rail.textureCoord(1, 1);
-		rail.position(next_vec.x + size_x_neg, next_vec.y + size_y_neg, next_vec.z); // 3
-		rail.textureCoord(0, 0);
-
-		//front
-		rail.position(next_vec.x + size_x_pos, next_vec.y + size_y_pos, next_vec.z); // 4
-		rail.textureCoord(1, 0);
-		rail.position(next_vec.x + size_x_neg, next_vec.y + size_y_neg, next_vec.z); // 5
-		rail.textureCoord(0, 1);
-		rail.position(next_vec.x + size_x_pos, next_vec.y + size_y_neg, next_vec.z); // 6
-		rail.textureCoord(1, 1);
-		rail.position(next_vec.x + size_x_neg, next_vec.y + size_y_pos, next_vec.z); // 7
-		rail.textureCoord(0, 0);
-
-		//right
-		rail.position(vec.x + size_x_neg, vec.y + size_y_pos, vec.z); // 8 
-		rail.textureCoord(0, 1);
-		rail.position(vec.x + size_x_neg, vec.y + size_y_neg, vec.z); // 9
-		rail.textureCoord(1, 1);
-		rail.position(next_vec.x + size_x_neg, next_vec.y + size_y_neg, next_vec.z); // 10
-		rail.textureCoord(1, 0);
-		rail.position(vec.x + size_x_pos, vec.y + size_y_neg, vec.z); // 11
-		rail.textureCoord(0, 1);
-
-		//left
-		rail.position(vec.x + size_x_pos, vec.y + size_y_pos, vec.z); // 12
-		rail.textureCoord(1, 1);
-		rail.position(next_vec.x + size_x_pos, next_vec.y + size_y_neg, next_vec.z); // 13
-		rail.textureCoord(0, 0);
-		rail.position(vec.x + size_x_pos, vec.y + size_y_neg, vec.z); // 14
-		rail.textureCoord(1, 0);
-		rail.position(vec.x + size_x_neg, vec.y + size_y_neg, vec.z); // 15
-		rail.textureCoord(0, 0);
-
-		//back
-		rail.position(next_vec.x + size_x_neg, next_vec.y + size_y_pos, next_vec.z); // 16
-		rail.textureCoord(1, 0);
-		rail.position(vec.x + size_x_pos, vec.y + size_y_pos, vec.z); // 17
-		rail.textureCoord(0, 1);
-		rail.position(vec.x + size_x_neg, vec.y + size_y_pos, vec.z); // 18
-		rail.textureCoord(1, 1);
-		rail.position(next_vec.x + size_x_pos, next_vec.y + size_y_pos, next_vec.z); // 19
-		rail.textureCoord(0, 0);
-		
-
-		int offset = i*20;
-
-		// 0 = 6 = 13
-		// 3 = 5 = 10
-		// 1 = 9 = 15
-		// 8 = 18
-		// 12 = 17
-		// 2 = 11 = 14
-		// 7 = 16
-		// 4 = 19
-		
-		//top
-		rail.triangle(offset+0, offset+1, offset+2);	rail.triangle(offset+3, offset+1, offset+0);
-		
-		//front
-		//rail.triangle(offset+4, offset+5, offset+6);	rail.triangle(offset+4, offset+7, offset+5);
-		
-		//right
-		rail.triangle(offset+8, offset+9, offset+10);	rail.triangle(offset+10, offset+7, offset+8);
-		//left
-		rail.triangle(offset+4, offset+11, offset+12);	rail.triangle(offset+4, offset+13, offset+11);
-		
-		//back
-		//rail.triangle(offset+14, offset+8, offset+12);	rail.triangle(offset+14, offset+15, offset+8);
 
 		//bottom
-		//rail.triangle(offset+16, offset+17, offset+18);	rail.triangle(offset+16, offset+19, offset+17);
-#endif
+		rail.position(left_front_bottom_right); // 4
+		rail.textureCoord(1, 0);
+		rail.position(left_front_bottom_left); // 5
+		rail.textureCoord(0, 1);
+		rail.position(left_back_bottom_right); // 6
+		rail.textureCoord(1, 1);
+		rail.position(left_back_bottom_left); // 7
+		rail.textureCoord(0, 0);
 
 		//int offset = i*20;
-		int offset = i*4;
+		int offset = i*16;
 		//top
-		rail.triangle(offset+1, offset+0, offset+2);	rail.triangle(offset+1, offset+2, offset+3);
+		rail.triangle(offset+0, offset+1, offset+2);	rail.triangle(offset+1, offset+3, offset+2);
 		
-		//front
-		//rail.triangle(offset+4, offset+5, offset+6);	rail.triangle(offset+4, offset+7, offset+5);
-		
+		//bottom
+		rail.triangle(offset+4, offset+6, offset+5);	rail.triangle(offset+5, offset+6, offset+7);
+
 		//right
-		//rail.triangle(offset+8, offset+9, offset+10);	rail.triangle(offset+10, offset+7, offset+8);
+		rail.triangle(offset+0, offset+2, offset+4);	rail.triangle(offset+2, offset+6, offset+4);
+
 		//left
-		//rail.triangle(offset+4, offset+11, offset+12);	rail.triangle(offset+4, offset+13, offset+11);
+		rail.triangle(offset+1, offset+5, offset+3);	rail.triangle(offset+3, offset+5, offset+7);
 		
-		//back
-		//rail.triangle(offset+14, offset+8, offset+12);	rail.triangle(offset+14, offset+15, offset+8);
+		//right rail
+		right_back_top_right	= right_front_top_right;
+		right_back_top_left		= right_front_top_left;
+		right_back_bottom_left	= right_front_bottom_left;
+		right_back_bottom_right	= right_front_bottom_right;
+		
+		right_front_top_right		= Ogre::Vector3(next_pos.x - norm.x - norm_parallel.x, next_pos.y + size.y, next_pos.z - norm.z - norm_parallel.z);
+		right_front_top_left		= Ogre::Vector3(next_pos.x + norm.x - norm_parallel.x, next_pos.y + size.y, next_pos.z + norm.z - norm_parallel.z);
+		right_front_bottom_right	= Ogre::Vector3(next_pos.x - norm.x - norm_parallel.x, next_pos.y - size.y, next_pos.z - norm.z - norm_parallel.z);
+		right_front_bottom_left		= Ogre::Vector3(next_pos.x + norm.x - norm_parallel.x, next_pos.y - size.y, next_pos.z + norm.z - norm_parallel.z);
+
+		//top
+		rail.position(right_front_top_right); // 0
+		rail.textureCoord(1, 0);
+		rail.position(right_front_top_left); // 1
+		rail.textureCoord(0, 1);
+		rail.position(right_back_top_right); // 2
+		rail.textureCoord(1, 1);
+		rail.position(right_back_top_left); // 3
+		rail.textureCoord(0, 0);
 
 		//bottom
-		//rail.triangle(offset+16, offset+17, offset+18);	rail.triangle(offset+16, offset+19, offset+17);
+		rail.position(right_front_bottom_right); // 4
+		rail.textureCoord(1, 0);
+		rail.position(right_front_bottom_left); // 5
+		rail.textureCoord(0, 1);
+		rail.position(right_back_bottom_right); // 6
+		rail.textureCoord(1, 1);
+		rail.position(right_back_bottom_left); // 7
+		rail.textureCoord(0, 0);
 
+		
+		//int offset = i*20;
+		offset = i*16+8;
+		//top
+		rail.triangle(offset+0, offset+1, offset+2);	rail.triangle(offset+1, offset+3, offset+2);
+		
+		//bottom
+		rail.triangle(offset+4, offset+6, offset+5);	rail.triangle(offset+5, offset+6, offset+7);
+
+		//right
+		rail.triangle(offset+0, offset+2, offset+4);	rail.triangle(offset+2, offset+6, offset+4);
+
+		//left
+		rail.triangle(offset+1, offset+5, offset+3);	rail.triangle(offset+3, offset+5, offset+7);
+		
 
 	}
 

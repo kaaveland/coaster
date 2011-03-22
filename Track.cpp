@@ -142,6 +142,7 @@ Vector3d Track::getPos(double t) const
 	return Track::Eq(lt, getTrackPoint(p0), getTrackPoint(p1), getTrackPoint(p2), getTrackPoint(p3));
 }
 
+
 double Track::getDistance(int index) const
 {
 	assert(index >= 0 && index < nPoints);
