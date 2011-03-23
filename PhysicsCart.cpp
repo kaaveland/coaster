@@ -68,14 +68,18 @@ bool PhysicsCart::hasTrack() const
 }
 
 void PhysicsCart::moveTo(double distance) {
+	// NOTE: this function does a crude approximation!
 	assert(track != NULL);
 	if (distance < 0.0) distance = 0.0;
 	if (distance > track->getTrackLength()) distance = track->getTrackLength();
 
-	// Not going to work,  unless iterate over track's get
-	currentDistance = distance;
-	vPos = track->getPos(track->distanceToT(distance));	// FIX
-	vUp = track->getUp(track->distanceToT(distance));	// FIX
+	// Snapping to closest control point
+	double t = (double)distance/track->getTrackLength();
+	currentDistance = track->getArcLengthToControlPoint(t);
+	current_t = t;
+
+	vPos = track->getPos(t);	// FIX
+	vUp = track->getUp(t);	// FIX
 	
 	vVelocity = Vector3d(0,0,0);
 	v = 0;
@@ -88,7 +92,7 @@ void PhysicsCart::moveTo(double distance) {
 // a_T will be calculated at the PhysicsCart's current distance.
 double PhysicsCart::calculate_a_T(double deltaDistance) const
 {	
-	double new_t = track->distanceToT(currentDistance + deltaDistance);
+	double new_t = current_t + track->deltaDistanceTodeltaT(deltaDistance, current_t);
 	int direction = 0;
 	if (abs(v) > SPEEDCUTOFF_FRICTION ) direction = (int)v/abs(v);	// Positive if going forward on track
 	
@@ -101,8 +105,9 @@ double PhysicsCart::calculate_a_T(double deltaDistance) const
 
 double PhysicsCart::calculate_a_N(double deltaDistance) const
 {
-	double new_t = track->distanceToT(currentDistance + deltaDistance);
-	return v*v*track->getCurvature(new_t);
+	//double new_t = track->distanceToT(currentDistance + deltaDistance);
+	//return v*v*track->getCurvature(new_t);
+	return 0.0;
 }
 
 void PhysicsCart::nextStep(double dT)
@@ -120,9 +125,6 @@ void PhysicsCart::nextStep(double dT)
 void PhysicsCart::calculateNextStep(double dT) {
 		
 	//cout << toString() << "Moving " << dT << " seconds.\nCurrent distance: " << currentDistance << " / " << track->getTrackLength() << "\n";
-	
-	if (currentDistance < 0.0 || currentDistance >= track->getTrackLength())
-		isFreefalling = true;			// We have gone outside of the track, set to free fall mode
 
 	if (isFreefalling) {
 		vAccel = gvector;
@@ -132,7 +134,10 @@ void PhysicsCart::calculateNextStep(double dT) {
 
 		return;
 	}
-
+	
+	if (currentDistance < 0.0 || currentDistance >= track->getTrackLength())
+		isFreefalling = true;			// We have gone outside of the track, set to free fall mode
+	
 	//const double trackDeltaDistance = track->getDelta();
 	//const double current_t = track->metersToT(currentDistance);
 
@@ -152,26 +157,29 @@ void PhysicsCart::calculateNextStep(double dT) {
 	double delta_distance_corrected = (dT * v + 0.5 * a_T * dT*dT);
 	v = v + a_T * dT;
 	
-	// Snap to track (direction and position)
-	vVelocity = v * track->getTangentVector(currentDistance + delta_distance_corrected);
-	vPos = track->getPos(track->distanceToT(currentDistance + delta_distance_corrected));
+	// Update distance and current t value
+	current_t += track->deltaDistanceTodeltaT(delta_distance_corrected, current_t);
 	currentDistance += delta_distance_corrected;
-			
-	bool insideCurve = (vUp * track->getNormalVector(currentDistance) >= 0.0);	// true if "inside" curvature
+	
+	// Snap to track (direction and position)
+	vVelocity = v * track->getTangentVector(current_t);
+	vPos = track->getPos(current_t);
+				
+	bool insideCurve = (vUp * track->getNormalVector(current_t) >= 0.0);	// true if "inside" curvature
 	// cout << "a_N is " << a_N << "\n";
 		
 	if (insideCurve) {		// TODO: Simplify
 		// If the acceleration required to keep in circular motion is LESS THAN the gravity component towards the
 		//  center of curvature, the cart will lose traction and fly! Should probably have a tolerance here (vertical attitudes).
 		double asdf = v*v*track->getCurvature(currentDistance) - track->getNormalVector(currentDistance)*gvector;
-		if (v*v*track->getCurvature(currentDistance) - track->getNormalVector(currentDistance)*gvector < 1e-12)
-			isFreefalling=true;
+		if (v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector < 1e-12)
+			isFreefalling=!true;
 	
 	} else {
 		// If the acceleration required to keep in circular motion is GREATER THAN the gravity component towards the
 		//  center of curvature, the cart will lose traction and fly! Should probably have a tolerance here (vertical attitudes).
-		if (v*v*track->getCurvature(currentDistance) - track->getNormalVector(currentDistance)*gvector > 0.0) 
-			isFreefalling = true;
+		if (v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector > 0.0) 
+			isFreefalling = !true;
 		
 	}
 }

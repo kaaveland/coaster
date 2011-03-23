@@ -33,14 +33,14 @@ public:
 	Vector3d getUp(double t) const;
 	
 	// Gives the unit tangent vector at the given segment.
-	Vector3d getTangentVector(double index) const;
+	Vector3d getTangentVector(double t) const;
 
 	// Returns the curvature at the given segment.
-	double getCurvature(double index) const;
+	double getCurvature(double t) const;
 
 	// Gives the unit normal vector at the given segment. The normal vector points 
 	// towards the center of curvature.
-	Vector3d getNormalVector(double index) const;
+	Vector3d getNormalVector(double t) const;
 
 
 	// Load and fill the track with points
@@ -58,7 +58,7 @@ public:
 	 // Operations
     void addPos(const Vector3d v);
 	Vector3d getPos(double t) const;   // t = 0...1; 0=pos[0] ... 1=pos[max]
-	double distanceToT(double distance) const;	// meters = [0, trackLength];
+	double deltaDistanceTodeltaT(double ds, double current_t) const;	// meters = [0, trackLength];
 
     // Static method for computing the Catmull-Rom parametric equation
     // given a time (t) and a vector quadruple (p1,p2,p3,p4).
@@ -70,6 +70,7 @@ public:
 	// Returns the arc distance from start to the point of the given track parameter.
 	//double getDistanceTo(double t) const;	
 	double getSection_dS(double t) const;
+	double getArcLengthToControlPoint(double t) const;
 	
 	// Set the (dimensional/in meters) length of the track
 	// void setTrackLength(double length);
@@ -81,6 +82,7 @@ protected:
 	std::vector<Vector3d> up;
 	std::vector<double> arcDistances;	// A vector that contains the (accumulative) arc distances to each of the control points.
 	std::vector<double> section_dS;		// A vector that contains the dS values for each segment
+	std::vector<Vector3d> finePoints;
 	double delta_t;
 	int smoothingValue;
 	double trackLength;
@@ -95,6 +97,7 @@ private:
 	void initValues();
 	void calculateArcDistances();
 	void calculateSections_dS();
+	void generateFinePoints(int nPoints);
 
 	int lastAccessedTrackIndex;
 	

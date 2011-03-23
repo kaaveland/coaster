@@ -188,17 +188,17 @@ Vector3d Track::getPos(double t) const
 	return Track::Eq(lt, getControlPoint(p0), getControlPoint(p1), getControlPoint(p2), getControlPoint(p3));
 }
 
-double Track::distanceToT(double distance) const 
+double Track::deltaDistanceTodeltaT(double ds, double current_t) const 
 {
 	// Check bounds
-	if (distance <= 0.0) return 0.0;
-	if (distance >= trackLength) return 1.0;
+	//if (distance <= 0.0) return 0.0;
+	//if (distance >= trackLength) return 1.0;
 
-	bool searchForward = (distance >= arcDistances[lastAccessedTrackIndex]);
-	int searchIndex = lastAccessedTrackIndex;
+	//bool searchForward = (distance >= arcDistances[lastAccessedTrackIndex]);
+	//int searchIndex = lastAccessedTrackIndex;
 
 	// Find the segment that meters will "land on"
-	bool found = false;
+	/*bool found = false;
 	while (!found) {
 		if (searchForward) {
 			if (arcDistances[searchIndex+1] > distance)
@@ -213,12 +213,15 @@ double Track::distanceToT(double distance) const
 				searchIndex--;
 			
 		}
-	}
+	}*/
 
-	assert(distance - arcDistances[searchIndex] >= 0.0);
-	double t = (double)searchIndex / (double)nControlPoints + delta_t * (distance-arcDistances[searchIndex]) / (arcDistances[searchIndex+1]-arcDistances[searchIndex]);
+//	assert(distance - arcDistances[searchIndex] >= 0.0);
+	double ds_dt = (getPos(current_t+getSmoothedDelta()) - getPos(current_t)).length() / getSmoothedDelta();
+	double dt = ds / ds_dt;
+		//(double)searchIndex / (double)nControlPoints + 
+		//delta_t * (distance-arcDistances[searchIndex]) / (arcDistances[searchIndex+1]-arcDistances[searchIndex]);
 
-	return t;
+	return dt;
 }
 
 //double Track::getDistanceTo(double t) const
@@ -405,6 +408,18 @@ void Track::calculateSections_dS() {
 		section_dS[i] = (arcDistances[i+1]-arcDistances[i])/delta_t;
 	}
 	section_dS[nControlPoints-1] = 0.0;
+}
+
+void Track::generateFinePoints(int nPoints) {
+
+}
+
+double Track::getArcLengthToControlPoint(double t) const
+{
+	if (t < 0.0) t = 0.0;
+	else if (t > 1.0) t = 1.0;
+
+	return arcDistances[(int)(t*nControlPoints)];
 }
 
 double Track::getSection_dS(double t) const 

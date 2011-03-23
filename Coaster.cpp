@@ -279,7 +279,7 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 			rail->setQueryFlags(RAIL_MASK);
 			railNode->attachObject(rail);
 
-			physicsCart.moveTo(1.0);
+			physicsCart.moveTo(0.0);
 			Vector3d start_pos = physicsCart.getPos();
 			Ogre::Vector3 start_pos_ogre = Ogre::Vector3(start_pos.x, start_pos.y, start_pos.z);
 			cartNode->setPosition(start_pos_ogre);

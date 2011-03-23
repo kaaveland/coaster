@@ -80,7 +80,7 @@ private:
 
 	// Simulation properties
 	double currentDistance;			// Which distance the cart has travelled
-	double current_t;				// jepp
+	double current_t;				// jepp (JEPP igjen)
 	
 	// Helper functions
 	double calculate_a_T(double deltaDistance) const;
