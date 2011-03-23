@@ -45,8 +45,8 @@ Track::Track(void) {
 	this->delta_t = 1;
 	this->trackLength = 1.0;
 
-	this->arcDistances = vector<double>(0);
-	this->section_dS = vector<double>(0);
+	this->arcDistances = vector<double>();
+	this->section_dS = vector<double>();
 
 	calculateArcDistances();
 	calculateSections_dS();
@@ -378,9 +378,9 @@ void Track::calculateArcDistances()
 {
 	assert(arcDistances.size() == nControlPoints);
 	
-	if(nControlPoints > 0) {
-		arcDistances[0] = 0.0;
-	}
+	if (nControlPoints == 0) return;
+
+	arcDistances[0] = 0.0;
 	for (int i=1; i<nControlPoints; i++) {
 		
 		arcDistances[i] = arcDistances[i-1];
@@ -396,6 +396,8 @@ void Track::calculateArcDistances()
 
 void Track::calculateSections_dS() {
 	assert (section_dS.size() == nControlPoints);
+	if (nControlPoints == 0) return;
+
 	for (int i=0; i < nControlPoints - 1; i++) {
 		section_dS[i] = (arcDistances[i+1]-arcDistances[i]);
 	}

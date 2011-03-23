@@ -282,6 +282,7 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 			Vector3d start_pos = physicsCart.getPos();
 			Ogre::Vector3 start_pos_ogre = Ogre::Vector3(start_pos.x, start_pos.y, start_pos.z);
 			cartNode->setPosition(start_pos_ogre);
+			printf("Rail generated\n");
 			
 		}
  

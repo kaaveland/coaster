@@ -69,8 +69,8 @@ bool PhysicsCart::hasTrack() const
 
 void PhysicsCart::moveTo(double distance) {
 	assert(track != NULL);
-	if (distance < 0.0) moveTo(0.0);
-	if (distance > track->getTrackLength()) moveTo(track->getTrackLength());
+	if (distance < 0.0) distance = 0.0;
+	if (distance > track->getTrackLength()) distance = track->getTrackLength();
 
 	// Not going to work,  unless iterate over track's get
 	currentDistance = distance;
@@ -118,7 +118,7 @@ void PhysicsCart::nextStep(double dT)
 
 void PhysicsCart::calculateNextStep(double dT) {
 		
-	cout << toString() << "Moving " << dT << " seconds.\nCurrent distance: " << currentDistance << " / " << track->getTrackLength() << "\n";
+	//cout << toString() << "Moving " << dT << " seconds.\nCurrent distance: " << currentDistance << " / " << track->getTrackLength() << "\n";
 	
 	if (currentDistance < 0.0 || currentDistance >= track->getTrackLength())
 	isFreefalling = true;			// We have gone outside of the track, set to free fall mode
@@ -205,7 +205,5 @@ string PhysicsCart::toString() const {
 		"Tangent  = [" << track->getTangentVector(currentDistance).x << ", " << track->getTangentVector(currentDistance).y << ", " << track->getTangentVector(currentDistance).z << "]\n" <<
 		"Curvature = " << track->getCurvature(currentDistance) << "\n";
 		
-
-
 	return res.str();
 }
