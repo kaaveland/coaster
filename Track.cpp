@@ -216,7 +216,7 @@ double Track::distanceToT(double distance) const
 	}
 
 	assert(distance - arcDistances[searchIndex] >= 0.0);
-	double t = (double)searchIndex / (double)nControlPoints + 1.0/nControlPoints * (distance - arcDistances[searchIndex]) / section_dS[searchIndex];
+	double t = (double)searchIndex / (double)nControlPoints + delta_t * (distance-arcDistances[searchIndex]) / (arcDistances[searchIndex+1]-arcDistances[searchIndex]);
 
 	return t;
 }
@@ -240,18 +240,18 @@ double Track::distanceToT(double distance) const
 //	return distance;
 //}
 
-Vector3d Track::getTangentVector(double index) const
+Vector3d Track::getTangentVector(double t) const
 {
-	if (index < 0) index = 0; 
-	else if (index >= 1-getSmoothedDelta()) index = 1-getSmoothedDelta();
-	assert(index >= 0 && index <= 1);
+	if (t < 0) t = 0; 
+	else if (t >= 1-getSmoothedDelta()) t = 1-getSmoothedDelta();
+	assert(t >= 0 && t <= 1);
 
 
-	//printf("GetTangent t: %f \n", index);
+	//printf("GetTangent t: %f \n", t);
 
 	Vector3d pos0, pos1;
-	pos0 = getPos(index);
-	pos1 = getPos(index+getSmoothedDelta());
+	pos0 = getPos(t);
+	pos1 = getPos(t+getSmoothedDelta());
 		
 	Vector3d tangent = pos1 - pos0;
 	double length = tangent.length();
@@ -262,39 +262,39 @@ Vector3d Track::getTangentVector(double index) const
 	return tangent;
 }
 
-double Track::getCurvature(double index) const
+double Track::getCurvature(double t) const
 {
-	if (index < 0 || index >= 1) return 0.0;
-	assert(index >= 0 && index <= 1);
+	if (t < 0 || t >= 1) return 0.0;
+	assert(t >= 0 && t <= 1);
 
-	// printf("GetCurvature t: %f \n", index);
+	// printf("GetCurvature t: %f \n", t);
 
 	Vector3d pos0, pos1;
-	pos0 = this->getPos(index);
-	pos1 = this->getPos(index+getSmoothedDelta());
+	pos0 = this->getPos(t);
+	pos1 = this->getPos(t+getSmoothedDelta());
 	double ds = (pos1 - pos0).length();
 	
-	Vector3d dT = getTangentVector(index+getSmoothedDelta()) - getTangentVector(index);
+	Vector3d dT = getTangentVector(t+getSmoothedDelta()) - getTangentVector(t);
 	dT /= ds;
 
 	return dT.length();
 
 }
 
-Vector3d Track::getNormalVector(double index) const
+Vector3d Track::getNormalVector(double t) const
 {
 	// TODO: assert that normal is not of inf length!
-	// assert(index >= 0 && index <= 1);
+	// assert(t >= 0 && t <= 1);
 
-	// printf("GetNormal t: %f \n", index);
+	// printf("GetNormal t: %f \n", t);
 
 	// We need one point back and one point forward for the normal vector, so on the boundaries we hack.
-	if (index <= 0) return getNormalVector(getSmoothedDelta());
-	if (index >= 1) return getNormalVector(1-getSmoothedDelta());
+	if (t <= 0) return getNormalVector(getSmoothedDelta());
+	if (t >= 1) return getNormalVector(1-getSmoothedDelta());
 	
 	Vector3d T0, T1;
-	T0 = getTangentVector(index-getSmoothedDelta());
-	T1 = getTangentVector(index);
+	T0 = getTangentVector(t-getSmoothedDelta());
+	T1 = getTangentVector(t);
 		
 	// The normal vector points towards T1-T0
 	Vector3d normal = T1 - T0;
@@ -381,14 +381,14 @@ void Track::calculateArcDistances()
 	if (nControlPoints == 0) return;
 
 	arcDistances[0] = 0.0;
-	for (int i=1; i<nControlPoints; i++) {
+	for (int i=0; i<nControlPoints-1; i++) {
 		
-		arcDistances[i] = arcDistances[i-1];
-		double tstart = (double)i/nControlPoints;
+		arcDistances[i+1] = arcDistances[i];
+		double tstart = (double)i/(double)nControlPoints;
 
 		// Step throug this segment and accumulate arc lengths
-		for (double dt = 0.0; dt < 1.0/nControlPoints; dt += delta_t/smoothingValue)
-			arcDistances[i] += (getPos(dt + delta_t/smoothingValue) - getPos(dt)).length(); 
+		for (double dt = 0.0; dt < delta_t; dt += delta_t/smoothingValue)
+			arcDistances[i+1] += (getPos(tstart + dt + delta_t/smoothingValue) - getPos(tstart + dt)).length(); 
 	}
 
 	this->trackLength = arcDistances[nControlPoints-1];
@@ -396,10 +396,13 @@ void Track::calculateArcDistances()
 
 void Track::calculateSections_dS() {
 	assert (section_dS.size() == nControlPoints);
+	if (nControlPoints == 4) {
+		int asd = 0;
+	}
 	if (nControlPoints == 0) return;
 
 	for (int i=0; i < nControlPoints - 1; i++) {
-		section_dS[i] = (arcDistances[i+1]-arcDistances[i]);
+		section_dS[i] = (arcDistances[i+1]-arcDistances[i])/delta_t;
 	}
 	section_dS[nControlPoints-1] = 0.0;
 }

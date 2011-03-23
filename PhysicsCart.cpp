@@ -31,7 +31,7 @@ PhysicsCart::PhysicsCart()
 	wheelsOffsetx = 0;
 	wheelsOffsety = 0.5;		// Total widTh of cart becomes 1.0
 	thrustFactor = brakingFactor = 0.0;
-	brakingFactor = 10.0;
+	brakingFactor = 0.0;
 
 	// Assign initial values
 	v = 0;
