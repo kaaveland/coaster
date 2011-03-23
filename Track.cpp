@@ -310,12 +310,7 @@ Vector3d Track::getNormalVector(double t) const
 	double length = normal.length();
 
 	normal /= length;
-		
-	if(length < 0.0001){
-		//WARNING: Should not happen
-		normal = Vector3d(0, 1, 0);
-	}
-	
+			
 	return normal;
 }
 

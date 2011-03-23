@@ -326,6 +326,30 @@ bool Coaster::keyPressed(const OIS::KeyEvent& arg)
 	{
 		bRobotMode = !bRobotMode;
 	}
+
+	switch (arg.key) {
+	case OIS::KC_0: 
+		this->physicsCart.moveTo(0); break;
+	case OIS::KC_5:
+		this->physicsCart.moveTo(0.5); break;
+	case OIS::KC_UP:
+		this->physicsCart.setThrust(1.0); break;
+		cout << "Accelerating.\n";
+	case OIS::KC_DOWN:
+		this->physicsCart.setThrust(0.0);
+		this->physicsCart.setBraking(1.0);
+		cout << "Breaking.\n";
+		break;
+	case OIS::KC_P:
+		cout << physicsCart.toString(); break;
+	case OIS::KC_RSHIFT:
+		physicsCart.setBraking(0);
+		physicsCart.setThrust(0);
+		cout << "Coasting.\n";
+		break;
+
+
+	}
  
 	//then we return the base app keyPressed function so that we get all of the functionality
 	//and the return value in one line

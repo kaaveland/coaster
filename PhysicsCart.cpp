@@ -30,8 +30,8 @@ PhysicsCart::PhysicsCart()
 	maxThrust = 1.0;
 	wheelsOffsetx = 0;
 	wheelsOffsety = 0.5;		// Total widTh of cart becomes 1.0
-	thrustFactor = brakingFactor = 0.0;
-	brakingFactor = 0.0;
+	thrustFactor = 1.0;
+	brakingFactor = 1.0;
 
 	// Assign initial values
 	v = 0;
@@ -104,9 +104,8 @@ double PhysicsCart::calculate_a_T(double deltaDistance) const
 
 double PhysicsCart::calculate_a_N(double deltaDistance) const
 {
-	//double new_t = track->distanceToT(currentDistance + deltaDistance);
-	//return v*v*track->getCurvature(new_t);
-	return 0.0;
+	double new_t = track->deltaDistanceTodeltaT(deltaDistance, current_t);
+	return v*v*track->getCurvature(new_t);
 }
 
 void PhysicsCart::nextStep(double dT)
@@ -170,14 +169,15 @@ void PhysicsCart::calculateNextStep(double dT) {
 	if (insideCurve) {		// TODO: Simplify
 		// If the acceleration required to keep in circular motion is LESS THAN the gravity component towards the
 		//  center of curvature, the cart will lose traction and fly! Should probably have a tolerance here (vertical attitudes).
-		double asdf = v*v*track->getCurvature(currentDistance) - track->getNormalVector(currentDistance)*gvector;
+		double asdf = v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector;
 		if (v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector < 1e-12)
 			isFreefalling = true;
 	
 	} else {
 		// If the acceleration required to keep in circular motion is GREATER THAN the gravity component towards the
 		//  center of curvature, the cart will lose traction and fly! Should probably have a tolerance here (vertical attitudes).
-		if (v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector > 0.0) 
+		double asdf = v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector;
+		if (v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector > 1e-12) 
 			isFreefalling = true;
 		
 	}
@@ -185,8 +185,15 @@ void PhysicsCart::calculateNextStep(double dT) {
 
 
 void PhysicsCart::setSpeed(double v) {
-
 	this->v = v;
+}
+
+void PhysicsCart::setBraking(double factor) {
+	brakingFactor = factor;
+}
+
+void PhysicsCart::setThrust(double factor) {
+	thrustFactor = factor;
 }
 
 Vector3d PhysicsCart::getPos() const {
