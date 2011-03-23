@@ -110,6 +110,7 @@ void PhysicsCart::nextStep(double dT)
 	assert(track != NULL);
 
 	if (dT > MAXDELTATIME_LAG) return;
+	calculateNextStep(dT); return;
 
 	int repeats = (int)(dT / MAXDELTATIME) + 1;
 	for (double i = 1; i <= repeats; i++)
