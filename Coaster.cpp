@@ -401,11 +401,13 @@ bool Coaster::keyPressed(const OIS::KeyEvent& arg)
 	case OIS::KC_0: 
 		this->physicsCart.moveTo(0); break;
 	case OIS::KC_5:
-		this->physicsCart.moveTo(0.5); break;
-	case OIS::KC_UP:
-		this->physicsCart.setThrust(1.0); break;
+		this->physicsCart.moveTo(0.5*track.getTrackLength()); break;
+	case OIS::KC_M:
+		physicsCart.setBraking(0.0);
+		this->physicsCart.setThrust(1.0); 
 		cout << "Accelerating.\n";
-	case OIS::KC_DOWN:
+		break;
+	case OIS::KC_N:
 		this->physicsCart.setThrust(0.0);
 		this->physicsCart.setBraking(1.0);
 		cout << "Breaking.\n";

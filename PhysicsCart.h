@@ -73,6 +73,7 @@ private:
 	Vector3d vVelocity;			// Direction of travel
 	Vector3d vAccel;				// Acceleration vector
 	Vector3d vAngularVelocity;	// Angular velocities
+	Vector3d vForward;
 	double brakingFactor;
 	double thrustFactor;
 	
