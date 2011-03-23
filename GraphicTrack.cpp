@@ -46,7 +46,7 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 	Vector3d next_pos = track.getPos(t);
 	
 	Vector3d diff, norm, last_norm, tangent, last_tangent, up, last_up, norm_parallel;
-	double norm_scale, norm_length;
+	double norm_length;
 
 	//normal in crosspoint
 	norm = Vector3d(1,0,0);

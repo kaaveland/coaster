@@ -56,7 +56,7 @@ public:
 	int getNumberOfPoints(void) const;
 
 	 // Operations
-    void addPos(const Vector3d v);	// should be removed??
+    void addPos(const Vector3d v);
 	Vector3d getPos(double t) const;   // t = 0...1; 0=pos[0] ... 1=pos[max]
 	double distanceToT(double distance) const;	// meters = [0, trackLength];
 

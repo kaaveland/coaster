@@ -1,8 +1,6 @@
 #include "Coaster.h"
-#include "tests.h"
+//#include "tests.h"
 
-Track test3();
- 
 //-------------------------------------------------------------------------------------
 Coaster::Coaster(void):
 mCount(0),
@@ -187,7 +185,7 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 {
 	if(id == OIS::MB_Left)
 	{
-		this->track = test3();
+		//this->track = test3();
 		//track.setTrackLength(1000);
 		physicsCart.setTrack(&track);
 		physicsCart.moveTo(1.0);
@@ -253,7 +251,7 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 				mCurrentObject->attachObject(ent);
 
 				//add track 120 over the ground
-				//track.addPos(Vector3d(iter->worldFragment->singleIntersection.x, iter->worldFragment->singleIntersection.y+120, iter->worldFragment->singleIntersection.z));
+				track.addPos(Vector3d(iter->worldFragment->singleIntersection.x, iter->worldFragment->singleIntersection.y+120, iter->worldFragment->singleIntersection.z));
 				position_added = true;
  
 				//lets shrink the object, only because the terrain is pretty small
