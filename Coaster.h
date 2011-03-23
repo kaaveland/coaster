@@ -28,6 +28,8 @@ class Coaster : public BaseApplication
 public:
     Coaster(void);
     virtual ~Coaster(void);
+
+	Ogre::Quaternion generateRotationFromDirectionVector(Ogre::Vector3 vDirection);
  
 	enum QueryFlags
 	{
