@@ -187,8 +187,8 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 	{
 		//this->track = test3();
 		//track.setTrackLength(1000);
-		physicsCart.setTrack(&track);
-		physicsCart.moveTo(1.0);
+		//physicsCart.setTrack(&track);
+		//physicsCart.moveTo(1.0);
 			
 
 		//show that the current object has been deselected by removing the bounding box visual
@@ -278,7 +278,7 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 			rail->setQueryFlags(RAIL_MASK);
 			railNode->attachObject(rail);
 
-			physicsCart.moveTo(0);
+			physicsCart.moveTo(1.0);
 			Vector3d start_pos = physicsCart.getPos();
 			Ogre::Vector3 start_pos_ogre = Ogre::Vector3(start_pos.x, start_pos.y, start_pos.z);
 			cartNode->setPosition(start_pos_ogre);
