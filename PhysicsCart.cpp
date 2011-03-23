@@ -88,7 +88,7 @@ void PhysicsCart::moveTo(double distance) {
 // a_T will be calculated at the PhysicsCart's current distance.
 double PhysicsCart::calculate_a_T(double deltaDistance) const
 {	
-	double new_t = track->getDistanceTo(currentDistance + deltaDistance);
+	double new_t = track->distanceToT(currentDistance + deltaDistance);
 	int direction = 0;
 	if (abs(v) > SPEEDCUTOFF_FRICTION ) direction = (int)v/abs(v);	// Positive if going forward on track
 	
@@ -101,7 +101,7 @@ double PhysicsCart::calculate_a_T(double deltaDistance) const
 
 double PhysicsCart::calculate_a_N(double deltaDistance) const
 {
-	double new_t = track->getDistanceTo(currentDistance + deltaDistance);
+	double new_t = track->distanceToT(currentDistance + deltaDistance);
 	return v*v*track->getCurvature(new_t);
 }
 
