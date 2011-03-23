@@ -161,9 +161,10 @@ void PhysicsCart::calculateNextStep(double dT) {
 	current_t += track->deltaDistanceTodeltaT(delta_distance_corrected, current_t);
 	currentDistance += delta_distance_corrected;
 	
-	// Snap to track (direction and position)
-	vVelocity = v * track->getTangentVector(current_t);
+	// Snap to track (position, direction and up)
 	vPos = track->getPos(current_t);
+	vForward = v * track->getTangentVector(current_t);
+	vUp = track->getUp(current_t);
 				
 	bool insideCurve = (vUp * track->getNormalVector(current_t) >= 0.0);	// true if "inside" curvature
 	// cout << "a_N is " << a_N << "\n";
