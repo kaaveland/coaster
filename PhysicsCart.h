@@ -76,14 +76,24 @@ private:
 	double thrustFactor;
 	
 	// Simulation "constants"
-	double gravityAccel;
+	Vector3d gvector;
 
 	// Simulation properties
-	double currentDistance;			// Which Track section index the cart currently is in
-	double accumDeltaPos;		// Used in cases where the time step is too small  BLA BLA BLA BLA MS VS SUCKS
+	double currentDistance;			// Which distance the cart has travelled
+	double current_t;				// jepp
+	
+	// Helper functions
+	double calculate_a_T(double deltaDistance) const;
+	double calculate_a_N(double deltaDistance) const;
+
+	void calculateNextStep(double dT);
 
 	Track *track;					// Current main (center) track
 	bool isFreefalling;
+
+	// Debugging
+	int step;
+
 
 };
 

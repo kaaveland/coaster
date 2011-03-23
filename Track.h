@@ -24,12 +24,13 @@ public:
 	
 	~Track(void);
 	
-	void setTrackPoint(int index, Vector3d v);
-
-	// Gives the track's unit up vector at the given segment.
-	Vector3d getUp(int index) const;
+	/* void setTrackPoint(double index, Vector3d v); */
 
 	void setUp(int index, Vector3d v);
+
+	// Gives the track's unit up vector at the given t value.
+	Vector3d getControlUp(int index) const;
+	Vector3d getUp(double t) const;
 	
 	// Gives the unit tangent vector at the given segment.
 	Vector3d getTangentVector(double index) const;
@@ -43,7 +44,7 @@ public:
 
 
 	// Load and fill the track with points
-	void generateTrack(void);
+	/* void generateTrack(void); */
 
 	// Calculates the data for a track that is parallel to this instance, offset at
 	// the given distance. The new track is offset at the given distance perpendicular both to the Track's up vector
@@ -55,33 +56,48 @@ public:
 	int getNumberOfPoints(void) const;
 
 	 // Operations
-    void addPos(const Vector3d v);
+    void addPos(const Vector3d v);	// should be removed??
 	Vector3d getPos(double t) const;   // t = 0...1; 0=pos[0] ... 1=pos[max]
+	double distanceToT(double distance) const;	// meters = [0, trackLength];
 
     // Static method for computing the Catmull-Rom parametric equation
     // given a time (t) and a vector quadruple (p1,p2,p3,p4).
     Vector3d Eq(double t, const Vector3d p1, const Vector3d p2, const Vector3d p3, const Vector3d p4) const;
 
-	double getDelta(void) const;
-	int getSmoothValue(void) const;
+	double getSmoothedDelta(void) const;
+	int getSmoothingValue(void) const;
+
+	// Returns the arc distance from start to the point of the given track parameter.
+	double getDistanceTo(double t) const;	
+	double getSection_dS(double t) const;
+	
+	// Set the (dimensional/in meters) length of the track
+	// void setTrackLength(double length);
+	double getTrackLength() const;
 
 protected:
-	int nPoints;
+	int nControlPoints;
 	std::vector<Vector3d> pos;
 	std::vector<Vector3d> up;
+	std::vector<double> arcDistances;	// A vector that contains the (accumulative) arc distances to each of the control points.
+	std::vector<double> section_dS;		// A vector that contains the dS values for each segment
 	double delta_t;
-	static int const smoothValue = 50;
+	int smoothingValue;
+	double trackLength;
 	//double trackLength, ds;
 
 	// returns vector at distance [0,1]
-	Vector3d inline getVectorAt(double distance) const;
-	
-	// Returns the distance travelled to the start of the given track section.
-	double inline getDistance(int index) const;	
-	
+	//Vector3d inline getVectorAt(double distance) const;
+		
 private:
-	Vector3d getTrackPoint(int index) const;
+	Vector3d getControlPoint(int n) const;
+	void generateTrack();
+	void initValues();
+	void calculateArcDistances();
+	void calculateSections_dS();
 
+	int lastAccessedTrackIndex;
+	
 };
 
 #endif // __Track_h_

@@ -9,17 +9,53 @@
 
 using namespace std;
 
-void printVector(Vector3d v) {
+void static printVector(Vector3d v) {
 	cout << "[" << v[0] << ", " << v[1] << ", " << v[2] << "]";
 }
 
-double inline vectorDot(Vector3d v0, Vector3d v1)
+double static inline vectorDot(Vector3d v0, Vector3d v1)
 {
 	return (v0[0]*v1[0] + v0[1]*v1[1] + v0[2]*v1[2]);
 }
 
+static void test4() {
 
-void test1() {
+	vector<Vector3d> points;
+	points.push_back(Vector3d(0,0,0));
+	points.push_back(Vector3d(0.4,0,0));
+	points.push_back(Vector3d(0.8,0,0));
+	points.push_back(Vector3d(1.0,0,0));
+	Track track(points, points);
+	Vector3d punkt = track.getPos(0.5);
+	printf("%lf %lf %lf\n", punkt.x, punkt.y, punkt.z);
+	
+	char c;
+	cin >> c;
+	system("pause");
+}
+
+static Track test3() {
+
+	vector<Vector3d> points(6);
+	points.clear();
+
+	points.push_back(Vector3d(0,400,0));
+	points.push_back(Vector3d(50,320,10));
+	points.push_back(Vector3d(120,120,40));
+	points.push_back(Vector3d(180,150,50));
+	points.push_back(Vector3d(250,240,90));
+	points.push_back(Vector3d(300,410,120));
+
+	vector<Vector3d> up(6);
+	up.clear();
+
+	for (int i=0; i <= 5; i++) up.push_back(Vector3d(0,1,0));
+	
+
+	return Track(points, up);
+}
+
+static Track* test1() {
 
 	// Generate test track 1 [OK]
 	// Half-sine wave.
@@ -45,41 +81,43 @@ void test1() {
 	int index = 1;//nPoints/2;
 		
 	// Track tests
-	Track track(points, up);
+	Track* track = new Track(points, up);
 	Vector3d temp, norm, tang;
 	
-	temp = track.getPos(index);
+	temp = track->getPos(index);
 	cout << "Pos: "; printVector(temp); cout << endl;
 		
-	norm = track.getNormalVector(index);
+	norm = track->getNormalVector(index);
 	cout << "Normal: ";  printVector(norm); cout << endl;
 
-	tang = track.getTangentVector(index);
+	tang = track->getTangentVector(index);
 	cout << "Tangent: ";  printVector(tang);; cout << endl;
-	cout << "Curvature: " << track.getCurvature(index) << endl;
+	cout << "Curvature: " << track->getCurvature(index) << endl;
 
 	cout << "N dot T: " << vectorDot(norm, tang) << endl;
 
-	temp = track.getUp(index);
+	temp = track->getUp(index);
 	cout << "Up: "; printVector(temp); cout << endl;
+
+	return track;
 	
 	// Create parallel track test [OK]
 	/* Track parallel(nPoints);
-	track.getParallelTrack(1.0, parallel);
+	track->getParallelTrack(1->0, parallel);
 
-	temp = parallel.getPos(index);
+	temp = parallel->getPos(index);
 	cout << "Pos: "; printVector(temp); cout << endl;
-	temp = parallel.getPos(0);
+	temp = parallel->getPos(0);
 	cout << "Pos(i=0): "; printVector(temp); cout << endl;
 
-	temp = parallel.getNormalVector(index);
+	temp = parallel->getNormalVector(index);
 	cout << "Normal: "; printVector(temp); cout << endl;
 
-	temp = parallel.getTangentVector(index);
+	temp = parallel->getTangentVector(index);
 	cout << "Tangent: "; printVector(temp); cout << endl;
-	cout << "Curvature: " << track.getCurvature(index) << endl;
+	cout << "Curvature: " << track->getCurvature(index) << endl;
 
-	temp = parallel.getUp(index);
+	temp = parallel->getUp(index);
 	cout << "Up: "; printVector(temp); cout << endl;
 
 	cout << "\nEND TRACK TESTS\n";
@@ -87,23 +125,31 @@ void test1() {
 
 	// Cart test 1
 	
-	PhysicsCart cart;
-	cart.setTrack(&track);
-	cart.moveToIndex(nPoints/2+100);
-	for (int i=0; i < 1000; i++) {	// 10 seconds of simulation
+//	PhysicsCart cart;
+	//cart.setTrack(&track);
+
+	
+	//cart.moveTo(0.0);
+	//cart.setSpeed(4.0);
+	
+	
+	/*for (int i=0; i < 1000; i++) {	// 10 seconds of simulation
 
 		cart.nextStep(0.01);
 		cout << cart.toString() << endl;
-		cin.get();
-	}
+		//char c;
+		//cin.get(c);
+		//if (tolower(c) == 'r') goto restart;
+		//else if (tolower(c) == 'q') return;
+	}*/
 	
 		
-	cin.get();
+	//cin.get();
 
 
 }
 
-void test2() {
+static void test2(Track &track) {
 	// Generate test track 2
 	// Loop/circle radius 1.0 with center in origo.
 	const int nPoints = 1000;
@@ -120,10 +166,10 @@ void test2() {
 		up[i] = -pos;
 	}
 
-	int index = 1;//nPoints/2;
+	double index = 0.0;//nPoints/2;
 		
 	// Track tests
-	Track track(points, up);
+	track = Track(points, up);
 	Vector3d temp, norm, tang;
 	
 	temp = track.getPos(index);
@@ -138,7 +184,7 @@ void test2() {
 
 	cout << "N dot T: " << vectorDot(norm, tang) << endl;
 
-	temp = track.getUp(index);
+	temp = track.getUp((int)index);
 	cout << "Up: "; printVector(temp); cout << endl;
 	
 	
@@ -146,24 +192,25 @@ void test2() {
 	
 	PhysicsCart cart;
 	cart.setTrack(&track);
-	cart.moveToIndex(0);
+	//track.setTrackLength(PI);
+	cart.moveTo(0.0);
 	cart.setSpeed(20.0);
 	
-	for (int i=0; i < 100000; i++) {
+	/*for (int i=0; i < 100000; i++) {
 
 		cart.nextStep(0.001);
-		cout << cart.toString() << endl;
-		cin.get();
-	}
+		//cout << cart.toString() << endl;
+		//cin.get();
+	}*/
 	
 		
-	cin.get();
+	//cin.get();
 
 
 
 }
 
-void testVector3d() {
+static void testVector3d() {
 	Vector3d x(1,0,0);
 	Vector3d y(0,1,0);
 	cout << "Dot: " << x*y << endl;

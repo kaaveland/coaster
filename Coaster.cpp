@@ -1,4 +1,7 @@
 #include "Coaster.h"
+#include "tests.h"
+
+Track test3();
  
 //-------------------------------------------------------------------------------------
 Coaster::Coaster(void):
@@ -91,14 +94,14 @@ bool Coaster::frameRenderingQueued(const Ogre::FrameEvent& arg)
 {
 	//delta time
 	Ogre::Real dt = arg.timeSinceLastFrame;
-	/*
+	
 	if(physicsCart.hasTrack()){
 		Vector3d pos = physicsCart.getPos();
 		Ogre::Vector3 ogre_pos= Ogre::Vector3(pos.x, pos.y, pos.z);
 		cartNode->setPosition(ogre_pos);
 		physicsCart.nextStep(dt);
 	}
-	*/
+	
 
 	//we want to run everything in the previous frameRenderingQueued call
 	//but we also want to do something afterwards, so lets  start off with this
@@ -184,6 +187,12 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 {
 	if(id == OIS::MB_Left)
 	{
+		this->track = test3();
+		//track.setTrackLength(1000);
+		physicsCart.setTrack(&track);
+		physicsCart.moveTo(1.0);
+			
+
 		//show that the current object has been deselected by removing the bounding box visual
 		if(mCurrentObject)
 		{
@@ -208,7 +217,7 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 
 		Ogre::MeshManager *meshManager = mRoot->getMeshManager();
 
-		bool position_added = false;
+		bool position_added = true;
  
 		for(iter; iter != result.end(); iter++)
 		{
@@ -244,7 +253,7 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 				mCurrentObject->attachObject(ent);
 
 				//add track 120 over the ground
-				track.addPos(Vector3d(iter->worldFragment->singleIntersection.x, iter->worldFragment->singleIntersection.y+120, iter->worldFragment->singleIntersection.z));
+				//track.addPos(Vector3d(iter->worldFragment->singleIntersection.x, iter->worldFragment->singleIntersection.y+120, iter->worldFragment->singleIntersection.z));
 				position_added = true;
  
 				//lets shrink the object, only because the terrain is pretty small
