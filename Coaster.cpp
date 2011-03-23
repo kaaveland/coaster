@@ -39,7 +39,7 @@ void Coaster::createScene(void)
 	//Add cart 
 	cartNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("cartNode", Ogre::Vector3(0, 0, 0));
     
-	Ogre::Entity* cartEnt = mSceneMgr->createEntity("Cart", "vogn.mesh");
+	Ogre::Entity* cartEnt = mSceneMgr->createEntity("Cart", "minecart.mesh");
 				  cartEnt->setQueryFlags(CART_MASK);
 	cartNode->attachObject(cartEnt);
 	cartNode->setScale(0.1f, 0.1f, 0.1f);
