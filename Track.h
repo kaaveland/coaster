@@ -29,7 +29,6 @@ public:
 	void setUp(int index, Vector3d v);
 
 	// Gives the track's unit up vector at the given t value.
-	Vector3d getControlUp(int index) const;
 	Vector3d getUp(double t) const;
 	
 	// Gives the unit tangent vector at the given segment.
@@ -56,7 +55,7 @@ public:
 	int getNumberOfPoints(void) const;
 
 	 // Operations
-    void addPos(const Vector3d v);
+    void addPos(const Vector3d v, const Vector3d up);
 	Vector3d getPos(double t) const;   // t = 0...1; 0=pos[0] ... 1=pos[max]
 	double deltaDistanceTodeltaT(double ds, double current_t) const;	// meters = [0, trackLength];
 
@@ -69,21 +68,22 @@ public:
 
 	// Returns the arc distance from start to the point of the given track parameter.
 	//double getDistanceTo(double t) const;	
-	double getSection_dS(double t) const;
+	//double getSection_dS(double t) const;
 	double getArcLengthToControlPoint(double t) const;
 	
 	// Set the (dimensional/in meters) length of the track
 	// void setTrackLength(double length);
 	double getTrackLength() const;
-	Vector3d getControlPoint(int n) const;
+	Vector3d getControlPoint(int index) const;
+	Vector3d getControlUp(int index) const;
 
 protected:
 	int nControlPoints;
 	std::vector<Vector3d> pos;
 	std::vector<Vector3d> up;
 	std::vector<double> arcDistances;	// A vector that contains the (accumulative) arc distances to each of the control points.
-	std::vector<double> section_dS;		// A vector that contains the dS values for each segment
-	std::vector<Vector3d> finePoints;
+	//std::vector<double> section_dS;		// A vector that contains the dS values for each segment
+	//std::vector<Vector3d> finePoints;
 	double delta_t;
 	int smoothingValue;
 	double trackLength;
@@ -96,9 +96,8 @@ private:
 	void generateTrack();
 	void initValues();
 	void calculateArcDistances();
-	void calculateSections_dS();
-	void generateFinePoints(int nPoints);
-
+	//void calculateSections_dS();
+	
 	int lastAccessedTrackIndex;
 	
 };

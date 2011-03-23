@@ -252,7 +252,8 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 				mCurrentObject->attachObject(ent);
 
 				//add track 120 over the ground
-				track.addPos(Vector3d(iter->worldFragment->singleIntersection.x, iter->worldFragment->singleIntersection.y+120, iter->worldFragment->singleIntersection.z));
+				track.addPos(Vector3d(iter->worldFragment->singleIntersection.x, iter->worldFragment->singleIntersection.y+120, iter->worldFragment->singleIntersection.z),
+					Vector3d(0,1,0));
 				position_added = true;
  
 				//lets shrink the object, only because the terrain is pretty small

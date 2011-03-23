@@ -17,8 +17,11 @@ void Track::initValues() {
 	this->nControlPoints = 0;
 	this->delta_t = 1;
 	this->smoothingValue = 50;
-	this->lastAccessedTrackIndex = 0;
-
+	
+	pos = vector<Vector3d>(0);
+	up = vector<Vector3d>(0);
+	arcDistances = vector<double>(0);
+	
 }
 
 Track::Track(vector<Vector3d> const &pos, vector<Vector3d> const &up)
@@ -30,28 +33,17 @@ Track::Track(vector<Vector3d> const &pos, vector<Vector3d> const &up)
 	this->pos = pos;
 	this->up = up;
 	this->arcDistances = vector<double>(nControlPoints);
-	this->section_dS = vector<double>(nControlPoints);
+	//this->section_dS = vector<double>(nControlPoints);
 
 	this->delta_t = (double)1 / (double)pos.size();
 	calculateArcDistances();
-	calculateSections_dS();
+	//	calculateSections_dS();
 
 }
 
 Track::Track(void) {
 	initValues();
 
-	this->nControlPoints = 0;
-	this->delta_t = 1;
-	this->trackLength = 1.0;
-
-	this->arcDistances = vector<double>(0);
-	this->section_dS = vector<double>(0);
-
-	calculateArcDistances();
-	calculateSections_dS();
-	
-	//this->generateTrack();
 }
 
 /*Track::Track(int nControlPoints) {
@@ -89,6 +81,15 @@ Vector3d Track::getControlPoint(int index) const
 	return pos[index];
 }
 
+Vector3d Track::getControlUp(int index) const
+{
+	if (index < 0) index = 0;
+	else if (index >= nControlPoints) index = nControlPoints-1;
+	assert(index >= 0 && index < nControlPoints);
+
+	return up[index];
+}
+
 /*void Track::setTrackPoint(double index, Vector3d v)
 {
 	assert(index >= 0 && index < nControlPoints);
@@ -105,25 +106,33 @@ double Track::getTrackLength() const
 	return trackLength;
 }
 
-Vector3d Track::getControlUp(int index) const
-{
-	assert(index >= 0 && index < nControlPoints);
-	return Vector3d(0,1,0);
-	//return up[index];
-}
 
 Vector3d Track::getUp(double t) const
 {
-	//assert
-	//interpol
-	return Vector3d(0,1,0);
+	 // Find out in which interval we are on the spline
+    int p = (int)(t / delta_t);
+    // Compute local control point indices
+#define BOUNDS2(pp) { if (pp < 0) pp = 0; else if (pp >= (int)up.size()-1) pp = up.size() - 1; }
+    int p0 = p - 1;     BOUNDS2(p0);
+    int p1 = p;         BOUNDS2(p1);
+    int p2 = p + 1;     BOUNDS2(p2);
+    int p3 = p + 2;     BOUNDS2(p3);
+    // Relative (local) time 
+	double lt = (t - delta_t*(double)p) / delta_t;
+	// Interpolate
+	//printf("lt: %f, p: %d, p0:%d, p1:%d, p2:%d, p3:%d \n", lt, p, p0, p1, p2, p3);
+
+	Vector3d upPos = Track::Eq(lt, getControlPoint(p0)+getControlUp(p0), getControlPoint(p1)+getControlUp(p1), getControlPoint(p2)+getControlUp(p2), getControlPoint(p3)+getControlUp(p3));
+	
+	Vector3d diff = upPos - getPos(t);
+	return diff/diff.length();
+	
 }
 
-void Track::setUp(int index, Vector3d v)
+void Track::setUp(int index, Vector3d up)
 {
 	assert(index >= 0 && index < nControlPoints);
-	
-	up[index] = v;
+	this->up[index] = up;		
 }
 
 // Solve the Catmull-Rom parametric equation for a given time(t) and vector quadruple (p1,p2,p3,p4)
@@ -155,19 +164,17 @@ Vector3d Track::Eq(double t, const Vector3d p1, const Vector3d p2, const Vector3
 }
 
 // Not going to work now. Need to recalculate distance array
-void Track::addPos(const Vector3d v)
+void Track::addPos(const Vector3d v, const Vector3d up)
 {
 	nControlPoints += 1;
 	//printf("Add point x:%f y:%f z:%f \n", v.x, v.y, v.z);
-    pos.push_back(v);
+    this->pos.push_back(v);
+	this->up.push_back(up);
 	//printf("Added point x:%f, y:%f, z:%f \n", getTrackPoint(nControlPoints-1));
-	this->arcDistances = vector<double>(pos.size());
-	this->section_dS = vector<double>(pos.size());
+	this->arcDistances.resize(nControlPoints);
 
 	this->delta_t = (double)1 / (double)pos.size();
 	calculateArcDistances();
-	calculateSections_dS();
-
 }
 
 Vector3d Track::getPos(double t) const
@@ -396,22 +403,19 @@ void Track::calculateArcDistances()
 	this->trackLength = arcDistances[nControlPoints-1];
 }
 
-void Track::calculateSections_dS() {
-	assert (section_dS.size() == nControlPoints);
-	if (nControlPoints == 4) {
-		int asd = 0;
-	}
-	if (nControlPoints == 0) return;
+//void Track::calculateSections_dS() {
+//	assert (section_dS.size() == nControlPoints);
+//	if (nControlPoints == 4) {
+//		int asd = 0;
+//	}
+//	if (nControlPoints == 0) return;
+//
+//	for (int i=0; i < nControlPoints - 1; i++) {
+//		section_dS[i] = (arcDistances[i+1]-arcDistances[i])/delta_t;
+//	}
+//	section_dS[nControlPoints-1] = 0.0;
+//}
 
-	for (int i=0; i < nControlPoints - 1; i++) {
-		section_dS[i] = (arcDistances[i+1]-arcDistances[i])/delta_t;
-	}
-	section_dS[nControlPoints-1] = 0.0;
-}
-
-void Track::generateFinePoints(int nPoints) {
-
-}
 
 double Track::getArcLengthToControlPoint(double t) const
 {
@@ -421,10 +425,10 @@ double Track::getArcLengthToControlPoint(double t) const
 	return arcDistances[(int)(t*nControlPoints)];
 }
 
-double Track::getSection_dS(double t) const 
+/*double Track::getSection_dS(double t) const 
 {
 	return section_dS[(int)(nControlPoints*t)];
-}
+}*/
 
 int Track::getNumberOfPoints(void) const
 {
