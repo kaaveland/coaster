@@ -29,8 +29,8 @@ Track::Track(vector<Vector3d> const &pos, vector<Vector3d> const &up)
 	this->nControlPoints = pos.size();
 	this->pos = pos;
 	this->up = up;
-	this->arcDistances = vector<double>(1);
-	this->section_dS = vector<double>(1);
+	this->arcDistances = vector<double>(nControlPoints);
+	this->section_dS = vector<double>(nControlPoints);
 
 	this->delta_t = (double)1 / (double)pos.size();
 	calculateArcDistances();
@@ -45,8 +45,8 @@ Track::Track(void) {
 	this->delta_t = 1;
 	this->trackLength = 1.0;
 
-	this->arcDistances = vector<double>();
-	this->section_dS = vector<double>();
+	this->arcDistances = vector<double>(0);
+	this->section_dS = vector<double>(0);
 
 	calculateArcDistances();
 	calculateSections_dS();
