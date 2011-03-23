@@ -136,6 +136,16 @@ bool Coaster::frameRenderingQueued(const Ogre::FrameEvent& arg)
 		Vector3d pos = physicsCart.getPos();
 		Ogre::Vector3 ogre_pos= Ogre::Vector3(pos.x, pos.y, pos.z);
 		cartNode->setPosition(ogre_pos);
+
+		printf("Forward: x%f y%f z%f \n", physicsCart.getForward().x, physicsCart.getForward().y, physicsCart.getForward().z);
+
+		//rotate cart
+		Ogre::Vector3 mDirection = Ogre::Vector3(physicsCart.getForward().x, physicsCart.getForward().y, physicsCart.getForward().z);
+		Ogre::Vector3 src = cartNode->getOrientation() * Ogre::Vector3::UNIT_X;
+		Ogre::Quaternion quat = src.getRotationTo(mDirection);
+		cartNode->rotate(quat);
+
+		//next step
 		physicsCart.nextStep(dt);
 	}
 	
@@ -318,13 +328,12 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 			rail->setQueryFlags(RAIL_MASK);
 			railNode->attachObject(rail);
 
+			//start cart from start
 			physicsCart.moveTo(0.0);
 			Vector3d start_pos = physicsCart.getPos();
 			Ogre::Vector3 start_pos_ogre = Ogre::Vector3(start_pos.x, start_pos.y, start_pos.z);
 			cartNode->setPosition(start_pos_ogre);
-			
-			//Ogre::Quaternion rot = Ogre::Quaternion(track.getForward());
-			//cartNode->rotate(rot);
+
 			printf("Rail generated\n");
 			
 		}
