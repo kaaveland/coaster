@@ -70,7 +70,7 @@ private:
 	Vector3d vPos;				// Position vector, origin is lower back center (is OK??)
 	Vector3d vUp;				// Normal/"up" vector/z-axis
 	double v;					// Track speed
-	Vector3d vForward;			// Direction of travel
+	Vector3d vVelocity;			// Direction of travel
 	Vector3d vAccel;				// Acceleration vector
 	Vector3d vAngularVelocity;	// Angular velocities
 	double brakingFactor;

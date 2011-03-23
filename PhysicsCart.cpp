@@ -10,7 +10,7 @@
 #define NULL 0
 #define WILLFLYTOLERANCE 1e-12
 #define MAXDELTATIME 1e-1
-#define MAXDELTATIME_LAG 1.0
+#define MAXDELTATIME_LAG 1e-1
 #define SPEEDCUTOFF_FRICTION 1e-12
 
 using std::stringstream;
@@ -30,17 +30,17 @@ PhysicsCart::PhysicsCart()
 	maxThrust = 1.0;
 	wheelsOffsetx = 0;
 	wheelsOffsety = 0.5;		// Total widTh of cart becomes 1.0
-	thrustFactor = 1.0;
-	brakingFactor = 1.0;
+	thrustFactor = 0.0;
+	brakingFactor = 0.0;
 
 	// Assign initial values
 	v = 0;
-	vForward = Vector3d(0,0,0);
+	vVelocity = Vector3d(0,0,0);
 	vAccel = Vector3d(0,0,0);
 	currentDistance = 0;
 	current_t = 0;
 
-	gvector = Vector3d(0,-10,0);
+	gvector = Vector3d(0,-9.81,0);
 	
 	isFreefalling = false;
 	track = NULL;
@@ -80,7 +80,7 @@ void PhysicsCart::moveTo(double distance) {
 
 	vPos = track->getPos(t);
 	vUp = track->getUp(t);
-	vForward = track->getTangentVector(t);
+	vVelocity = track->getTangentVector(t);
 	v = 0;
 	vAccel = Vector3d(0,0,0);
 	
@@ -126,9 +126,8 @@ void PhysicsCart::calculateNextStep(double dT) {
 
 	if (isFreefalling) {
 		//vAccel = gvector;
-		v += gvector.length() * dT;
-		vPos +=  v * gvector/gvector.length() * dT; // + 0.5 * vAccel * dT * dT;
-		
+		vPos +=  vVelocity * dT; // + 0.5 * vAccel * dT * dT;
+		vVelocity += gvector * dT;
 		return;
 	}
 	
@@ -160,11 +159,13 @@ void PhysicsCart::calculateNextStep(double dT) {
 	
 	// Snap to track (position, direction and up)
 	vPos = track->getPos(current_t);
-	vForward = track->getTangentVector(current_t);
+	vVelocity = v*track->getTangentVector(current_t);
 	vUp = track->getUp(current_t);
 				
 	bool insideCurve = (vUp * track->getNormalVector(current_t) >= 0.0);	// true if "inside" curvature
 	// cout << "a_N is " << a_N << "\n";
+	printf("Curvature: %lf, up dot normal: %lf \n", track->getCurvature(current_t), vUp * track->getNormalVector(current_t));
+	printf("v: %lf \n", v);
 		
 	if (insideCurve) {		// TODO: Simplify
 		// If the acceleration required to keep in circular motion is LESS THAN the gravity component towards the
@@ -205,7 +206,11 @@ Vector3d PhysicsCart::getUp() const {
 }
 
 Vector3d PhysicsCart::getForward() const {
-	return vForward;
+	if (!isFreefalling) return vVelocity/vVelocity.length();
+	
+	return vVelocity/vVelocity.length();
+	// TODO: angular velocity and calculate forward in freefall
+
 }
 
 string PhysicsCart::toString() const {
@@ -215,7 +220,7 @@ string PhysicsCart::toString() const {
 		"isFreefalling = " << isFreefalling << "\n" <<
 		"Position = [ " << vPos.x << ", " << vPos.y << ", " << vPos.z << "]\n" <<
 		"Up vecto = [" << vUp.x << ", " << vUp.y << ", " << vUp.z << "]\n" << 
-		"Velocity = [" << vForward.x << ", " << vForward.y << ", " << vForward.z << "], v = " << v << "\n" <<
+		"Velocity = [" << vVelocity.x << ", " << vVelocity.y << ", " << vVelocity.z << "], v = " << v << "\n" <<
 		"Accelera = [" << vAccel.x << ", " << vAccel.y << ", " << vAccel.z << "]\n" <<
 		"--Track info current index--\n" <<
 		"Position = [" << track->getPos(currentDistance).x << ", " << track->getPos(currentDistance).y << ", " << track->getPos(currentDistance).z << "]\n" <<
