@@ -68,7 +68,7 @@ public:
 	int getSmoothingValue(void) const;
 
 	// Returns the arc distance from start to the point of the given track parameter.
-	double getDistanceTo(double t) const;	
+	//double getDistanceTo(double t) const;	
 	double getSection_dS(double t) const;
 	
 	// Set the (dimensional/in meters) length of the track

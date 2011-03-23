@@ -41,10 +41,10 @@ static Track test3() {
 
 	points.push_back(Vector3d(0,400,0));
 	points.push_back(Vector3d(50,320,10));
-	points.push_back(Vector3d(120,120,40));
-	points.push_back(Vector3d(180,150,50));
-	points.push_back(Vector3d(250,240,90));
-	points.push_back(Vector3d(300,410,120));
+	points.push_back(Vector3d(200,120,40));
+	points.push_back(Vector3d(300,150,50));
+	points.push_back(Vector3d(450,240,90));
+	points.push_back(Vector3d(400,410,200));
 
 	vector<Vector3d> up(6);
 	up.clear();

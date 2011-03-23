@@ -206,28 +206,28 @@ double Track::distanceToT(double distance) const
 	return t;
 }
 
-double Track::getDistanceTo(double t) const
-{
-	assert(false);
-	return 0.0;
-
-	assert(t >= 0.0 && t <= 1.0);
-	
-	int index = (int)(t*nControlPoints);
-	double start_t = index * delta_t;
-	double local_t = t - start_t;
-
-	if (index == nControlPoints-1) return arcDistances[nControlPoints-1];
-
-	double distance = arcDistances[index];		// This is the arc distance to the start of the segment that contains the point with parameter t
-	distance += (arcDistances[index+1]-arcDistances[index]) * (local_t/delta_t);	// Linear interpolation between this and next control point
-
-	return distance;
-}
+//double Track::getDistanceTo(double t) const
+//{
+//	assert(false);
+//	return 0.0;
+//
+//	assert(t >= 0.0 && t <= 1.0);
+//	
+//	int index = (int)(t*nControlPoints);
+//	double start_t = index * delta_t;
+//	double local_t = t - start_t;
+//
+//	if (index == nControlPoints-1) return arcDistances[nControlPoints-1];
+//
+//	double distance = arcDistances[index];		// This is the arc distance to the start of the segment that contains the point with parameter t
+//	distance += (arcDistances[index+1]-arcDistances[index]) * (local_t/delta_t);	// Linear interpolation between this and next control point
+//
+//	return distance;
+//}
 
 Vector3d Track::getTangentVector(double index) const
 {
-	if (index < 0) index = 0;
+	if (index < 0) index = 0; 
 	else if (index >= 1-getSmoothedDelta()) index = 1-getSmoothedDelta();
 	assert(index >= 0 && index <= 1);
 
