@@ -42,6 +42,7 @@ void Coaster::createScene(void)
 	Ogre::Entity* cartEnt = mSceneMgr->createEntity("Cart", "vogn.mesh");
 				  cartEnt->setQueryFlags(CART_MASK);
 	cartNode->attachObject(cartEnt);
+	cartNode->setScale(0.1f, 0.1f, 0.1f);
 
 
 	
