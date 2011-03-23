@@ -28,6 +28,8 @@ class Coaster : public BaseApplication
 public:
     Coaster(void);
     virtual ~Coaster(void);
+
+	Ogre::Quaternion generateRotationFromDirectionVector(Ogre::Vector3 vDirection);
  
 	enum QueryFlags
 	{
@@ -67,6 +69,9 @@ protected:
 	Ogre::SceneNode *cartNode;
 
 	PhysicsCart physicsCart;
+
+	Ogre::String cameraName;
+	void changeViewPoint(void);
 
 	//void createRailMesh(const Track track, const bool export_mesh);
 };
