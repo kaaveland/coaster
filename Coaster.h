@@ -68,6 +68,9 @@ protected:
 
 	PhysicsCart physicsCart;
 
+	Ogre::String cameraName;
+	void changeViewPoint(void);
+
 	//void createRailMesh(const Track track, const bool export_mesh);
 };
  

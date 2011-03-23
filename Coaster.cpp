@@ -44,7 +44,28 @@ void Coaster::createScene(void)
 	cartNode->attachObject(cartEnt);
 	cartNode->setScale(0.1f, 0.1f, 0.1f);
 
+	cameraName = "PlayerCam";
+	// create the camera
+    pCamera = mSceneMgr->createCamera("CartCam");
+	cartNode->attachObject(pCamera);
 
+	/*
+	// create the camera
+    mCamera = mSceneMgr->createCamera("PlayerCam");
+	cartNode->attachObject(mCamera);
+    // set its position, direction  
+    mCamera->setPosition(Ogre::Vector3(0,10,500));
+    mCamera->lookAt(Ogre::Vector3(0,0,0));
+    // set the near clip distance
+    mCamera->setNearClipDistance(5);
+	*/
+ 
+	/*
+	cam = mCamera;
+	vp = mWindow->addViewport(cam, 1, 0.5, 0, 0.5, 1);
+	vp->setBackgroundColour(Ogre::ColourValue(0,0,0));
+	cam->setAspectRatio(Ogre::Real(vp->getActualWidth()) / Ogre::Real(vp->getActualHeight()));
+	*/
 	
 	//Scene setup
 	mSceneMgr->setAmbientLight(Ogre::ColourValue(0.5f, 0.5f, 0.5f));
@@ -60,7 +81,7 @@ void Coaster::createScene(void)
     Ogre::Light* l = mSceneMgr->createLight("MainLight");
     l->setPosition(20,80,50);
  
-	//camera setup
+	//camera change setup
 	mCamera->setPosition(670, 860, 4570);
 	mCamera->pitch(Ogre::Degree(-30));
 	mCamera->yaw(Ogre::Degree(-45));
@@ -72,6 +93,23 @@ void Coaster::createScene(void)
 	//show the CEGUI cursor
 	CEGUI::SchemeManager::getSingleton().create((CEGUI::utf8*)"TaharezLook.scheme");
 	CEGUI::MouseCursor::getSingleton().setImage("TaharezLook", "MouseArrow");
+}
+
+void Coaster::changeViewPoint(void){
+
+	if(cameraName == "PlayerCam"){
+		cameraName = "CartCam";
+	} else {
+		cameraName = "PlayerCam";
+	}
+
+	mWindow->removeAllViewports();
+	Ogre::Viewport *vp = 0;
+	Ogre::Camera *cam = mSceneMgr->getCamera(cameraName);
+	vp = mWindow->addViewport(cam, 0, 0, 0, 1, 1);
+	vp->setBackgroundColour(Ogre::ColourValue(0,0,0));
+	cam->setAspectRatio(Ogre::Real(vp->getActualWidth()) / Ogre::Real(vp->getActualHeight()));
+
 }
  
 void Coaster::chooseSceneManager(void)
@@ -283,6 +321,9 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 			Vector3d start_pos = physicsCart.getPos();
 			Ogre::Vector3 start_pos_ogre = Ogre::Vector3(start_pos.x, start_pos.y, start_pos.z);
 			cartNode->setPosition(start_pos_ogre);
+			
+			//Ogre::Quaternion rot = Ogre::Quaternion(track.getForward());
+			//cartNode->rotate(rot);
 			printf("Rail generated\n");
 			
 		}
@@ -324,6 +365,7 @@ bool Coaster::keyPressed(const OIS::KeyEvent& arg)
 	if(arg.key == OIS::KC_SPACE)
 	{
 		bRobotMode = !bRobotMode;
+		changeViewPoint();
 	}
  
 	//then we return the base app keyPressed function so that we get all of the functionality
