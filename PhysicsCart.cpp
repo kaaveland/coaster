@@ -122,7 +122,7 @@ void PhysicsCart::calculateNextStep(double dT) {
 	//cout << toString() << "Moving " << dT << " seconds.\nCurrent distance: " << currentDistance << " / " << track->getTrackLength() << "\n";
 	
 	if (currentDistance < 0.0 || currentDistance >= track->getTrackLength())
-	isFreefalling = true;			// We have gone outside of the track, set to free fall mode
+		isFreefalling = true;			// We have gone outside of the track, set to free fall mode
 
 	if (isFreefalling) {
 		vAccel = gvector;
