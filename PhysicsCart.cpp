@@ -69,8 +69,8 @@ bool PhysicsCart::hasTrack() const
 
 void PhysicsCart::moveTo(double distance) {
 	assert(track != NULL);
-	if (distance < 0.0) moveTo(0.0);
-	if (distance > track->getTrackLength()) moveTo(track->getTrackLength());
+	if (distance < 0.0) distance = 0.0;
+	if (distance > track->getTrackLength()) distance = track->getTrackLength();
 
 	// Not going to work,  unless iterate over track's get
 	currentDistance = distance;
