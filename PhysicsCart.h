@@ -47,6 +47,7 @@ public:
 
 	Vector3d getPos() const;
 	Vector3d getUp() const;
+	Vector3d getForward() const;
 
 	// Debugging/testing functions
 	string toString() const;	

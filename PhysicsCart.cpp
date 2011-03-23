@@ -35,7 +35,7 @@ PhysicsCart::PhysicsCart()
 
 	// Assign initial values
 	v = 0;
-	vVelocity = Vector3d(0,0,0);
+	vForward = Vector3d(0,0,0);
 	vAccel = Vector3d(0,0,0);
 	currentDistance = 0;
 	current_t = 0;
@@ -78,10 +78,9 @@ void PhysicsCart::moveTo(double distance) {
 	currentDistance = track->getArcLengthToControlPoint(t);
 	current_t = t;
 
-	vPos = track->getPos(t);	// FIX
-	vUp = track->getUp(t);	// FIX
-	
-	vVelocity = Vector3d(0,0,0);
+	vPos = track->getPos(t);
+	vUp = track->getUp(t);
+	vForward = track->getTangentVector(t);
 	v = 0;
 	vAccel = Vector3d(0,0,0);
 	
@@ -127,11 +126,10 @@ void PhysicsCart::calculateNextStep(double dT) {
 	//cout << toString() << "Moving " << dT << " seconds.\nCurrent distance: " << currentDistance << " / " << track->getTrackLength() << "\n";
 
 	if (isFreefalling) {
-		vAccel = gvector;
-		vPos +=  vVelocity * dT + 0.5 * vAccel * dT * dT;
-		vVelocity += vAccel * dT;
-		v = vVelocity.length();
-
+		//vAccel = gvector;
+		v += gvector.length() * dT;
+		vPos +=  v * gvector/gvector.length() * dT; // + 0.5 * vAccel * dT * dT;
+		
 		return;
 	}
 	
@@ -188,7 +186,6 @@ void PhysicsCart::calculateNextStep(double dT) {
 
 void PhysicsCart::setSpeed(double v) {
 
-	vVelocity = v * track->getTangentVector(current_t);
 	this->v = v;
 }
 
@@ -200,6 +197,10 @@ Vector3d PhysicsCart::getUp() const {
 	return vUp;
 }
 
+Vector3d PhysicsCart::getForward() const {
+	return vForward;
+}
+
 string PhysicsCart::toString() const {
 	stringstream res;
 	res << "--PhysicsCart info--\n" << 
@@ -207,7 +208,7 @@ string PhysicsCart::toString() const {
 		"isFreefalling = " << isFreefalling << "\n" <<
 		"Position = [ " << vPos.x << ", " << vPos.y << ", " << vPos.z << "]\n" <<
 		"Up vecto = [" << vUp.x << ", " << vUp.y << ", " << vUp.z << "]\n" << 
-		"Velocity = [" << vVelocity.x << ", " << vVelocity.y << ", " << vVelocity.z << "], v = " << v << "\n" <<
+		"Velocity = [" << vForward.x << ", " << vForward.y << ", " << vForward.z << "], v = " << v << "\n" <<
 		"Accelera = [" << vAccel.x << ", " << vAccel.y << ", " << vAccel.z << "]\n" <<
 		"--Track info current index--\n" <<
 		"Position = [" << track->getPos(currentDistance).x << ", " << track->getPos(currentDistance).y << ", " << track->getPos(currentDistance).z << "]\n" <<
