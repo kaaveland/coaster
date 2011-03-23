@@ -96,7 +96,7 @@ double PhysicsCart::calculate_a_T(double deltaDistance) const
 	if (abs(v) > SPEEDCUTOFF_FRICTION ) direction = (int)v/abs(v);	// Positive if going forward on track
 	
 	double a_T = thrustFactor*maxThrust/mass 
-		- 0.0*direction*brakingFactor
+		- direction*brakingFactor
 		+ gvector * track->getTangentVector(new_t);	// Possibly air resistance
 
 	return a_T;
@@ -161,7 +161,7 @@ void PhysicsCart::calculateNextStep(double dT) {
 	
 	// Snap to track (position, direction and up)
 	vPos = track->getPos(current_t);
-	vForward = v * track->getTangentVector(current_t);
+	vForward = track->getTangentVector(current_t);
 	vUp = track->getUp(current_t);
 				
 	bool insideCurve = (vUp * track->getNormalVector(current_t) >= 0.0);	// true if "inside" curvature
