@@ -36,7 +36,11 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 	Vector3d vec_math, vec_math2;
 	Ogre::Vector3 vec, next_vec;
 
-	//printf("Points: %d \n", track.getNumberOfPoints());
+	printf("Points: %d \n", track.getNumberOfPoints());
+
+	for(int h=0; h<track.getNumberOfPoints(); h++){
+		printf("h:%d x:%f y:%f z:%f \n", h, track.getControlPoint(h).x, track.getControlPoint(h).y, track.getControlPoint(h).z);
+	}
 
 	double td = track.getSmoothedDelta();
 	double t = td;
@@ -96,9 +100,23 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 	right_front_bottom_right	= Ogre::Vector3(cur_pos.x - norm.x - norm_parallel.x, cur_pos.y - size.y, cur_pos.z - norm.z - norm_parallel.z);
 	right_front_bottom_left		= Ogre::Vector3(cur_pos.x + norm.x - norm_parallel.x, cur_pos.y - size.y, cur_pos.z + norm.z - norm_parallel.z);
 
+	/*
+	printf("LFTR: x: %f y:%f z:%f \n", left_front_top_right.x, left_front_top_right.y, left_front_top_right.z);
+	printf("LFTL: x: %f y:%f z:%f \n", left_front_top_left.x, left_front_top_left.y, left_front_top_left.z);
+	printf("LFBR: x: %f y:%f z:%f \n", left_front_bottom_right.x, left_front_bottom_right.y, left_front_bottom_right.z);
+	printf("LFBL: x: %f y:%f z:%f \n", left_front_bottom_left.x, left_front_bottom_left.y, left_front_bottom_left.z);
+
+	printf("RFTR: x: %f y:%f z:%f \n", right_front_top_right.x, left_front_top_right.y, left_front_top_right.z);
+	printf("RFTL: x: %f y:%f z:%f \n", right_front_top_left.x, left_front_top_left.y, left_front_top_left.z);
+	printf("RFBR: x: %f y:%f z:%f \n", right_front_bottom_right.x, left_front_bottom_right.y, left_front_bottom_right.z);
+	printf("RFBL: x: %f y:%f z:%f \n", right_front_bottom_left.x, left_front_bottom_left.y, left_front_bottom_left.z);
+	*/
+
 	t += td;
-	for(int i=0; i<(track.getNumberOfPoints()-2)*track.getSmoothedDelta(); i++){
+
+	for(int i=0; i<(track.getNumberOfPoints()-1)*track.getSmoothingValue(); i++){
 	
+		//printf("T: %f\n", t);
 		last_pos = cur_pos;
 		cur_pos = next_pos;
 		if(t > 1) t = 1;
@@ -108,6 +126,7 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 		last_up = up;
 
 		tangent = track.getTangentVector(t);
+		printf("Tangent: x:%f y:%f z:%f \n", tangent.x, tangent.y, tangent.z);
 		up = track.getUp(t);
 		norm = up.cross(tangent);
 
@@ -120,19 +139,24 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 		norm_parallel = norm*5;
 
 		//left rail
-		//left_back_top_right		= Ogre::Vector3(cur_pos.x - last_norm.x + norm_parallel.x, cur_pos.y + size.y, cur_pos.z - last_norm.z + norm_parallel.z);
-		//left_back_top_left		= Ogre::Vector3(cur_pos.x + last_norm.x + norm_parallel.x, cur_pos.y + size.y, cur_pos.z + last_norm.z + norm_parallel.z);
-		//left_back_bottom_left	= Ogre::Vector3(cur_pos.x + last_norm.x + norm_parallel.x, cur_pos.y - size.y, cur_pos.z + last_norm.z + norm_parallel.z);
-		//left_back_bottom_right	= Ogre::Vector3(cur_pos.x - last_norm.x + norm_parallel.x, cur_pos.y - size.y, cur_pos.z - last_norm.z + norm_parallel.z);
-		left_back_top_right		= left_front_top_right;
 		left_back_top_left		= left_front_top_left;
 		left_back_bottom_left	= left_front_bottom_left;
 		left_back_bottom_right	= left_front_bottom_right;
 
-		left_front_top_right	= Ogre::Vector3(next_pos.x - norm.x + norm_parallel.x, next_pos.y + size.y, next_pos.z - norm.z + norm_parallel.z);
+		/*
+		printf("LFTR: next_pos.x: %f, norm.x %f, norm_parallel.x %f, next_pos.y %f, size.y :%f next_pos.z %f norm.z %f norm_parallel.z %f \n", next_pos.x, norm.x, norm_parallel.x, next_pos.y ,size.y, next_pos.z , norm.z , norm_parallel.z);
+		printf("LFTR: x: %f y:%f z:%f \n", next_pos.x - norm.x + norm_parallel.x, next_pos.y + size.y, next_pos.z - norm.z + norm_parallel.z);
+		printf("LFTL: x: %f y:%f z:%f \n", next_pos.x + norm.x + norm_parallel.x, next_pos.y + size.y, next_pos.z + norm.z + norm_parallel.z);
+		printf("LFBR: x: %f y:%f z:%f \n", next_pos.x - norm.x + norm_parallel.x, next_pos.y - size.y, next_pos.z - norm.z + norm_parallel.z);
+		printf("LFBL: x: %f y:%f z:%f \n", next_pos.x + norm.x + norm_parallel.x, next_pos.y - size.y, next_pos.z + norm.z + norm_parallel.z);
+		*/
+		
+		left_front_top_right	= Ogre::Vector3(next_pos.x - norm.x + norm_parallel.x, next_pos.y + size.y+200, next_pos.z - norm.z + norm_parallel.z);
 		left_front_top_left		= Ogre::Vector3(next_pos.x + norm.x + norm_parallel.x, next_pos.y + size.y, next_pos.z + norm.z + norm_parallel.z);
 		left_front_bottom_right	= Ogre::Vector3(next_pos.x - norm.x + norm_parallel.x, next_pos.y - size.y, next_pos.z - norm.z + norm_parallel.z);
 		left_front_bottom_left	= Ogre::Vector3(next_pos.x + norm.x + norm_parallel.x, next_pos.y - size.y, next_pos.z + norm.z + norm_parallel.z);
+
+		//printf("Making track %d \n", i);
 
 		//top
 		rail.position(left_front_top_right); // 0
@@ -157,16 +181,16 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 		//int offset = i*20;
 		int offset = i*16;
 		//top
-		rail.triangle(offset+0, offset+1, offset+2);	rail.triangle(offset+1, offset+3, offset+2);
+		//rail.triangle(offset+0, offset+1, offset+2);	rail.triangle(offset+1, offset+3, offset+2);
 		
 		//bottom
-		rail.triangle(offset+4, offset+6, offset+5);	rail.triangle(offset+5, offset+6, offset+7);
+		//rail.triangle(offset+4, offset+6, offset+5);	rail.triangle(offset+5, offset+6, offset+7);
 
 		//right
-		rail.triangle(offset+0, offset+2, offset+4);	rail.triangle(offset+2, offset+6, offset+4);
+		//rail.triangle(offset+0, offset+2, offset+4);	rail.triangle(offset+2, offset+6, offset+4);
 
 		//left
-		rail.triangle(offset+1, offset+5, offset+3);	rail.triangle(offset+3, offset+5, offset+7);
+		//rail.triangle(offset+1, offset+5, offset+3);	rail.triangle(offset+3, offset+5, offset+7);
 		
 		//right rail
 		right_back_top_right	= right_front_top_right;
@@ -214,10 +238,24 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 		//left
 		rail.triangle(offset+1, offset+5, offset+3);	rail.triangle(offset+3, offset+5, offset+7);
 		
+		/*
 
+	printf("LFTR: x: %f y:%f z:%f \n", left_front_top_right.x, left_front_top_right.y, left_front_top_right.z);
+	printf("LFTL: x: %f y:%f z:%f \n", left_front_top_left.x, left_front_top_left.y, left_front_top_left.z);
+	printf("LFBR: x: %f y:%f z:%f \n", left_front_bottom_right.x, left_front_bottom_right.y, left_front_bottom_right.z);
+	printf("LFBL: x: %f y:%f z:%f \n", left_front_bottom_left.x, left_front_bottom_left.y, left_front_bottom_left.z);
+
+	printf("RFTR: x: %f y:%f z:%f \n", right_front_top_right.x, left_front_top_right.y, left_front_top_right.z);
+	printf("RFTL: x: %f y:%f z:%f \n", right_front_top_left.x, left_front_top_left.y, left_front_top_left.z);
+	printf("RFBR: x: %f y:%f z:%f \n", right_front_bottom_right.x, left_front_bottom_right.y, left_front_bottom_right.z);
+	printf("RFBL: x: %f y:%f z:%f \n", right_front_bottom_left.x, left_front_bottom_left.y, left_front_bottom_left.z);
+	*/
 	}
 
+
 	} // more than 3 points
+
+	
 
 	rail.end();
  

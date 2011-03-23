@@ -75,6 +75,7 @@ public:
 	// Set the (dimensional/in meters) length of the track
 	// void setTrackLength(double length);
 	double getTrackLength() const;
+	Vector3d getControlPoint(int n) const;
 
 protected:
 	int nControlPoints;
@@ -92,7 +93,6 @@ protected:
 	//Vector3d inline getVectorAt(double distance) const;
 		
 private:
-	Vector3d getControlPoint(int n) const;
 	void generateTrack();
 	void initValues();
 	void calculateArcDistances();

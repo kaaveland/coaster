@@ -216,7 +216,7 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 
 		Ogre::MeshManager *meshManager = mRoot->getMeshManager();
 
-		bool position_added = true;
+		bool position_added = false;
  
 		for(iter; iter != result.end(); iter++)
 		{
