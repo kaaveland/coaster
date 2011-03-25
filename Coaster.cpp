@@ -32,6 +32,7 @@ void Coaster::createScene(void)
 	Ogre::Entity* cartEnt = mSceneMgr->createEntity("Cart", "minecart.mesh");
 				  cartEnt->setQueryFlags(CART_MASK);
 	cartNode->attachObject(cartEnt);
+	cartNode->yaw(Ogre::Degree(90));
 	cartNode->setScale(0.1f, 0.1f, 0.1f);
 
 	
@@ -115,12 +116,7 @@ bool Coaster::frameRenderingQueued(const Ogre::FrameEvent& arg)
 
 		//rotate cart
 		Ogre::Vector3 mDirection = Ogre::Vector3(physicsCart.getForward().x, physicsCart.getForward().y, physicsCart.getForward().z);
-		//Ogre::Quaternion mRotSrc = cartNode->getOrientation();
-		
-		//printf("dir: x:%f y:%f z:%f \n", mDirection.x, mDirection.y, mDirection.z);
 
-		//cartNode->rotate(generateRotationFromDirectionVector(mDirection));
-		//cartNode->setDirection(mDirection);
 		cartNode->setOrientation(generateRotationFromDirectionVector(mDirection));
 
 		//next step
