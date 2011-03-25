@@ -18,7 +18,8 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 
 	const float width = 0.15f;
 	const float height = 0.3f;
-	const float length_between_rails = 1.0f;
+	// times longer than width/2 is more correct
+	const float length_between_rails = 20.0f;
 
 	Ogre::ManualObject rail("RailObject");
 	Ogre::Vector3 size(width / 2, height/2, 0);
@@ -136,20 +137,21 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 		norm.y = 0;
 		t += td;
 		
-		norm_parallel = norm*5;
+		norm_parallel = norm*length_between_rails;
 
 		//left rail
 		left_back_top_left		= left_front_top_left;
+		left_back_top_right		= left_front_top_right;
 		left_back_bottom_left	= left_front_bottom_left;
 		left_back_bottom_right	= left_front_bottom_right;
 
-		
+		/*
 		printf("LFTR: next_pos.x: %f, norm.x %f, norm_parallel.x %f, next_pos.y %f, size.y :%f next_pos.z %f norm.z %f norm_parallel.z %f \n", next_pos.x, norm.x, norm_parallel.x, next_pos.y ,size.y, next_pos.z , norm.z , norm_parallel.z);
 		printf("LFTR: x: %f y:%f z:%f \n", next_pos.x - norm.x + norm_parallel.x, next_pos.y + size.y, next_pos.z - norm.z + norm_parallel.z);
 		printf("LFTL: x: %f y:%f z:%f \n", next_pos.x + norm.x + norm_parallel.x, next_pos.y + size.y, next_pos.z + norm.z + norm_parallel.z);
 		printf("LFBR: x: %f y:%f z:%f \n", next_pos.x - norm.x + norm_parallel.x, next_pos.y - size.y, next_pos.z - norm.z + norm_parallel.z);
 		printf("LFBL: x: %f y:%f z:%f \n", next_pos.x + norm.x + norm_parallel.x, next_pos.y - size.y, next_pos.z + norm.z + norm_parallel.z);
-		
+		*/
 		
 		left_front_top_right	= Ogre::Vector3(next_pos.x - norm.x + norm_parallel.x, next_pos.y + size.y, next_pos.z - norm.z + norm_parallel.z);
 		left_front_top_left		= Ogre::Vector3(next_pos.x + norm.x + norm_parallel.x, next_pos.y + size.y, next_pos.z + norm.z + norm_parallel.z);
