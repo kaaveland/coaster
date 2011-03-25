@@ -76,6 +76,7 @@ public:
 	double getTrackLength() const;
 	Vector3d getControlPoint(int index) const;
 	Vector3d getControlUp(int index) const;
+	void Track::setControlPoint(int index, Vector3d position);
 
 protected:
 	int nControlPoints;

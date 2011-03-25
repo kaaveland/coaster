@@ -81,6 +81,16 @@ Vector3d Track::getControlPoint(int index) const
 	return pos[index];
 }
 
+void Track::setControlPoint(int index, Vector3d position)
+{
+	if (index < 0) index = 0;
+	else if (index >= nControlPoints) index = nControlPoints-1;
+	assert(index >= 0 && index < nControlPoints);
+
+	pos[index] = position;
+}
+
+
 Vector3d Track::getControlUp(int index) const
 {
 	if (index < 0) index = 0;

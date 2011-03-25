@@ -9,7 +9,8 @@ bLMouseDown(false),
 bRMouseDown(false),
 mRotateSpeed(0.1f),
 bRobotMode(true),
-track()
+track(),
+mControllPointCount(0)
 {
 }
 //-------------------------------------------------------------------------------------
@@ -35,6 +36,7 @@ void Coaster::createScene(void)
 	cartNode->yaw(Ogre::Degree(90));
 	cartNode->setScale(0.1f, 0.1f, 0.1f);
 
+	placedObjects = std::vector<Ogre::String>(0);
 	
 	cameraName = "PlayerCam";
 	// create the camera
@@ -210,6 +212,27 @@ bool Coaster::mouseMoved(const OIS::MouseEvent& arg)
 			if(iter->worldFragment)
 			{
 				mCurrentObject->setPosition(iter->worldFragment->singleIntersection);
+
+				if(track.getNumberOfPoints() > 3){
+					for (vector<Ogre::String>::iterator it = placedObjects.begin(); it!=placedObjects.end(); ++it) {
+						if(*it == mCurrentObject->getName()){
+							printf("Clicked at %s \n", it);
+							string obj_name = string(*it);
+							Ogre::String controll = "Controll";
+							int pos = obj_name.find(controll);
+
+							//Controll point clicked
+							if(pos != string::npos){
+								obj_name.replace(pos, controll.size(), ""); 
+								int ctrl_point = std::atoi(obj_name.c_str());
+								Vector3d v = Vector3d(iter->worldFragment->singleIntersection.x, iter->worldFragment->singleIntersection.y, iter->worldFragment->singleIntersection.z);
+								track.setControlPoint(ctrl_point, v);
+								generateTrack();
+
+							}
+						}
+					}
+				}
 				break;
 			}	
 		}
@@ -255,8 +278,6 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 		Ogre::RaySceneQueryResult& result = mRayScnQuery->execute();
 		Ogre::RaySceneQueryResult::iterator iter = result.begin();
 
-		Ogre::MeshManager *meshManager = mRoot->getMeshManager();
-
 		bool position_added = false;
  
 		for(iter; iter != result.end(); iter++)
@@ -276,57 +297,36 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 				//if we are in robot mode we spawn a robot at the mouse location
 				if(bRobotMode)
 				{
-					sprintf(name, "Robot%d", mCount++);
-					ent = mSceneMgr->createEntity(name, "robot.mesh");
+					sprintf(name, "%dControll", mControllPointCount++);
+					ent = mSceneMgr->createEntity(name, "support_element.mesh");
 					ent->setQueryFlags(ROBOT_MASK);
 				}
 				//otherwise we spawn a ninja
 				else
 				{
-					sprintf(name, "Ninja%d", mCount++);
+					sprintf(name, "Ninja%dNode", mCount++);
 					ent = mSceneMgr->createEntity(name, "ninja.mesh");
 					ent->setQueryFlags(NINJA_MASK);
  
 				}
 				//attach the object to a scene node
-				mCurrentObject = mSceneMgr->getRootSceneNode()->createChildSceneNode(std::string(name) + "Node", iter->worldFragment->singleIntersection);
+				mCurrentObject = mSceneMgr->getRootSceneNode()->createChildSceneNode(std::string(name) , iter->worldFragment->singleIntersection);
 				mCurrentObject->attachObject(ent);
 
 				//add track 120 over the ground
-				track.addPos(Vector3d(iter->worldFragment->singleIntersection.x, iter->worldFragment->singleIntersection.y+120, iter->worldFragment->singleIntersection.z), Vector3d(0,1,0));
+				track.addPos(Vector3d(iter->worldFragment->singleIntersection.x, iter->worldFragment->singleIntersection.y+10, iter->worldFragment->singleIntersection.z), Vector3d(0,1,0));
+				placedObjects.push_back(std::string(name));
+
 				position_added = true;
  
 				//lets shrink the object, only because the terrain is pretty small
-				//mCurrentObject->setScale(0.1f, 0.1f, 0.1f);
+				mCurrentObject->setScale(0.1f, 0.1f, 0.1f);
 				break;
 			}
 		}
 		if(position_added && track.getNumberOfPoints() > 3){
 
-			railNode->detachAllObjects();
-			if(mSceneMgr->hasEntity("Rails")){
-				mSceneMgr->destroyEntity("Rails");
-				mSceneMgr->destroyManualObject("RailMesh");
-				meshManager->remove("RailMesh");
-			}
-
-			// make graphical track mesh
-			GraphicTrack::createRailMesh(&track, false);
-			
-			physicsCart.setTrack(&track);
-
-			// add rails to scene
-			Ogre::Entity* rail = mSceneMgr->createEntity("Rails","RailMesh");
-			rail->setQueryFlags(RAIL_MASK);
-			railNode->attachObject(rail);
-
-			//start cart from start
-			physicsCart.moveTo(0.0);
-			Vector3d start_pos = physicsCart.getPos();
-			Ogre::Vector3 start_pos_ogre = Ogre::Vector3(start_pos.x, start_pos.y, start_pos.z);
-			cartNode->setPosition(start_pos_ogre);
-
-			printf("Rail generated\n");
+			generateTrack();
 			
 		}
  
@@ -345,6 +345,36 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 	}
  
 	return true;
+}
+
+void Coaster::generateTrack(void){
+	meshManager = mRoot->getMeshManager();
+
+	railNode->detachAllObjects();
+	if(mSceneMgr->hasEntity("Rails")){
+		mSceneMgr->destroyEntity("Rails");
+		mSceneMgr->destroyManualObject("RailMesh");
+		meshManager->remove("RailMesh");
+	}
+
+	// make graphical track mesh
+	GraphicTrack::createRailMesh(&track, false);
+			
+	physicsCart.setTrack(&track);
+
+	// add rails to scene
+	Ogre::Entity* rail = mSceneMgr->createEntity("Rails","RailMesh");
+	rail->setQueryFlags(RAIL_MASK);
+	railNode->attachObject(rail);
+
+	//start cart from start
+	physicsCart.moveTo(0.0);
+	Vector3d start_pos = physicsCart.getPos();
+	Ogre::Vector3 start_pos_ogre = Ogre::Vector3(start_pos.x, start_pos.y, start_pos.z);
+	cartNode->setPosition(start_pos_ogre);
+
+	printf("Rail generated\n");
+
 }
  
 bool Coaster::mouseReleased(const OIS::MouseEvent& arg, OIS::MouseButtonID id)

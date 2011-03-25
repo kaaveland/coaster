@@ -37,11 +37,13 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 	Vector3d vec_math, vec_math2;
 	Ogre::Vector3 vec, next_vec;
 
+	/*
 	printf("Points: %d \n", track.getNumberOfPoints());
 
 	for(int h=0; h<track.getNumberOfPoints(); h++){
 		printf("h:%d x:%f y:%f z:%f \n", h, track.getControlPoint(h).x, track.getControlPoint(h).y, track.getControlPoint(h).z);
 	}
+	*/
 
 	double td = track.getSmoothedDelta();
 	double t = td;

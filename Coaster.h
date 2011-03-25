@@ -60,6 +60,7 @@ protected:
  
 	bool bLMouseDown, bRMouseDown;	//true if mouse buttons are held down
 	int mCount;						//number of objects created
+	int mControllPointCount;
 	float mRotateSpeed;				//the rotation speed for the camera
  
 	bool bRobotMode;				//if true we place robots in the world
@@ -73,6 +74,10 @@ protected:
 
 	Ogre::String cameraName;
 	void changeViewPoint(void);
+	std::vector<Ogre::String> placedObjects;
+	void Coaster::generateTrack(void);
+
+	Ogre::MeshManager *meshManager;
 
 	//void createRailMesh(const Track track, const bool export_mesh);
 };
