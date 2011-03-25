@@ -126,7 +126,7 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 		last_up = up;
 
 		tangent = track.getTangentVector(t);
-		printf("Tangent: x:%f y:%f z:%f \n", tangent.x, tangent.y, tangent.z);
+		//printf("Tangent: x:%f y:%f z:%f \n", tangent.x, tangent.y, tangent.z);
 		up = track.getUp(t);
 		norm = up.cross(tangent);
 
@@ -143,15 +143,15 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 		left_back_bottom_left	= left_front_bottom_left;
 		left_back_bottom_right	= left_front_bottom_right;
 
-		/*
+		
 		printf("LFTR: next_pos.x: %f, norm.x %f, norm_parallel.x %f, next_pos.y %f, size.y :%f next_pos.z %f norm.z %f norm_parallel.z %f \n", next_pos.x, norm.x, norm_parallel.x, next_pos.y ,size.y, next_pos.z , norm.z , norm_parallel.z);
 		printf("LFTR: x: %f y:%f z:%f \n", next_pos.x - norm.x + norm_parallel.x, next_pos.y + size.y, next_pos.z - norm.z + norm_parallel.z);
 		printf("LFTL: x: %f y:%f z:%f \n", next_pos.x + norm.x + norm_parallel.x, next_pos.y + size.y, next_pos.z + norm.z + norm_parallel.z);
 		printf("LFBR: x: %f y:%f z:%f \n", next_pos.x - norm.x + norm_parallel.x, next_pos.y - size.y, next_pos.z - norm.z + norm_parallel.z);
 		printf("LFBL: x: %f y:%f z:%f \n", next_pos.x + norm.x + norm_parallel.x, next_pos.y - size.y, next_pos.z + norm.z + norm_parallel.z);
-		*/
 		
-		left_front_top_right	= Ogre::Vector3(next_pos.x - norm.x + norm_parallel.x, next_pos.y + size.y+200, next_pos.z - norm.z + norm_parallel.z);
+		
+		left_front_top_right	= Ogre::Vector3(next_pos.x - norm.x + norm_parallel.x, next_pos.y + size.y, next_pos.z - norm.z + norm_parallel.z);
 		left_front_top_left		= Ogre::Vector3(next_pos.x + norm.x + norm_parallel.x, next_pos.y + size.y, next_pos.z + norm.z + norm_parallel.z);
 		left_front_bottom_right	= Ogre::Vector3(next_pos.x - norm.x + norm_parallel.x, next_pos.y - size.y, next_pos.z - norm.z + norm_parallel.z);
 		left_front_bottom_left	= Ogre::Vector3(next_pos.x + norm.x + norm_parallel.x, next_pos.y - size.y, next_pos.z + norm.z + norm_parallel.z);
@@ -181,16 +181,16 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 		//int offset = i*20;
 		int offset = i*16;
 		//top
-		//rail.triangle(offset+0, offset+1, offset+2);	rail.triangle(offset+1, offset+3, offset+2);
+		rail.triangle(offset+0, offset+1, offset+2);	rail.triangle(offset+1, offset+3, offset+2);
 		
 		//bottom
-		//rail.triangle(offset+4, offset+6, offset+5);	rail.triangle(offset+5, offset+6, offset+7);
+		rail.triangle(offset+4, offset+6, offset+5);	rail.triangle(offset+5, offset+6, offset+7);
 
 		//right
-		//rail.triangle(offset+0, offset+2, offset+4);	rail.triangle(offset+2, offset+6, offset+4);
+		rail.triangle(offset+0, offset+2, offset+4);	rail.triangle(offset+2, offset+6, offset+4);
 
 		//left
-		//rail.triangle(offset+1, offset+5, offset+3);	rail.triangle(offset+3, offset+5, offset+7);
+		rail.triangle(offset+1, offset+5, offset+3);	rail.triangle(offset+3, offset+5, offset+7);
 		
 		//right rail
 		right_back_top_right	= right_front_top_right;

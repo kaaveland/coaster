@@ -37,7 +37,8 @@ public:
 		ROBOT_MASK = 1<<1,
 		RAIL_MASK  = 1<<2,
 		CART_MASK  = 1<<3,
-		ISLAND_MASK = 1<<4
+		ISLAND_MASK = 1<<4,
+		CAMERA_MASK = 1<<5
 	};
  
 protected:
