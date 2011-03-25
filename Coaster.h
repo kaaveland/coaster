@@ -53,6 +53,7 @@ protected:
 	virtual bool mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id);
 	virtual bool mouseReleased(const OIS::MouseEvent& arg, OIS::MouseButtonID id);
 	virtual bool keyPressed(const OIS::KeyEvent& arg);
+	virtual bool keyReleased( const OIS::KeyEvent& evt );
  
 	Ogre::SceneNode *mCurrentObject;	//pointer to our currently selected object
 	Ogre::RaySceneQuery* mRayScnQuery;	//pointer to our ray scene query
@@ -78,6 +79,7 @@ protected:
 	void Coaster::generateTrack(void);
 
 	Ogre::MeshManager *meshManager;
+	bool adjustHeight;
 
 	//void createRailMesh(const Track track, const bool export_mesh);
 };

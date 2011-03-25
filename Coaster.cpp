@@ -10,7 +10,8 @@ bRMouseDown(false),
 mRotateSpeed(0.1f),
 bRobotMode(true),
 track(),
-mControllPointCount(0)
+mControllPointCount(0),
+adjustHeight(false)
 {
 }
 //-------------------------------------------------------------------------------------
@@ -211,12 +212,23 @@ bool Coaster::mouseMoved(const OIS::MouseEvent& arg)
 		{
 			if(iter->worldFragment)
 			{
-				mCurrentObject->setPosition(iter->worldFragment->singleIntersection);
+				float mouseHeightDiff = 0;
+				if(adjustHeight){
+					CEGUI::System::getSingleton().injectMouseMove(arg.state.X.rel, arg.state.Y.rel);
+					mouseHeightDiff = (mousePos.d_y - CEGUI::MouseCursor::getSingleton().getPosition().d_y);
+					//add just height
+					Ogre::Vector3 railCurPos = mCurrentObject->getPosition();
+					mCurrentObject->setPosition(railCurPos.x, railCurPos.y+mouseHeightDiff, railCurPos.z);
+					generateTrack();
+
+				} else {
+					mCurrentObject->setPosition(iter->worldFragment->singleIntersection);
+				}
 
 				if(track.getNumberOfPoints() > 3){
 					for (vector<Ogre::String>::iterator it = placedObjects.begin(); it!=placedObjects.end(); ++it) {
 						if(*it == mCurrentObject->getName()){
-							printf("Clicked at %s \n", it);
+
 							string obj_name = string(*it);
 							Ogre::String controll = "Controll";
 							int pos = obj_name.find(controll);
@@ -225,7 +237,14 @@ bool Coaster::mouseMoved(const OIS::MouseEvent& arg)
 							if(pos != string::npos){
 								obj_name.replace(pos, controll.size(), ""); 
 								int ctrl_point = std::atoi(obj_name.c_str());
-								Vector3d v = Vector3d(iter->worldFragment->singleIntersection.x, iter->worldFragment->singleIntersection.y, iter->worldFragment->singleIntersection.z);
+								Vector3d v(0,0,0);
+								if(adjustHeight){
+									Vector3d railCurPos = track.getControlPoint(ctrl_point);
+									v = Vector3d(railCurPos.x, railCurPos.y+mouseHeightDiff, railCurPos.z);
+								} else {
+									v = Vector3d(iter->worldFragment->singleIntersection.x, iter->worldFragment->singleIntersection.y, iter->worldFragment->singleIntersection.z);
+								}
+
 								track.setControlPoint(ctrl_point, v);
 								generateTrack();
 
@@ -233,6 +252,8 @@ bool Coaster::mouseMoved(const OIS::MouseEvent& arg)
 						}
 					}
 				}
+
+				
 				break;
 			}	
 		}
@@ -390,38 +411,40 @@ bool Coaster::mouseReleased(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 	}
 	return true;
 }
- 
+
 bool Coaster::keyPressed(const OIS::KeyEvent& arg)
 {
-	//check and see if the spacebar was hit, and this will switch which mesh is spawned
-	if(arg.key == OIS::KC_SPACE)
-	{
-		bRobotMode = !bRobotMode;
-		changeViewPoint();
-	}
 
 	switch (arg.key) {
-	case OIS::KC_0: 
-		this->physicsCart.moveTo(0); break;
-	case OIS::KC_5:
-		this->physicsCart.moveTo(0.5*track.getTrackLength()); break;
-	case OIS::KC_M:
-		physicsCart.setBraking(0.0);
-		this->physicsCart.setThrust(1.0); 
-		cout << "Accelerating.\n";
-		break;
-	case OIS::KC_N:
-		this->physicsCart.setThrust(0.0);
-		this->physicsCart.setBraking(1.0);
-		cout << "Breaking.\n";
-		break;
-	case OIS::KC_P:
-		cout << physicsCart.toString(); break;
-	case OIS::KC_RSHIFT:
-		physicsCart.setBraking(0);
-		physicsCart.setThrust(0);
-		cout << "Coasting.\n";
-		break;
+		case OIS::KC_SPACE:
+			bRobotMode = !bRobotMode;
+			changeViewPoint();
+			break;
+		case OIS::KC_0: 
+			this->physicsCart.moveTo(0); break;
+		case OIS::KC_5:
+			this->physicsCart.moveTo(0.5*track.getTrackLength()); break;
+		case OIS::KC_M:
+			physicsCart.setBraking(0.0);
+			this->physicsCart.setThrust(1.0); 
+			cout << "Accelerating.\n";
+			break;
+		case OIS::KC_N:
+			this->physicsCart.setThrust(0.0);
+			this->physicsCart.setBraking(1.0);
+			cout << "Breaking.\n";
+			break;
+		case OIS::KC_P:
+			cout << physicsCart.toString(); break;
+		case OIS::KC_RSHIFT:
+			physicsCart.setBraking(0);
+			physicsCart.setThrust(0);
+			cout << "Coasting.\n";
+			break;
+		case OIS::KC_LSHIFT:
+			adjustHeight = true;
+			cout << "Adjust height start.\n";
+			break;
 
 
 	}
@@ -430,7 +453,17 @@ bool Coaster::keyPressed(const OIS::KeyEvent& arg)
 	//and the return value in one line
 	return BaseApplication::keyPressed(arg);
 }
- 
+
+bool Coaster::keyReleased( const OIS::KeyEvent& arg ){
+	switch (arg.key) {
+		case OIS::KC_LSHIFT:
+			adjustHeight = false;
+			cout << "Adjust height end.\n";
+			break;
+	}
+	return BaseApplication::keyReleased(arg);
+}
+
 
 void showWin32Console()
 {
