@@ -48,7 +48,7 @@ PhysicsCart::PhysicsCart()
 
 	step = 0;
 
-#ifdef DEBUG
+#if _DEBUG
 	std::cout << "PhysicsCart constructed. \n";
 #endif
 }
