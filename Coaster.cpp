@@ -45,7 +45,7 @@ void Coaster::createScene(void)
 	pCamera->setNearClipDistance(0.5f);
 	pCamera->setQueryFlags(CAMERA_MASK);
 	Ogre::SceneNode* cameraNode = cartNode->createChildSceneNode("cameraNode", Ogre::Vector3(0, 80, 150));
-	pCamera->pitch(Ogre::Degree(-5));
+	//pCamera->pitch(Ogre::Degree(-5));
 	cameraNode->attachObject(pCamera);
 	
 	//Scene setup
@@ -117,10 +117,16 @@ bool Coaster::frameRenderingQueued(const Ogre::FrameEvent& arg)
 		Vector3d pos = physicsCart.getPos();
 		cartNode->setPosition(Ogre::Vector3(pos.x, pos.y, pos.z));
 
-		//rotate cart
-		Ogre::Vector3 mDirection = Ogre::Vector3(physicsCart.getForward().x, physicsCart.getForward().y, physicsCart.getForward().z);
+		using namespace Ogre;
 
-		cartNode->setOrientation(generateRotationFromDirectionVector(mDirection));
+		Ogre::Vector3 mForward = Vector3(physicsCart.getForward().x, physicsCart.getForward().y, physicsCart.getForward().z);
+		Ogre::Vector3 mUp = Vector3(physicsCart.getUp().x, physicsCart.getUp().y, physicsCart.getUp().z);
+
+		//Radian yaw = Math::ACos(Vector3::UNIT_X.dotProduct(mForward));
+		//Quaternion q3 (Radian(0), Vector3::NEGATIVE_UNIT_Z);
+		Vector3 mRight = mForward.crossProduct(mUp);
+		Quaternion tot(mRight, mUp, -mForward);
+		cartNode->setOrientation(tot);		//rotate cart
 
 		//next step
 		physicsCart.nextStep(dt);
@@ -173,8 +179,8 @@ Ogre::Quaternion Coaster::generateRotationFromDirectionVector(Ogre::Vector3 vDir
         {
             // Step 1. Setup basis vectors describing the rotation given the input vector and assuming an initial up direction of (0, 1, 0)
 			Ogre::Vector3 vUp = Ogre::Vector3(0.0f, 1.0f, 0.0f);           // Y Up vector
-			Ogre::Vector3 vRight = vUp.crossProduct(vDirection);    // The perpendicular vector to Up and Direction
-			vUp = vDirection.crossProduct(vRight);           // The actual up vector given the direction and the right vector
+			Ogre::Vector3 vRight = vUp.crossProduct(vDirection);    // The perpendicular vector to Up and Direction (feil, dette er venstre)
+			//vUp = vDirection.crossProduct(vRight);           // The actual up vector given the direction and the right vector (denne vil vel alltid bli lik opprinnelig vUp)
             
 
             // Step 2. Put the three vectors into the matrix to bulid a basis rotation matrix
@@ -184,6 +190,9 @@ Ogre::Quaternion Coaster::generateRotationFromDirectionVector(Ogre::Vector3 vDir
 												 vUp.x, vUp.y, vUp.z, 0.0f,
 												 vDirection.x, vDirection.y, vDirection.z, 0.0f,
 												 0.0f, 0.0f, 0.0f, 1.0f);
+			// Hvorfor 4x4?
+
+			//Ogre::Matrix3(v
 
             return mBasis.extractQuaternion();
         }
@@ -421,7 +430,9 @@ bool Coaster::keyPressed(const OIS::KeyEvent& arg)
 			changeViewPoint();
 			break;
 		case OIS::KC_0: 
-			this->physicsCart.moveTo(0); break;
+			this->physicsCart.moveTo(0); 
+			cartNode->setOrientation(1,0,0,0);
+			break;
 		case OIS::KC_5:
 			this->physicsCart.moveTo(0.5*track.getTrackLength()); break;
 		case OIS::KC_M:
