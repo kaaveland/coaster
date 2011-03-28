@@ -27,7 +27,7 @@ PhysicsCart::PhysicsCart()
 	Ix = 1.0;
 	friction_static = 1.0;
 	friction_glide = 1.0;
-	maxThrust = 10.0;
+	maxThrust = 500.0;
 	wheelsOffsetx = 0;
 	wheelsOffsety = 0.5;		// Total widTh of cart becomes 1.0
 	thrustFactor = 0.0;
@@ -95,7 +95,7 @@ double PhysicsCart::calculate_a_T(double deltaDistance) const
 {	
 	double new_t = current_t + track->deltaDistanceTodeltaT(deltaDistance, current_t);
 	int direction = 0;
-	if (abs(v) > SPEEDCUTOFF_FRICTION ) direction = (int)v/abs(v);	// Positive if going forward on track
+	if (abs(v) > SPEEDCUTOFF_FRICTION ) direction = (int)(v/abs(v));	// Positive if going forward on track
 	
 	double a_T = thrustFactor*maxThrust/mass 
 		- direction*brakingFactor
@@ -205,6 +205,7 @@ Vector3d PhysicsCart::getPos() const {
 }
 
 Vector3d PhysicsCart::getUp() const {
+	if (!isFreefalling) return vUp;
 	return vUp;
 }
 
@@ -220,16 +221,18 @@ string PhysicsCart::toString() const {
 	stringstream res;
 	res << "--PhysicsCart info--\n" << 
 		"Currently on distance: " << currentDistance << "\n" <<
+		"current_t = " << current_t << "\n" <<
 		"isFreefalling = " << isFreefalling << "\n" <<
 		"Position = [ " << vPos.x << ", " << vPos.y << ", " << vPos.z << "]\n" <<
 		"Up vecto = [" << vUp.x << ", " << vUp.y << ", " << vUp.z << "]\n" << 
 		"Velocity = [" << vVelocity.x << ", " << vVelocity.y << ", " << vVelocity.z << "], v = " << v << "\n" <<
 		"Accelera = [" << vAccel.x << ", " << vAccel.y << ", " << vAccel.z << "]\n" <<
 		"--Track info current index--\n" <<
-		"Position = [" << track->getPos(currentDistance).x << ", " << track->getPos(currentDistance).y << ", " << track->getPos(currentDistance).z << "]\n" <<
-		"Normal v = [" << track->getNormalVector(currentDistance).x << ", " << track->getNormalVector(currentDistance).y << ", " << track->getNormalVector(currentDistance).z << "]\n" <<
-		"Tangent  = [" << track->getTangentVector(currentDistance).x << ", " << track->getTangentVector(currentDistance).y << ", " << track->getTangentVector(currentDistance).z << "]\n" <<
-		"Curvature = " << track->getCurvature(currentDistance) << "\n";
+		"Position = [" << track->getPos(current_t).x << ", " << track->getPos(current_t).y << ", " << track->getPos(current_t).z << "]\n" <<
+		"Normal v = [" << track->getNormalVector(current_t).x << ", " << track->getNormalVector(current_t).y << ", " << track->getNormalVector(current_t).z << "]\n" <<
+		"Tangent  = [" << track->getTangentVector(current_t).x << ", " << track->getTangentVector(current_t).y << ", " << track->getTangentVector(current_t).z << "]\n" <<
+		"Forward = [" << getForward().x << ", " << getForward().y << ", " << getForward().z << "]\n" <<
+		"Curvature = " << track->getCurvature(current_t) << "\n";
 		
 	return res.str();
 }

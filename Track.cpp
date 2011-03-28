@@ -207,8 +207,8 @@ Vector3d Track::getPos(double t) const
 double Track::deltaDistanceTodeltaT(double ds, double current_t) const 
 {
 	// Check bounds
-	//if (distance <= 0.0) return 0.0;
-	//if (distance >= trackLength) return 1.0;
+	if (current_t < 0.0) return 0.0;
+	if (current_t > 1.0) return 0.0;
 
 	//bool searchForward = (distance >= arcDistances[lastAccessedTrackIndex]);
 	//int searchIndex = lastAccessedTrackIndex;
