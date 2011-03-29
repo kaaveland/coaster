@@ -344,7 +344,7 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 				mCurrentObject->attachObject(ent);
 
 				//add track 120 over the ground
-				track.addPos(Vector3d(iter->worldFragment->singleIntersection.x, iter->worldFragment->singleIntersection.y+10, iter->worldFragment->singleIntersection.z), Vector3d(0,1,0));
+				track.addPos(Vector3d(iter->worldFragment->singleIntersection.x, iter->worldFragment->singleIntersection.y+10, iter->worldFragment->singleIntersection.z), 0.0);
 				placedObjects.push_back(std::string(name));
 
 				position_added = true;
@@ -447,6 +447,11 @@ bool Coaster::keyPressed(const OIS::KeyEvent& arg)
 			break;
 		case OIS::KC_P:
 			cout << physicsCart.toString(); break;
+
+		case OIS::KC_R:
+			this->destroyScene();
+			this->createScene(); break;
+			
 		case OIS::KC_RSHIFT:
 			physicsCart.setBraking(0);
 			physicsCart.setThrust(0);

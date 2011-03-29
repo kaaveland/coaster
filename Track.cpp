@@ -21,7 +21,7 @@ void Track::initValues() {
 	pos = vector<Vector3d>(0);
 	up = vector<Vector3d>(0);
 	arcDistances = vector<double>(0);
-	
+		
 }
 
 Track::Track(vector<Vector3d> const &pos, vector<Vector3d> const &up)
@@ -37,6 +37,7 @@ Track::Track(vector<Vector3d> const &pos, vector<Vector3d> const &up)
 
 	this->delta_t = (double)1 / (double)pos.size();
 	calculateArcDistances();
+	makePlaneUpVectors();
 	//	calculateSections_dS();
 
 }
@@ -100,6 +101,24 @@ Vector3d Track::getControlUp(int index) const
 	return up[index];
 }
 
+void Track::makePlaneUpVectors() 
+{
+	for (int i=0; i < nControlPoints; i++) {
+		double t = (double)i/nControlPoints;
+		up[i] = getNormalVector(t);
+	}
+}
+
+void Track::setTrackRotation(int index, double delta_radian)
+{
+	assert (index >= 0 && index < nControlPoints);
+	double t = 1.0/index;
+	Vector3d right = getTangentVector(t).cross(getUp(t));
+	right /= right.length();
+
+	up[index] = up[index] + right * sin(delta_radian);
+	
+}
 /*void Track::setTrackPoint(double index, Vector3d v)
 {
 	assert(index >= 0 && index < nControlPoints);
@@ -173,18 +192,21 @@ Vector3d Track::Eq(double t, const Vector3d p1, const Vector3d p2, const Vector3
 	return (p1*b1 + p2*b2 + p3*b3 + p4*b4);
 }
 
-// Not going to work now. Need to recalculate distance array
-void Track::addPos(const Vector3d v, const Vector3d up)
+void Track::addPos(const Vector3d v, double rotation_radians)
 {
 	nControlPoints += 1;
 	//printf("Add point x:%f y:%f z:%f \n", v.x, v.y, v.z);
     this->pos.push_back(v);
-	this->up.push_back(up);
+	
 	//printf("Added point x:%f, y:%f, z:%f \n", getTrackPoint(nControlPoints-1));
 	this->arcDistances.resize(nControlPoints);
+	up.resize(nControlPoints);
 
-	this->delta_t = (double)1 / (double)pos.size();
+	this->delta_t = 1.0/pos.size();
 	calculateArcDistances();
+	makePlaneUpVectors();
+	//setTrackRotation(nControlPoints-1, rotation_radians);
+
 }
 
 Vector3d Track::getPos(double t) const
@@ -439,4 +461,3 @@ int Track::getNumberOfPoints(void) const
 {
 	return this->nControlPoints;
 }
-

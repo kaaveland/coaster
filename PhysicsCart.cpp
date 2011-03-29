@@ -28,6 +28,7 @@ PhysicsCart::PhysicsCart()
 	friction_static = 1.0;
 	friction_glide = 1.0;
 	maxThrust = 500.0;
+	maxBreak = 500.0;
 	wheelsOffsetx = 0;
 	wheelsOffsety = 0.5;		// Total widTh of cart becomes 1.0
 	thrustFactor = 0.0;
@@ -98,7 +99,7 @@ double PhysicsCart::calculate_a_T(double deltaDistance) const
 	if (abs(v) > SPEEDCUTOFF_FRICTION ) direction = (int)(v/abs(v));	// Positive if going forward on track
 	
 	double a_T = thrustFactor*maxThrust/mass 
-		- direction*brakingFactor
+		- direction*brakingFactor*maxBreak
 		+ gvector * track->getTangentVector(new_t);	// Possibly air resistance
 
 	return a_T;
