@@ -155,7 +155,7 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 		printf("LFBL: x: %f y:%f z:%f \n", next_pos.x + norm.x + norm_parallel.x, next_pos.y - size.y, next_pos.z + norm.z + norm_parallel.z);
 		*/
 		
-		left_front_top_right	= Ogre::Vector3(next_pos.x - norm.x + norm_parallel.x, next_pos.y + size.y, next_pos.z - norm.z + norm_parallel.z);
+		left_front_top_right	= Ogre::Vector3(next_pos.x - norm.x + norm_parallel.x, next_pos.y + size.y+20, next_pos.z - norm.z + norm_parallel.z);
 		left_front_top_left		= Ogre::Vector3(next_pos.x + norm.x + norm_parallel.x, next_pos.y + size.y, next_pos.z + norm.z + norm_parallel.z);
 		left_front_bottom_right	= Ogre::Vector3(next_pos.x - norm.x + norm_parallel.x, next_pos.y - size.y, next_pos.z - norm.z + norm_parallel.z);
 		left_front_bottom_left	= Ogre::Vector3(next_pos.x + norm.x + norm_parallel.x, next_pos.y - size.y, next_pos.z + norm.z + norm_parallel.z);

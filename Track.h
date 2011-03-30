@@ -11,7 +11,6 @@ using std::vector;
 class Track
 {
 public:
-
 	// Constructs new Track instance. 
 	// 
 	//	Parameters:
@@ -45,6 +44,8 @@ public:
 	// Gives the unit normal vector at the given segment. The normal vector points 
 	// towards the center of curvature.
 	Vector3d getNormalVector(double t) const;
+	// Gives the not-normalized normal vector
+	Vector3d getNonNormalizedNormalVector(double t) const;
 
 
 	// Load and fill the track with points

@@ -71,7 +71,7 @@ protected:
 	Ogre::SceneNode *railNode;
 	Ogre::SceneNode *cartNode;
 
-	PhysicsCart physicsCart;
+	PhysicsCart *physicsCart;
 
 	Ogre::String cameraName;
 	void changeViewPoint(void);
