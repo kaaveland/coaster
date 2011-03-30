@@ -11,7 +11,6 @@ using std::vector;
 class Track
 {
 public:
-
 	// Constructs new Track instance. 
 	// 
 	//	Parameters:

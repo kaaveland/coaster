@@ -4,6 +4,7 @@
 #include "Vector3d.h"
 #include <cassert>
 #include <math.h>
+#include <sstream>
 
 #define NULL 0
 #define DEBUG
@@ -476,7 +477,7 @@ int Track::getNumberOfPoints(void) const
 
 void Track::read(std::istream &in)
 {
-	PARSE_STATE state = BEGIN;
+	enum { BEGIN, CONTROL, POS, UP, END, ERROR} state = BEGIN;
 	char buf[512];
 
 	while (in.getline(buf, 512) && state != END) {
@@ -511,7 +512,7 @@ void Track::read(std::istream &in)
 
 void Track::dump(std::ostream &out)
 {
-	out << "CP: " << controlPoints << std::endl;
+	out << "CP: " << nControlPoints << std::endl;
 	out << "P: " << std::endl;
 	for (int i = 0; i < pos.size(); ++i)
 		pos[i].dump(out);
