@@ -479,14 +479,25 @@ void Coaster::resetRail(void){
 		meshManager->remove("RailMesh");
 	}
 
-	char buffer[50];
+	vector<Ogre::String> temp = vector<Ogre::String>(0);
+
 	for (vector<Ogre::String>::iterator it = placedObjects.begin(); it!=placedObjects.end(); ++it) {
-		sprintf(buffer, "%s", it);
-		Ogre::String ent = buffer;
-		if(mSceneMgr->hasEntity(ent)){
-			mSceneMgr->destroyEntity(ent);
+
+		string obj_name = string(*it);
+		Ogre::String controll = "Controll";
+		int pos = obj_name.find(controll);
+
+		//Controll point found
+		if(pos != string::npos){
+			if(mSceneMgr->hasEntity(obj_name)){
+				mSceneMgr->destroyEntity(obj_name);
+			}
+		} else {
+			temp.push_back(*it);
 		}
 	}
+
+	placedObjects = temp;
 
 	if(mCurrentObject)
 	{
