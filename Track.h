@@ -79,6 +79,8 @@ public:
 	void setControlPoint(int index, Vector3d position);
 	void setTrackRotation(int index, double radian);
 
+	void initValues();
+
 protected:
 	int nControlPoints;
 	std::vector<Vector3d> pos;
@@ -96,7 +98,6 @@ protected:
 		
 private:
 	void generateTrack();
-	void initValues();
 	void calculateArcDistances();
 	void makePlaneUpVectors();
 	
