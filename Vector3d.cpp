@@ -1,6 +1,8 @@
 #include "Vector3d.h"
 #include <math.h>
 #include <exception>
+#include <istream>
+#include <ostream>
 
 Vector3d::Vector3d()
 {
@@ -20,6 +22,16 @@ double const& Vector3d::operator[](unsigned i) const
 	if (i==1) return y;
 	if (i==2) return z;
 	throw std::exception("Vector3d::operator[]: index out of range");
+}
+
+void Vector3d::read(std::istream &in)
+{
+	in >> x; in >> y; in >> z;
+}
+
+void Vector3d::dump(std::ostream &out)
+{
+	out << x << " " << y << " " << z << std::endl;
 }
 
 Vector3d& Vector3d::operator+=(const Vector3d &v)
