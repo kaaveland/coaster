@@ -3,6 +3,8 @@
 
 #include <vector>
 #include "Vector3d.h"
+#include <istream>
+#include <ostream>
 
 using std::vector;
 
@@ -23,6 +25,9 @@ public:
 	Track(void);
 	
 	~Track(void);
+	
+	void read(std::istream &in);
+	void dump(std::ostream &out);
 	
 	/* void setTrackPoint(double index, Vector3d v); */
 

@@ -1,13 +1,19 @@
 #ifndef VECTOR3D_H
 #define VECTOR3D_H
 
+#include <istream>
+#include <ostream>
+
 struct Vector3d {
 
 	double x, y, z;
 
 	Vector3d();
 	Vector3d(double x, double y, double z);
-
+	
+	void read(std::istream &in);
+	void dump(std::ostream &out);
+	
 	double const& operator[](unsigned i) const;
 	Vector3d& Vector3d::operator+=(const Vector3d &v);
 	Vector3d& Vector3d::operator-=(const Vector3d &v);
