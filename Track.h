@@ -3,6 +3,8 @@
 
 #include <vector>
 #include "Vector3d.h"
+#include <istream>
+#include <ostream>
 
 using std::vector;
 
@@ -23,6 +25,9 @@ public:
 	Track(void);
 	
 	~Track(void);
+	
+	void read(std::istream &in);
+	void dump(std::ostream &out);
 	
 	/* void setTrackPoint(double index, Vector3d v); */
 
@@ -81,6 +86,8 @@ public:
 	void setControlPoint(int index, Vector3d position);
 	void setTrackRotation(int index, double radian);
 
+	void initValues();
+
 protected:
 	int nControlPoints;
 	std::vector<Vector3d> pos;
@@ -98,7 +105,6 @@ protected:
 		
 private:
 	void generateTrack();
-	void initValues();
 	void calculateArcDistances();
 	void makePlaneUpVectors();
 	

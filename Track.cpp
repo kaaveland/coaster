@@ -473,3 +473,49 @@ int Track::getNumberOfPoints(void) const
 {
 	return this->nControlPoints;
 }
+
+void Track::read(std::istream &in)
+{
+	PARSE_STATE state = BEGIN;
+	char buf[512];
+
+	while (in.getline(buf, 512) && state != END) {
+		std::string input(buf);
+		std::string trash;
+		std::istringstream parse(input);
+
+		if (state == BEGIN && input.substr(0, 3) == "CP:") {
+			state = CONTROL;
+			parse >> trash; // Skip CP: and space
+			parse >> nControlPoints; // Fill in control points
+		} else if (state == CONTROL && input.substr(0, 2) == "P:") {
+			state = POS; // Skip this line, but expect data on pos on following lines
+		} else if (state == POS && input.substr(0, 2) != "U:") {
+			Vector3d parsed;
+			parsed.read(parse);
+			pos.push_back(parsed);
+		} else if (state == POS && input.substr(0, 2) == "U:") {
+			state = UP; // Skip this line, but expect data on up on following lines
+		} else if (state == UP && input.size() > 1) {
+			Vector3d parsed;
+			parsed.read(parse);
+			up.push_back(parsed);
+		} else if (state == UP && input.size() < 2) {
+			state = END; // This means we're done
+		} else if (state == END)
+			continue; // Empty line after up has been parsed, ignore
+		else // Can only happen if input doesn't have strict
+			state = ERROR; // May want to try to recover or something here
+	}
+}
+
+void Track::dump(std::ostream &out)
+{
+	out << "CP: " << controlPoints << std::endl;
+	out << "P: " << std::endl;
+	for (int i = 0; i < pos.size(); ++i)
+		pos[i].dump(out);
+	out << "U: " << std::endl;
+	for (int i = 0; i < up.size(); ++i)
+		up[i].dump(out);
+}

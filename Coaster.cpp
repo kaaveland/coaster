@@ -135,7 +135,10 @@ bool Coaster::frameRenderingQueued(const Ogre::FrameEvent& arg)
 		cartNode->setOrientation(tot);		//rotate cart
 
 		//next step
-		physicsCart->nextStep(dt);
+		if(track.getNumberOfPoints() > 3){
+			physicsCart->nextStep(dt);
+		}
+
 	}
 	
 
@@ -186,7 +189,7 @@ Ogre::Quaternion Coaster::generateRotationFromDirectionVector(Ogre::Vector3 vDir
             // Step 1. Setup basis vectors describing the rotation given the input vector and assuming an initial up direction of (0, 1, 0)
 			Ogre::Vector3 vUp = Ogre::Vector3(0.0f, 1.0f, 0.0f);           // Y Up vector
 			Ogre::Vector3 vRight = vUp.crossProduct(vDirection);    // The perpendicular vector to Up and Direction (feil, dette er venstre)
-			//vUp = vDirection.crossProduct(vRight);           // The actual up vector given the direction and the right vector (denne vil vel alltid bli lik opprinnelig vUp)
+			vUp = vDirection.crossProduct(vRight);           // The actual up vector given the direction and the right vector (denne vil vel alltid bli lik opprinnelig vUp)
             
 
             // Step 2. Put the three vectors into the matrix to bulid a basis rotation matrix
@@ -196,9 +199,6 @@ Ogre::Quaternion Coaster::generateRotationFromDirectionVector(Ogre::Vector3 vDir
 												 vUp.x, vUp.y, vUp.z, 0.0f,
 												 vDirection.x, vDirection.y, vDirection.z, 0.0f,
 												 0.0f, 0.0f, 0.0f, 1.0f);
-			// Hvorfor 4x4?
-
-			//Ogre::Matrix3(v
 
             return mBasis.extractQuaternion();
         }
@@ -455,8 +455,8 @@ bool Coaster::keyPressed(const OIS::KeyEvent& arg)
 			cout << physicsCart->toString(); break;
 
 		case OIS::KC_R:
-			this->destroyScene();
-			this->createScene(); break;
+			this->resetRail();
+			break;
 			
 		case OIS::KC_RSHIFT:
 			physicsCart->setBraking(0);
@@ -475,6 +475,34 @@ bool Coaster::keyPressed(const OIS::KeyEvent& arg)
 	//and the return value in one line
 	return BaseApplication::keyPressed(arg);
 }
+
+void Coaster::resetRail(void){
+	meshManager = mRoot->getMeshManager();
+
+	railNode->detachAllObjects();
+	if(mSceneMgr->hasEntity("Rails")){
+		mSceneMgr->destroyEntity("Rails");
+		mSceneMgr->destroyManualObject("RailMesh");
+		meshManager->remove("RailMesh");
+	}
+
+	char buffer[50];
+	for (vector<Ogre::String>::iterator it = placedObjects.begin(); it!=placedObjects.end(); ++it) {
+		sprintf(buffer, "%s", it);
+		Ogre::String ent = buffer;
+		if(mSceneMgr->hasEntity(ent)){
+			mSceneMgr->destroyEntity(ent);
+		}
+	}
+
+	if(mCurrentObject)
+	{
+		mCurrentObject->showBoundingBox(false);
+	}
+
+	track.initValues();
+}
+
 
 bool Coaster::keyReleased( const OIS::KeyEvent& arg ){
 	switch (arg.key) {
