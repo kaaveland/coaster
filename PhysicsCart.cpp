@@ -12,6 +12,7 @@
 #define MAXDELTATIME 1e-1
 #define MAXDELTATIME_LAG 1e-1
 #define SPEEDCUTOFF_FRICTION 1e-12
+#define NULLVECTOR Vector3d(0,0,0)
 
 using std::stringstream;
 using std::cout;
@@ -20,7 +21,7 @@ int inline signum(double d) {
 	return (int)((d > 0) - (d < 0));
 }
 
-PhysicsCart::PhysicsCart()
+PhysicsCart::PhysicsCart() : gvector(0,-9.81,0)
 {
 	// Set "constants"
 	mass = 1.0;
@@ -42,8 +43,7 @@ PhysicsCart::PhysicsCart()
 	currentDistance = 0;
 	current_t = 0;
 
-	gvector = Vector3d(0,-9.81,0);
-	
+		
 	isFreefalling = false;
 	track = NULL;
 
@@ -163,7 +163,8 @@ void PhysicsCart::calculateNextStep(double dT) {
 	// Snap to track (position, direction, up and forward)
 	vPos = track->getPos(current_t);
 	vVelocity = v*track->getTangentVector(current_t);
-	vUp = track->getUp(current_t);
+	if (track->getUp(current_t) != NULLVECTOR)		// If the up vector goes crazy singular, don't change it!
+		vUp = track->getUp(current_t);
 	vForward = track->getTangentVector(current_t);
 				
 	bool insideCurve = (vUp * track->getNormalVector(current_t) >= 0.0);	// true if "inside" curvature

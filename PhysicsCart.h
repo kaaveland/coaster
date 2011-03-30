@@ -79,7 +79,7 @@ private:
 	double thrustFactor;
 	
 	// Simulation "constants"
-	Vector3d gvector;
+	const Vector3d gvector;// = Vector3d(0,-9.81,0);
 
 	// Simulation properties
 	double currentDistance;			// Which distance the cart has travelled

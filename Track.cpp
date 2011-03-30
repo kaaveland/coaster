@@ -8,6 +8,9 @@
 #define NULL 0
 #define DEBUG
 
+#define VECTORLENGHTMINIMUM 1e-6*1e-6
+#define NULLVECTOR Vector3d(0,0,0)
+
 #ifdef DEBUG
 #include <iostream>
 #endif
@@ -89,6 +92,8 @@ void Track::setControlPoint(int index, Vector3d position)
 	assert(index >= 0 && index < nControlPoints);
 
 	pos[index] = position;
+	calculateArcDistances();
+	makePlaneUpVectors();
 }
 
 
@@ -112,8 +117,9 @@ void Track::makePlaneUpVectors()
 void Track::setTrackRotation(int index, double delta_radian)
 {
 	assert (index >= 0 && index < nControlPoints);
-	double t = 1.0/index;
+	double t = (double)index/1.0;
 	Vector3d right = getTangentVector(t).cross(getUp(t));
+	//if (
 	right /= right.length();
 
 	up[index] = up[index] + right * sin(delta_radian);
@@ -137,9 +143,15 @@ double Track::getTrackLength() const
 
 
 Vector3d Track::getUp(double t) const
-{
+{	
+	Vector3d vup = getNonNormalizedNormalVector(t);
+	assert (vup.x==vup.x && vup.y==vup.y && vup.z==vup.z); // Ensure is not NAN
+	assert (vup.length() >= VECTORLENGHTMINIMUM);
+	return vup/vup.length();
+
 	 // Find out in which interval we are on the spline
     int p = (int)(t / delta_t);
+	
     // Compute local control point indices
 #define BOUNDS2(pp) { if (pp < 0) pp = 0; else if (pp >= (int)up.size()-1) pp = up.size() - 1; }
     int p0 = p - 1;     BOUNDS2(p0);
@@ -283,22 +295,20 @@ double Track::deltaDistanceTodeltaT(double ds, double current_t) const
 
 Vector3d Track::getTangentVector(double t) const
 {
-	if (t < 0) t = 0; 
+	if (t < getSmoothedDelta()) t = getSmoothedDelta(); 
 	else if (t >= 1-getSmoothedDelta()) t = 1-getSmoothedDelta();
-	assert(t >= 0 && t <= 1);
-
-
+	//assert(t >= 0 && t <= 1);
 	//printf("GetTangent t: %f \n", t);
 
 	Vector3d pos0, pos1;
-	pos0 = getPos(t);
+	// Note: We use central estimate now
+	pos0 = getPos(t-getSmoothedDelta());
 	pos1 = getPos(t+getSmoothedDelta());
 		
 	Vector3d tangent = pos1 - pos0;
 	double length = tangent.length();
-	if(length != 0){
-		tangent /= length;
-	}
+	assert (length < VECTORLENGHTMINIMUM);
+	tangent /= length;
 	
 	return tangent;
 }
@@ -326,23 +336,25 @@ Vector3d Track::getNormalVector(double t) const
 {
 	// TODO: assert that normal is not of inf length!
 	// assert(t >= 0 && t <= 1);
-
 	// printf("GetNormal t: %f \n", t);
+	
+	Vector3d normal = getNonNormalizedNormalVector(t);
+	double length = normal.length();
+	if (length < VECTORLENGHTMINIMUM) return Vector3d(0,0,0);
+	return normal/length;
+}
 
-	// We need one point back and one point forward for the normal vector, so on the boundaries we hack.
-	if (t <= 0) return getNormalVector(getSmoothedDelta());
-	if (t >= 1) return getNormalVector(1-getSmoothedDelta());
+Vector3d Track::getNonNormalizedNormalVector(double t) const
+{
+	if (t < 0) t = getSmoothedDelta();
+	if (t > 1) t = 1.0-getSmoothedDelta();
 	
 	Vector3d T0, T1;
 	T0 = getTangentVector(t-getSmoothedDelta());
-	T1 = getTangentVector(t);
+	T1 = getTangentVector(t+getSmoothedDelta());
 		
 	// The normal vector points towards T1-T0
 	Vector3d normal = T1 - T0;
-	double length = normal.length();
-
-	normal /= length;
-			
 	return normal;
 }
 
