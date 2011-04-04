@@ -351,7 +351,7 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 				
 				//add track 120 over the ground
 				track.addPos(Vector3d(iter->worldFragment->singleIntersection.x, iter->worldFragment->singleIntersection.y+10, 
-					iter->worldFragment->singleIntersection.z), ((rand()%180) -90)/180*3.1415);	// TODO: fix setting angles in GUI
+					iter->worldFragment->singleIntersection.z), (double)((rand()%180)-90)/180*3.1415);	// TODO: fix setting angles in GUI
 				placedObjects.push_back(std::string(name));
 
 				position_added = true;
