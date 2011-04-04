@@ -63,6 +63,7 @@ private:
 	double C_x, C_y, C_z;		// Displacements of CG
 	
 	double maxThrust;			// Maximum forward thrust [force]
+	double maxBreak;
 	double wheelsOffsety;		// Offset sideways of wheels (along y-axis)
 	double wheelsOffsetx;		// Offset of wheels along x axis
 
@@ -78,7 +79,7 @@ private:
 	double thrustFactor;
 	
 	// Simulation "constants"
-	Vector3d gvector;
+	const Vector3d gvector;// = Vector3d(0,-9.81,0);
 
 	// Simulation properties
 	double currentDistance;			// Which distance the cart has travelled

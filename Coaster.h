@@ -71,7 +71,7 @@ protected:
 	Ogre::SceneNode *railNode;
 	Ogre::SceneNode *cartNode;
 
-	PhysicsCart physicsCart;
+	PhysicsCart *physicsCart;
 
 	Ogre::String cameraName;
 	void changeViewPoint(void);
@@ -81,6 +81,7 @@ protected:
 	Ogre::MeshManager *meshManager;
 	bool adjustHeight;
 
+	void resetRail(void);
 	//void createRailMesh(const Track track, const bool export_mesh);
 };
  

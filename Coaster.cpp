@@ -11,7 +11,8 @@ mRotateSpeed(0.1f),
 bRobotMode(true),
 track(),
 mControllPointCount(0),
-adjustHeight(false)
+adjustHeight(false),
+physicsCart(new PhysicsCart())
 {
 }
 //-------------------------------------------------------------------------------------
@@ -23,7 +24,8 @@ Coaster::~Coaster(void)
 //-------------------------------------------------------------------------------------
 void Coaster::createScene(void)
 {
-	physicsCart = PhysicsCart();
+	delete physicsCart;
+	physicsCart = new PhysicsCart();
 
     railNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("RailsNode", Ogre::Vector3(0, 0, 0));
     //railNode->attachObject(rail);
@@ -34,7 +36,7 @@ void Coaster::createScene(void)
 	Ogre::Entity* cartEnt = mSceneMgr->createEntity("Cart", "minecart.mesh");
 				  cartEnt->setQueryFlags(CART_MASK);
 	cartNode->attachObject(cartEnt);
-	cartNode->yaw(Ogre::Degree(90));
+	//cartNode->yaw(Ogre::Degree(90));
 	cartNode->setScale(0.1f, 0.1f, 0.1f);
 
 	placedObjects = std::vector<Ogre::String>(0);
@@ -113,14 +115,18 @@ bool Coaster::frameRenderingQueued(const Ogre::FrameEvent& arg)
 	//delta time
 	Ogre::Real dt = arg.timeSinceLastFrame;
 	
-	if(physicsCart.hasTrack()){
-		Vector3d pos = physicsCart.getPos();
+	if(physicsCart->hasTrack()){
+		Vector3d pos = physicsCart->getPos();
 		cartNode->setPosition(Ogre::Vector3(pos.x, pos.y, pos.z));
 
 		using namespace Ogre;
 
-		Ogre::Vector3 mForward = Vector3(physicsCart.getForward().x, physicsCart.getForward().y, physicsCart.getForward().z);
-		Ogre::Vector3 mUp = Vector3(physicsCart.getUp().x, physicsCart.getUp().y, physicsCart.getUp().z);
+		Ogre::Vector3 mForward = Vector3(physicsCart->getForward().x, physicsCart->getForward().y, physicsCart->getForward().z).normalisedCopy();
+		Ogre::Vector3 mUp = Vector3(physicsCart->getUp().x, physicsCart->getUp().y, physicsCart->getUp().z).normalisedCopy();
+		double dot = mForward.dotProduct(mUp);
+		if (dot > 0.1) {
+ 			cout << dot << "! ";
+		}
 
 		//Radian yaw = Math::ACos(Vector3::UNIT_X.dotProduct(mForward));
 		//Quaternion q3 (Radian(0), Vector3::NEGATIVE_UNIT_Z);
@@ -129,7 +135,10 @@ bool Coaster::frameRenderingQueued(const Ogre::FrameEvent& arg)
 		cartNode->setOrientation(tot);		//rotate cart
 
 		//next step
-		physicsCart.nextStep(dt);
+		if(track.getNumberOfPoints() > 3){
+			physicsCart->nextStep(dt);
+		}
+
 	}
 	
 
@@ -180,7 +189,7 @@ Ogre::Quaternion Coaster::generateRotationFromDirectionVector(Ogre::Vector3 vDir
             // Step 1. Setup basis vectors describing the rotation given the input vector and assuming an initial up direction of (0, 1, 0)
 			Ogre::Vector3 vUp = Ogre::Vector3(0.0f, 1.0f, 0.0f);           // Y Up vector
 			Ogre::Vector3 vRight = vUp.crossProduct(vDirection);    // The perpendicular vector to Up and Direction (feil, dette er venstre)
-			//vUp = vDirection.crossProduct(vRight);           // The actual up vector given the direction and the right vector (denne vil vel alltid bli lik opprinnelig vUp)
+			vUp = vDirection.crossProduct(vRight);           // The actual up vector given the direction and the right vector (denne vil vel alltid bli lik opprinnelig vUp)
             
 
             // Step 2. Put the three vectors into the matrix to bulid a basis rotation matrix
@@ -190,9 +199,6 @@ Ogre::Quaternion Coaster::generateRotationFromDirectionVector(Ogre::Vector3 vDir
 												 vUp.x, vUp.y, vUp.z, 0.0f,
 												 vDirection.x, vDirection.y, vDirection.z, 0.0f,
 												 0.0f, 0.0f, 0.0f, 1.0f);
-			// Hvorfor 4x4?
-
-			//Ogre::Matrix3(v
 
             return mBasis.extractQuaternion();
         }
@@ -282,8 +288,8 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 	{
 		//this->track = test3();
 		//track.setTrackLength(1000);
-		//physicsCart.setTrack(&track);
-		//physicsCart.moveTo(1.0);
+		//physicsCart->setTrack(&track);
+		//physicsCart->moveTo(1.0);
 			
 
 		//show that the current object has been deselected by removing the bounding box visual
@@ -344,7 +350,7 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 				mCurrentObject->attachObject(ent);
 
 				//add track 120 over the ground
-				track.addPos(Vector3d(iter->worldFragment->singleIntersection.x, iter->worldFragment->singleIntersection.y+10, iter->worldFragment->singleIntersection.z), Vector3d(0,1,0));
+				track.addPos(Vector3d(iter->worldFragment->singleIntersection.x, iter->worldFragment->singleIntersection.y+10, iter->worldFragment->singleIntersection.z), 30.0/180*3.1415);
 				placedObjects.push_back(std::string(name));
 
 				position_added = true;
@@ -390,7 +396,7 @@ void Coaster::generateTrack(void){
 	// make graphical track mesh
 	GraphicTrack::createRailMesh(&track, false);
 			
-	physicsCart.setTrack(&track);
+	physicsCart->setTrack(&track);
 
 	// add rails to scene
 	Ogre::Entity* rail = mSceneMgr->createEntity("Rails","RailMesh");
@@ -398,8 +404,8 @@ void Coaster::generateTrack(void){
 	railNode->attachObject(rail);
 
 	//start cart from start
-	physicsCart.moveTo(0.0);
-	Vector3d start_pos = physicsCart.getPos();
+	physicsCart->moveTo(0.0);
+	Vector3d start_pos = physicsCart->getPos();
 	Ogre::Vector3 start_pos_ogre = Ogre::Vector3(start_pos.x, start_pos.y, start_pos.z);
 	cartNode->setPosition(start_pos_ogre);
 
@@ -430,26 +436,31 @@ bool Coaster::keyPressed(const OIS::KeyEvent& arg)
 			changeViewPoint();
 			break;
 		case OIS::KC_0: 
-			this->physicsCart.moveTo(0); 
+			this->physicsCart->moveTo(0); 
 			cartNode->setOrientation(1,0,0,0);
 			break;
 		case OIS::KC_5:
-			this->physicsCart.moveTo(0.5*track.getTrackLength()); break;
+			this->physicsCart->moveTo(0.5*track.getTrackLength()); break;
 		case OIS::KC_M:
-			physicsCart.setBraking(0.0);
-			this->physicsCart.setThrust(1.0); 
+			physicsCart->setBraking(0.0);
+			this->physicsCart->setThrust(1.0); 
 			cout << "Accelerating.\n";
 			break;
 		case OIS::KC_N:
-			this->physicsCart.setThrust(0.0);
-			this->physicsCart.setBraking(1.0);
+			this->physicsCart->setThrust(0.0);
+			this->physicsCart->setBraking(1.0);
 			cout << "Breaking.\n";
 			break;
 		case OIS::KC_P:
-			cout << physicsCart.toString(); break;
+			cout << physicsCart->toString(); break;
+
+		case OIS::KC_R:
+			this->resetRail();
+			break;
+			
 		case OIS::KC_RSHIFT:
-			physicsCart.setBraking(0);
-			physicsCart.setThrust(0);
+			physicsCart->setBraking(0);
+			physicsCart->setThrust(0);
 			cout << "Coasting.\n";
 			break;
 		case OIS::KC_LSHIFT:
@@ -464,6 +475,45 @@ bool Coaster::keyPressed(const OIS::KeyEvent& arg)
 	//and the return value in one line
 	return BaseApplication::keyPressed(arg);
 }
+
+void Coaster::resetRail(void){
+	meshManager = mRoot->getMeshManager();
+
+	railNode->detachAllObjects();
+	if(mSceneMgr->hasEntity("Rails")){
+		mSceneMgr->destroyEntity("Rails");
+		mSceneMgr->destroyManualObject("RailMesh");
+		meshManager->remove("RailMesh");
+	}
+
+	vector<Ogre::String> temp = vector<Ogre::String>(0);
+
+	for (vector<Ogre::String>::iterator it = placedObjects.begin(); it!=placedObjects.end(); ++it) {
+
+		string obj_name = string(*it);
+		Ogre::String controll = "Controll";
+		int pos = obj_name.find(controll);
+
+		//Controll point found
+		if(pos != string::npos){
+			if(mSceneMgr->hasEntity(obj_name)){
+				mSceneMgr->destroyEntity(obj_name);
+			}
+		} else {
+			temp.push_back(*it);
+		}
+	}
+
+	placedObjects = temp;
+
+	if(mCurrentObject)
+	{
+		mCurrentObject->showBoundingBox(false);
+	}
+
+	track.initValues();
+}
+
 
 bool Coaster::keyReleased( const OIS::KeyEvent& arg ){
 	switch (arg.key) {

@@ -11,7 +11,8 @@
 #define WILLFLYTOLERANCE 1e-12
 #define MAXDELTATIME 1e-1
 #define MAXDELTATIME_LAG 1e-1
-#define SPEEDCUTOFF_FRICTION 1e-12
+#define SPEEDCUTOFF_FRICTION 1e-6
+#define NULLVECTOR Vector3d(0,0,0)
 
 using std::stringstream;
 using std::cout;
@@ -20,7 +21,7 @@ int inline signum(double d) {
 	return (int)((d > 0) - (d < 0));
 }
 
-PhysicsCart::PhysicsCart()
+PhysicsCart::PhysicsCart() : gvector(0,-9.81,0)
 {
 	// Set "constants"
 	mass = 1.0;
@@ -28,6 +29,7 @@ PhysicsCart::PhysicsCart()
 	friction_static = 1.0;
 	friction_glide = 1.0;
 	maxThrust = 500.0;
+	maxBreak = 500.0;
 	wheelsOffsetx = 0;
 	wheelsOffsety = 0.5;		// Total widTh of cart becomes 1.0
 	thrustFactor = 0.0;
@@ -41,8 +43,7 @@ PhysicsCart::PhysicsCart()
 	currentDistance = 0;
 	current_t = 0;
 
-	gvector = Vector3d(0,-9.81,0);
-	
+		
 	isFreefalling = false;
 	track = NULL;
 
@@ -95,10 +96,11 @@ double PhysicsCart::calculate_a_T(double deltaDistance) const
 {	
 	double new_t = current_t + track->deltaDistanceTodeltaT(deltaDistance, current_t);
 	int direction = 0;
-	if (abs(v) > SPEEDCUTOFF_FRICTION ) direction = (int)(v/abs(v));	// Positive if going forward on track
+	/* if (abs(v) > SPEEDCUTOFF_FRICTION )*/
+	direction = (int)(v/abs(v));	// Positive if going forward on track
 	
 	double a_T = thrustFactor*maxThrust/mass 
-		- direction*brakingFactor
+		- direction*brakingFactor*maxBreak
 		+ gvector * track->getTangentVector(new_t);	// Possibly air resistance
 
 	return a_T;
@@ -162,7 +164,10 @@ void PhysicsCart::calculateNextStep(double dT) {
 	// Snap to track (position, direction, up and forward)
 	vPos = track->getPos(current_t);
 	vVelocity = v*track->getTangentVector(current_t);
-	vUp = track->getUp(current_t);
+	if (track->getUp(current_t) != NULLVECTOR)		// If the up vector goes crazy singular, don't change it!
+		vUp = track->getUp(current_t);
+	else assert(false);
+
 	vForward = track->getTangentVector(current_t);
 				
 	bool insideCurve = (vUp * track->getNormalVector(current_t) >= 0.0);	// true if "inside" curvature
@@ -175,15 +180,18 @@ void PhysicsCart::calculateNextStep(double dT) {
 		//  center of curvature, the cart will lose traction and fly! Should probably have a tolerance here (vertical attitudes).
 		double asdf = v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector;
 		if (v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector < 1e-12)
-			;//isFreefalling = true;
+			// Disabled for now
+			//isFreefalling = true;
+			;
 	
 	} else {
 		// If the acceleration required to keep in circular motion is GREATER THAN the gravity component towards the
 		//  center of curvature, the cart will lose traction and fly! Should probably have a tolerance here (vertical attitudes).
 		double asdf = v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector;
 		if (v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector > 1e-12) 
-			;//isFreefalling = true;
-		
+			// Disabled for now
+			// isFreefalling = true;
+			;
 	}
 }
 
@@ -232,7 +240,8 @@ string PhysicsCart::toString() const {
 		"Normal v = [" << track->getNormalVector(current_t).x << ", " << track->getNormalVector(current_t).y << ", " << track->getNormalVector(current_t).z << "]\n" <<
 		"Tangent  = [" << track->getTangentVector(current_t).x << ", " << track->getTangentVector(current_t).y << ", " << track->getTangentVector(current_t).z << "]\n" <<
 		"Forward = [" << getForward().x << ", " << getForward().y << ", " << getForward().z << "]\n" <<
-		"Curvature = " << track->getCurvature(current_t) << "\n";
+		"Curvature = " << track->getCurvature(current_t) << "\n" <<
+		"Tangent(t) dot NonNormalizedNormal(t) = " << track->getTangentVector(current_t) * track->getNonNormalizedNormalVector(current_t) << "\n";
 		
 	return res.str();
 }

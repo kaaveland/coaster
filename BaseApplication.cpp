@@ -59,7 +59,6 @@ bool BaseApplication::configure(void)
         // If returned true, user clicked OK so initialise
         // Here we choose to let the system create a default rendering window by passing 'true'
         mWindow = mRoot->initialise(true, "Coaster Xtreme 7");
-
         return true;
     }
     else
@@ -325,7 +324,7 @@ bool BaseApplication::keyPressed( const OIS::KeyEvent &arg )
         Ogre::MaterialManager::getSingleton().setDefaultAnisotropy(aniso);
         mDetailsPanel->setParamValue(9, newVal);
     }
-    else if (arg.key == OIS::KC_R)   // cycle polygon rendering mode
+    else if (arg.key == OIS::KC_E)   // cycle polygon rendering mode
     {
         Ogre::String newVal;
         Ogre::PolygonMode pm;

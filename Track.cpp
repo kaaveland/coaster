@@ -4,9 +4,13 @@
 #include "Vector3d.h"
 #include <cassert>
 #include <math.h>
+#include <sstream>
 
 #define NULL 0
 #define DEBUG
+
+#define VECTORLENGHTMINIMUM 1e-6*1e-6
+#define NULLVECTOR Vector3d(0,0,0)
 
 #ifdef DEBUG
 #include <iostream>
@@ -21,11 +25,15 @@ void Track::initValues() {
 	pos = vector<Vector3d>(0);
 	up = vector<Vector3d>(0);
 	arcDistances = vector<double>(0);
-	
+	rotations = vector<double>(0);
+		
 }
 
 Track::Track(vector<Vector3d> const &pos, vector<Vector3d> const &up)
 {
+	// Do not use this constructor
+	assert(false);
+
 	assert(pos.size() == up.size());
 	initValues();
 
@@ -37,6 +45,7 @@ Track::Track(vector<Vector3d> const &pos, vector<Vector3d> const &up)
 
 	this->delta_t = (double)1 / (double)pos.size();
 	calculateArcDistances();
+	makePlaneUpVectors();
 	//	calculateSections_dS();
 
 }
@@ -88,6 +97,8 @@ void Track::setControlPoint(int index, Vector3d position)
 	assert(index >= 0 && index < nControlPoints);
 
 	pos[index] = position;
+	calculateArcDistances();
+	//makePlaneUpVectors();
 }
 
 
@@ -100,6 +111,32 @@ Vector3d Track::getControlUp(int index) const
 	return up[index];
 }
 
+void Track::makePlaneUpVectors() 
+{
+	for (int i=0; i < nControlPoints; i++) {
+		double t = (double)i/nControlPoints;
+
+		// Ensure up is always pointing "upwards"/positive y axis
+		// If this gives the wrong intention, set a rotation of pi radians with setRotation()
+		if (getNormalVector(t) * Vector3d(0,1,0) >= 0) up[i] = getNormalVector(t);	
+		else up[i] = -getNormalVector(t);
+	}
+}
+
+void Track::setTrackRotation(int index, double radian)
+{
+	assert (index >= 0 && index < nControlPoints);
+	rotations[index] = radian;
+		
+	
+	//double t = (double)index/1.0;
+	//Vector3d right = getTangentVector(t).cross(getUp(t));
+	//if (
+	//right /= right.length();
+
+	//up[index] = Vector(0,1,0) + right * sin(radian);
+	
+}
 /*void Track::setTrackPoint(double index, Vector3d v)
 {
 	assert(index >= 0 && index < nControlPoints);
@@ -107,20 +144,47 @@ Vector3d Track::getControlUp(int index) const
 	pos[index] = v;
 }*/
 
-/*void Track::setTrackLength(double length) {
-	trackLength = length;
-}*/
 
 double Track::getTrackLength() const
 {
 	return trackLength;
 }
 
+Vector3d Track::getUnitBinormal(double t) const
+{
+	assert ((getTangentVector(t).cross(getUp(t))).normalizedCopy() != NULLVECTOR);
+	return (getTangentVector(t).cross(getUp(t))).normalizedCopy();
+}
+
 
 Vector3d Track::getUp(double t) const
-{
+{	
+	//Vector3d vup = getNonNormalizedNormalVector(t);
+	//assert (vup.x==vup.x && vup.y==vup.y && vup.z==vup.z); // Ensure is not NAN
+	//if (vup.length() < VECTORLENGHTMINIMUM) return Vector3d(0,0,0);
+	//return vup;
+
 	 // Find out in which interval we are on the spline
     int p = (int)(t / delta_t);
+	double lt = (t - delta_t*(double)p) / delta_t;
+	//double angle0 = rotations[p];
+	//double angle1 = rotations[p+1];
+	//double angleinterpolated = (angle1-angle0)*lt;
+
+	// TODO: if y axis and tangent is almost parallel, we get gimbal lock. FIX!
+	Vector3d yaxis(0,1,0);
+	Vector3d tangent = getTangentVector(t);
+	
+	// Find the unit right/binormal vector in the right-hand system (tangent, (0,1,0), right).
+	// Note that this will lead to problems if the tangent vector is very close to +- (0,1,0)
+	Vector3d right = tangent.cross(yaxis).normalizedCopy();
+	Vector3d up = -tangent.cross(right).normalizedCopy();
+	
+	// Interpolate the angle linearly between this and next point
+	up = up + right * cos( rotations[p] + (rotations[p+1]-rotations[p]) * lt);
+	return up;
+
+/*
     // Compute local control point indices
 #define BOUNDS2(pp) { if (pp < 0) pp = 0; else if (pp >= (int)up.size()-1) pp = up.size() - 1; }
     int p0 = p - 1;     BOUNDS2(p0);
@@ -128,15 +192,18 @@ Vector3d Track::getUp(double t) const
     int p2 = p + 1;     BOUNDS2(p2);
     int p3 = p + 2;     BOUNDS2(p3);
     // Relative (local) time 
-	double lt = (t - delta_t*(double)p) / delta_t;
+	
 	// Interpolate
 	//printf("lt: %f, p: %d, p0:%d, p1:%d, p2:%d, p3:%d \n", lt, p, p0, p1, p2, p3);
 
 	Vector3d upPos = Track::Eq(lt, getControlPoint(p0)+getControlUp(p0), getControlPoint(p1)+getControlUp(p1), getControlPoint(p2)+getControlUp(p2), getControlPoint(p3)+getControlUp(p3));
 	
 	Vector3d diff = upPos - getPos(t);
+	double rot = acos(diff/diff.length() * getNormalVector(t));
+	//Vector3d right = 
+	if (diff.length() < VECTORLENGHTMINIMUM) return Vector3d(0,0,0);
 	return diff/diff.length();
-	
+*/
 }
 
 void Track::setUp(int index, Vector3d up)
@@ -173,18 +240,24 @@ Vector3d Track::Eq(double t, const Vector3d p1, const Vector3d p2, const Vector3
 	return (p1*b1 + p2*b2 + p3*b3 + p4*b4);
 }
 
-// Not going to work now. Need to recalculate distance array
-void Track::addPos(const Vector3d v, const Vector3d up)
+void Track::addPos(const Vector3d v, double rotation_radians)
 {
 	nControlPoints += 1;
 	//printf("Add point x:%f y:%f z:%f \n", v.x, v.y, v.z);
-    this->pos.push_back(v);
-	this->up.push_back(up);
+    pos.push_back(v);
+	rotations.push_back(rotation_radians);
+
+	
 	//printf("Added point x:%f, y:%f, z:%f \n", getTrackPoint(nControlPoints-1));
 	this->arcDistances.resize(nControlPoints);
-
-	this->delta_t = (double)1 / (double)pos.size();
+	up.resize(nControlPoints);
+	
+	this->delta_t = 1.0/pos.size();
 	calculateArcDistances();
+
+	//makePlaneUpVectors();
+	//setTrackRotation(nControlPoints-1, rotation_radians);
+
 }
 
 Vector3d Track::getPos(double t) const
@@ -261,22 +334,20 @@ double Track::deltaDistanceTodeltaT(double ds, double current_t) const
 
 Vector3d Track::getTangentVector(double t) const
 {
-	if (t < 0) t = 0; 
+	if (t < getSmoothedDelta()) t = getSmoothedDelta(); 
 	else if (t >= 1-getSmoothedDelta()) t = 1-getSmoothedDelta();
-	assert(t >= 0 && t <= 1);
-
-
+	//assert(t >= 0 && t <= 1);
 	//printf("GetTangent t: %f \n", t);
 
 	Vector3d pos0, pos1;
+	// Note: We use central estimate now
 	pos0 = getPos(t);
 	pos1 = getPos(t+getSmoothedDelta());
 		
 	Vector3d tangent = pos1 - pos0;
 	double length = tangent.length();
-	if(length != 0){
-		tangent /= length;
-	}
+	//assert (length >= VECTORLENGHTMINIMUM);
+	tangent /= length;
 	
 	return tangent;
 }
@@ -304,23 +375,25 @@ Vector3d Track::getNormalVector(double t) const
 {
 	// TODO: assert that normal is not of inf length!
 	// assert(t >= 0 && t <= 1);
-
 	// printf("GetNormal t: %f \n", t);
+	
+	Vector3d normal = getNonNormalizedNormalVector(t);
+	double length = normal.length();
+	if (length < VECTORLENGHTMINIMUM) return Vector3d(0,0,0);
+	return normal/length;
+}
 
-	// We need one point back and one point forward for the normal vector, so on the boundaries we hack.
-	if (t <= 0) return getNormalVector(getSmoothedDelta());
-	if (t >= 1) return getNormalVector(1-getSmoothedDelta());
+Vector3d Track::getNonNormalizedNormalVector(double t) const
+{
+	if (t <= 0) t = getSmoothedDelta();
+	if (t >= 1) t = 1.0-getSmoothedDelta();
 	
 	Vector3d T0, T1;
 	T0 = getTangentVector(t-getSmoothedDelta());
-	T1 = getTangentVector(t);
+	T1 = getTangentVector(t+getSmoothedDelta());
 		
 	// The normal vector points towards T1-T0
 	Vector3d normal = T1 - T0;
-	double length = normal.length();
-
-	normal /= length;
-			
 	return normal;
 }
 
@@ -440,3 +513,48 @@ int Track::getNumberOfPoints(void) const
 	return this->nControlPoints;
 }
 
+void Track::read(std::istream &in)
+{
+	enum { BEGIN, CONTROL, POS, UP, END, ERROR} state = BEGIN;
+	char buf[512];
+
+	while (in.getline(buf, 512) && state != END) {
+		std::string input(buf);
+		std::string trash;
+		std::istringstream parse(input);
+
+		if (state == BEGIN && input.substr(0, 3) == "CP:") {
+			state = CONTROL;
+			parse >> trash; // Skip CP: and space
+			parse >> nControlPoints; // Fill in control points
+		} else if (state == CONTROL && input.substr(0, 2) == "P:") {
+			state = POS; // Skip this line, but expect data on pos on following lines
+		} else if (state == POS && input.substr(0, 2) != "U:") {
+			Vector3d parsed;
+			parsed.read(parse);
+			pos.push_back(parsed);
+		} else if (state == POS && input.substr(0, 2) == "U:") {
+			state = UP; // Skip this line, but expect data on up on following lines
+		} else if (state == UP && input.size() > 1) {
+			Vector3d parsed;
+			parsed.read(parse);
+			up.push_back(parsed);
+		} else if (state == UP && input.size() < 2) {
+			state = END; // This means we're done
+		} else if (state == END)
+			continue; // Empty line after up has been parsed, ignore
+		else // Can only happen if input doesn't have strict
+			state = ERROR; // May want to try to recover or something here
+	}
+}
+
+void Track::dump(std::ostream &out)
+{
+	out << "CP: " << nControlPoints << std::endl;
+	out << "P: " << std::endl;
+	for (int i = 0; i < pos.size(); ++i)
+		pos[i].dump(out);
+	out << "U: " << std::endl;
+	for (int i = 0; i < up.size(); ++i)
+		up[i].dump(out);
+}

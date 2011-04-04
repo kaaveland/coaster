@@ -3,13 +3,14 @@
 
 #include <vector>
 #include "Vector3d.h"
+#include <istream>
+#include <ostream>
 
 using std::vector;
 
 class Track
 {
 public:
-
 	// Constructs new Track instance. 
 	// 
 	//	Parameters:
@@ -23,6 +24,9 @@ public:
 	Track(void);
 	
 	~Track(void);
+	
+	void read(std::istream &in);
+	void dump(std::ostream &out);
 	
 	/* void setTrackPoint(double index, Vector3d v); */
 
@@ -40,6 +44,10 @@ public:
 	// Gives the unit normal vector at the given segment. The normal vector points 
 	// towards the center of curvature.
 	Vector3d getNormalVector(double t) const;
+	// Gives the not-normalized normal vector
+	Vector3d getNonNormalizedNormalVector(double t) const;
+
+	Vector3d getUnitBinormal(double t) const;
 
 
 	// Load and fill the track with points
@@ -55,7 +63,7 @@ public:
 	int getNumberOfPoints(void) const;
 
 	 // Operations
-    void addPos(const Vector3d v, const Vector3d up);
+    void addPos(const Vector3d v, double rotation_radians);
 	Vector3d getPos(double t) const;   // t = 0...1; 0=pos[0] ... 1=pos[max]
 	double deltaDistanceTodeltaT(double ds, double current_t) const;	// meters = [0, trackLength];
 
@@ -76,12 +84,16 @@ public:
 	double getTrackLength() const;
 	Vector3d getControlPoint(int index) const;
 	Vector3d getControlUp(int index) const;
-	void Track::setControlPoint(int index, Vector3d position);
+	void setControlPoint(int index, Vector3d position);
+	void setTrackRotation(int index, double radian);
+
+	void initValues();
 
 protected:
 	int nControlPoints;
 	std::vector<Vector3d> pos;
 	std::vector<Vector3d> up;
+	std::vector<double> rotations;
 	std::vector<double> arcDistances;	// A vector that contains the (accumulative) arc distances to each of the control points.
 	//std::vector<double> section_dS;		// A vector that contains the dS values for each segment
 	//std::vector<Vector3d> finePoints;
@@ -95,9 +107,8 @@ protected:
 		
 private:
 	void generateTrack();
-	void initValues();
 	void calculateArcDistances();
-	//void calculateSections_dS();
+	void makePlaneUpVectors();
 	
 	int lastAccessedTrackIndex;
 	
