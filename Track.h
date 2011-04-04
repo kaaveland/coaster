@@ -47,6 +47,8 @@ public:
 	// Gives the not-normalized normal vector
 	Vector3d getNonNormalizedNormalVector(double t) const;
 
+	Vector3d getUnitBinormal(double t) const;
+
 
 	// Load and fill the track with points
 	/* void generateTrack(void); */
@@ -91,6 +93,7 @@ protected:
 	int nControlPoints;
 	std::vector<Vector3d> pos;
 	std::vector<Vector3d> up;
+	std::vector<double> rotations;
 	std::vector<double> arcDistances;	// A vector that contains the (accumulative) arc distances to each of the control points.
 	//std::vector<double> section_dS;		// A vector that contains the dS values for each segment
 	//std::vector<Vector3d> finePoints;

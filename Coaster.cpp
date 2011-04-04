@@ -123,9 +123,9 @@ bool Coaster::frameRenderingQueued(const Ogre::FrameEvent& arg)
 
 		Ogre::Vector3 mForward = Vector3(physicsCart->getForward().x, physicsCart->getForward().y, physicsCart->getForward().z).normalisedCopy();
 		Ogre::Vector3 mUp = Vector3(physicsCart->getUp().x, physicsCart->getUp().y, physicsCart->getUp().z).normalisedCopy();
-		double dot = mForward.absDotProduct(mUp);
-		if (dot > 1e-5) {
- 			cout << dot << " ";
+		double dot = mForward.dotProduct(mUp);
+		if (dot > 0.1) {
+ 			cout << dot << "! ";
 		}
 
 		//Radian yaw = Math::ACos(Vector3::UNIT_X.dotProduct(mForward));
@@ -350,7 +350,7 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 				mCurrentObject->attachObject(ent);
 
 				//add track 120 over the ground
-				track.addPos(Vector3d(iter->worldFragment->singleIntersection.x, iter->worldFragment->singleIntersection.y+10, iter->worldFragment->singleIntersection.z), 0.0);
+				track.addPos(Vector3d(iter->worldFragment->singleIntersection.x, iter->worldFragment->singleIntersection.y+10, iter->worldFragment->singleIntersection.z), 30.0/180*3.1415);
 				placedObjects.push_back(std::string(name));
 
 				position_added = true;

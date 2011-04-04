@@ -25,11 +25,15 @@ void Track::initValues() {
 	pos = vector<Vector3d>(0);
 	up = vector<Vector3d>(0);
 	arcDistances = vector<double>(0);
+	rotations = vector<double>(0);
 		
 }
 
 Track::Track(vector<Vector3d> const &pos, vector<Vector3d> const &up)
 {
+	// Do not use this constructor
+	assert(false);
+
 	assert(pos.size() == up.size());
 	initValues();
 
@@ -94,7 +98,7 @@ void Track::setControlPoint(int index, Vector3d position)
 
 	pos[index] = position;
 	calculateArcDistances();
-	makePlaneUpVectors();
+	//makePlaneUpVectors();
 }
 
 
@@ -111,19 +115,26 @@ void Track::makePlaneUpVectors()
 {
 	for (int i=0; i < nControlPoints; i++) {
 		double t = (double)i/nControlPoints;
-		up[i] = getNormalVector(t);
+
+		// Ensure up is always pointing "upwards"/positive y axis
+		// If this gives the wrong intention, set a rotation of pi radians with setRotation()
+		if (getNormalVector(t) * Vector3d(0,1,0) >= 0) up[i] = getNormalVector(t);	
+		else up[i] = -getNormalVector(t);
 	}
 }
 
-void Track::setTrackRotation(int index, double delta_radian)
+void Track::setTrackRotation(int index, double radian)
 {
 	assert (index >= 0 && index < nControlPoints);
-	double t = (double)index/1.0;
-	Vector3d right = getTangentVector(t).cross(getUp(t));
+	rotations[index] = radian;
+		
+	
+	//double t = (double)index/1.0;
+	//Vector3d right = getTangentVector(t).cross(getUp(t));
 	//if (
-	right /= right.length();
+	//right /= right.length();
 
-	up[index] = up[index] + right * sin(delta_radian);
+	//up[index] = Vector(0,1,0) + right * sin(radian);
 	
 }
 /*void Track::setTrackPoint(double index, Vector3d v)
@@ -133,26 +144,47 @@ void Track::setTrackRotation(int index, double delta_radian)
 	pos[index] = v;
 }*/
 
-/*void Track::setTrackLength(double length) {
-	trackLength = length;
-}*/
 
 double Track::getTrackLength() const
 {
 	return trackLength;
 }
 
+Vector3d Track::getUnitBinormal(double t) const
+{
+	assert ((getTangentVector(t).cross(getUp(t))).normalizedCopy() != NULLVECTOR);
+	return (getTangentVector(t).cross(getUp(t))).normalizedCopy();
+}
+
 
 Vector3d Track::getUp(double t) const
 {	
-	Vector3d vup = getNonNormalizedNormalVector(t);
-	assert (vup.x==vup.x && vup.y==vup.y && vup.z==vup.z); // Ensure is not NAN
-	assert (vup.length() >= VECTORLENGHTMINIMUM);
-	return vup/vup.length();
+	//Vector3d vup = getNonNormalizedNormalVector(t);
+	//assert (vup.x==vup.x && vup.y==vup.y && vup.z==vup.z); // Ensure is not NAN
+	//if (vup.length() < VECTORLENGHTMINIMUM) return Vector3d(0,0,0);
+	//return vup;
 
 	 // Find out in which interval we are on the spline
     int p = (int)(t / delta_t);
+	double lt = (t - delta_t*(double)p) / delta_t;
+	//double angle0 = rotations[p];
+	//double angle1 = rotations[p+1];
+	//double angleinterpolated = (angle1-angle0)*lt;
+
+	// TODO: if y axis and tangent is almost parallel, we get gimbal lock. FIX!
+	Vector3d yaxis(0,1,0);
+	Vector3d tangent = getTangentVector(t);
 	
+	// Find the unit right/binormal vector in the right-hand system (tangent, (0,1,0), right).
+	// Note that this will lead to problems if the tangent vector is very close to +- (0,1,0)
+	Vector3d right = tangent.cross(yaxis).normalizedCopy();
+	Vector3d up = -tangent.cross(right).normalizedCopy();
+	
+	// Interpolate the angle linearly between this and next point
+	up = up + right * cos( rotations[p] + (rotations[p+1]-rotations[p]) * lt);
+	return up;
+
+/*
     // Compute local control point indices
 #define BOUNDS2(pp) { if (pp < 0) pp = 0; else if (pp >= (int)up.size()-1) pp = up.size() - 1; }
     int p0 = p - 1;     BOUNDS2(p0);
@@ -160,15 +192,18 @@ Vector3d Track::getUp(double t) const
     int p2 = p + 1;     BOUNDS2(p2);
     int p3 = p + 2;     BOUNDS2(p3);
     // Relative (local) time 
-	double lt = (t - delta_t*(double)p) / delta_t;
+	
 	// Interpolate
 	//printf("lt: %f, p: %d, p0:%d, p1:%d, p2:%d, p3:%d \n", lt, p, p0, p1, p2, p3);
 
 	Vector3d upPos = Track::Eq(lt, getControlPoint(p0)+getControlUp(p0), getControlPoint(p1)+getControlUp(p1), getControlPoint(p2)+getControlUp(p2), getControlPoint(p3)+getControlUp(p3));
 	
 	Vector3d diff = upPos - getPos(t);
+	double rot = acos(diff/diff.length() * getNormalVector(t));
+	//Vector3d right = 
+	if (diff.length() < VECTORLENGHTMINIMUM) return Vector3d(0,0,0);
 	return diff/diff.length();
-	
+*/
 }
 
 void Track::setUp(int index, Vector3d up)
@@ -209,15 +244,18 @@ void Track::addPos(const Vector3d v, double rotation_radians)
 {
 	nControlPoints += 1;
 	//printf("Add point x:%f y:%f z:%f \n", v.x, v.y, v.z);
-    this->pos.push_back(v);
+    pos.push_back(v);
+	rotations.push_back(rotation_radians);
+
 	
 	//printf("Added point x:%f, y:%f, z:%f \n", getTrackPoint(nControlPoints-1));
 	this->arcDistances.resize(nControlPoints);
 	up.resize(nControlPoints);
-
+	
 	this->delta_t = 1.0/pos.size();
 	calculateArcDistances();
-	makePlaneUpVectors();
+
+	//makePlaneUpVectors();
 	//setTrackRotation(nControlPoints-1, rotation_radians);
 
 }
@@ -303,12 +341,12 @@ Vector3d Track::getTangentVector(double t) const
 
 	Vector3d pos0, pos1;
 	// Note: We use central estimate now
-	pos0 = getPos(t-getSmoothedDelta());
+	pos0 = getPos(t);
 	pos1 = getPos(t+getSmoothedDelta());
 		
 	Vector3d tangent = pos1 - pos0;
 	double length = tangent.length();
-	assert (length < VECTORLENGHTMINIMUM);
+	//assert (length >= VECTORLENGHTMINIMUM);
 	tangent /= length;
 	
 	return tangent;
@@ -347,8 +385,8 @@ Vector3d Track::getNormalVector(double t) const
 
 Vector3d Track::getNonNormalizedNormalVector(double t) const
 {
-	if (t < 0) t = getSmoothedDelta();
-	if (t > 1) t = 1.0-getSmoothedDelta();
+	if (t <= 0) t = getSmoothedDelta();
+	if (t >= 1) t = 1.0-getSmoothedDelta();
 	
 	Vector3d T0, T1;
 	T0 = getTangentVector(t-getSmoothedDelta());

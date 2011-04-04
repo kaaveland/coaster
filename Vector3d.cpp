@@ -151,4 +151,11 @@ Vector3d operator-(const Vector3d &v)
 	return Vector3d(-v.x, -v.y, -v.z);
 }
 
+Vector3d Vector3d::normalizedCopy() const
+{
+	double length = this->length();
+	if (length == 0.0) return *this;	// Do nothing if length is zero
+
+	return Vector3d(x,y,z)/length;
+}
 

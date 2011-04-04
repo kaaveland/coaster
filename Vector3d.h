@@ -32,6 +32,9 @@ struct Vector3d {
 
 	double Vector3d::length() const;
 
+	// Returns a normalized copy of this vector (of unit length). An unchanged copy of this is returned if the length is zero.
+	Vector3d Vector3d::normalizedCopy() const;	
+
 };
 
 // Non-member functions
