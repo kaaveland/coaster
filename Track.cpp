@@ -167,6 +167,8 @@ Vector3d Track::getUp(double t) const
 	 // Find out in which interval we are on the spline
     int p = (int)(t / delta_t);
 	double lt = (t - delta_t*(double)p) / delta_t;
+	#define BOUNDS2(pp) { if (pp < 0) pp = 0; else if (pp >= (int)rotations.size()-2) pp = rotations.size() - 2; }
+	BOUNDS2(p);
 	//double angle0 = rotations[p];
 	//double angle1 = rotations[p+1];
 	//double angleinterpolated = (angle1-angle0)*lt;
@@ -181,8 +183,8 @@ Vector3d Track::getUp(double t) const
 	Vector3d up = -tangent.cross(right).normalizedCopy();
 	
 	// Interpolate the angle linearly between this and next point
-	up = up + right * cos( rotations[p] + (rotations[p+1]-rotations[p]) * lt);
-	return up;
+	up = up + right * tan( rotations[p] + (rotations[p+1]-rotations[p]) * lt);
+	return up.normalizedCopy();
 
 /*
     // Compute local control point indices

@@ -348,9 +348,10 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 				//attach the object to a scene node
 				mCurrentObject = mSceneMgr->getRootSceneNode()->createChildSceneNode(std::string(name) , iter->worldFragment->singleIntersection);
 				mCurrentObject->attachObject(ent);
-
+				
 				//add track 120 over the ground
-				track.addPos(Vector3d(iter->worldFragment->singleIntersection.x, iter->worldFragment->singleIntersection.y+10, iter->worldFragment->singleIntersection.z), 30.0/180*3.1415);
+				track.addPos(Vector3d(iter->worldFragment->singleIntersection.x, iter->worldFragment->singleIntersection.y+10, 
+					iter->worldFragment->singleIntersection.z), ((rand()%180) -90)/180*3.1415);	// TODO: fix setting angles in GUI
 				placedObjects.push_back(std::string(name));
 
 				position_added = true;
