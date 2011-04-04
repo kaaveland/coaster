@@ -183,7 +183,8 @@ Vector3d Track::getUp(double t) const
 	Vector3d up = -tangent.cross(right).normalizedCopy();
 	
 	// Interpolate the angle linearly between this and next point
-	up = up + right * tan( rotations[p] + (rotations[p+1]-rotations[p]) * lt);
+	double angleInterpolated = rotations[p] + (rotations[p+1]-rotations[p]) * lt;
+	up = cos(angleInterpolated)*up + sin(angleInterpolated)*right;
 	return up.normalizedCopy();
 
 /*
