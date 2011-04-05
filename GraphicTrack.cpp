@@ -19,7 +19,7 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 	const float width = 0.15f;
 	const float height = 0.3f;
 	// times longer than width/2 is more correct
-	const float length_between_rails = 20.0f;
+	const float length_between_rails = 2.0f;
 
 	Ogre::ManualObject rail("RailObject");
 	Ogre::Vector3 size(width / 2, height/2, 0);
@@ -52,7 +52,7 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 	Vector3d cur_pos = track.getPos(0);
 	Vector3d next_pos = track.getPos(t);
 	
-	Vector3d diff, norm, last_norm, tangent, last_tangent, up, last_up, norm_parallel;
+	Vector3d diff, norm, last_norm, tangent, last_tangent, up, last_up, norm_parallel, right;
 	double norm_length;
 
 	//normal in crosspoint
@@ -85,6 +85,7 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 	tangent = track.getTangentVector(0);
 	up = track.getUp(0);
 	norm = up.cross(tangent);
+	right = track.getUnitBinormal(0);
 
 	// Divide by current length and multiply by the offset to get correct length
 	norm_length = norm.length();
@@ -132,6 +133,7 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 		//printf("Tangent: x:%f y:%f z:%f \n", tangent.x, tangent.y, tangent.z);
 		up = track.getUp(t);
 		norm = up.cross(tangent);
+		right = track.getUnitBinormal(t);
 
 		// Divide by current length and multiply by the offset to get correct length
 		norm_length = norm.length();
@@ -139,7 +141,7 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 		norm.y = 0;
 		t += td;
 		
-		norm_parallel = norm*length_between_rails;
+		norm_parallel = right*length_between_rails;
 
 		//left rail
 		left_back_top_left		= left_front_top_left;
@@ -155,10 +157,10 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 		printf("LFBL: x: %f y:%f z:%f \n", next_pos.x + norm.x + norm_parallel.x, next_pos.y - size.y, next_pos.z + norm.z + norm_parallel.z);
 		*/
 
-		left_front_top_right	= Ogre::Vector3(next_pos.x - norm.x + norm_parallel.x, next_pos.y + size.y, next_pos.z - norm.z + norm_parallel.z);
-		left_front_top_left		= Ogre::Vector3(next_pos.x + norm.x + norm_parallel.x, next_pos.y + size.y, next_pos.z + norm.z + norm_parallel.z);
-		left_front_bottom_right	= Ogre::Vector3(next_pos.x - norm.x + norm_parallel.x, next_pos.y - size.y, next_pos.z - norm.z + norm_parallel.z);
-		left_front_bottom_left	= Ogre::Vector3(next_pos.x + norm.x + norm_parallel.x, next_pos.y - size.y, next_pos.z + norm.z + norm_parallel.z);
+		left_front_top_right	= Ogre::Vector3(next_pos.x - norm.x + norm_parallel.x, next_pos.y + size.y + norm_parallel.y, next_pos.z - norm.z + norm_parallel.z);
+		left_front_top_left		= Ogre::Vector3(next_pos.x + norm.x + norm_parallel.x, next_pos.y + size.y + norm_parallel.y, next_pos.z + norm.z + norm_parallel.z);
+		left_front_bottom_right	= Ogre::Vector3(next_pos.x - norm.x + norm_parallel.x, next_pos.y - size.y + norm_parallel.y, next_pos.z - norm.z + norm_parallel.z);
+		left_front_bottom_left	= Ogre::Vector3(next_pos.x + norm.x + norm_parallel.x, next_pos.y - size.y + norm_parallel.y, next_pos.z + norm.z + norm_parallel.z);
 
 		//printf("Making track %d \n", i);
 
@@ -202,10 +204,10 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 		right_back_bottom_left	= right_front_bottom_left;
 		right_back_bottom_right	= right_front_bottom_right;
 		
-		right_front_top_right		= Ogre::Vector3(next_pos.x - norm.x - norm_parallel.x, next_pos.y + size.y, next_pos.z - norm.z - norm_parallel.z);
-		right_front_top_left		= Ogre::Vector3(next_pos.x + norm.x - norm_parallel.x, next_pos.y + size.y, next_pos.z + norm.z - norm_parallel.z);
-		right_front_bottom_right	= Ogre::Vector3(next_pos.x - norm.x - norm_parallel.x, next_pos.y - size.y, next_pos.z - norm.z - norm_parallel.z);
-		right_front_bottom_left		= Ogre::Vector3(next_pos.x + norm.x - norm_parallel.x, next_pos.y - size.y, next_pos.z + norm.z - norm_parallel.z);
+		right_front_top_right		= Ogre::Vector3(next_pos.x - norm.x - norm_parallel.x, next_pos.y + size.y - norm_parallel.y, next_pos.z - norm.z - norm_parallel.z);
+		right_front_top_left		= Ogre::Vector3(next_pos.x + norm.x - norm_parallel.x, next_pos.y + size.y - norm_parallel.y, next_pos.z + norm.z - norm_parallel.z);
+		right_front_bottom_right	= Ogre::Vector3(next_pos.x - norm.x - norm_parallel.x, next_pos.y - size.y - norm_parallel.y, next_pos.z - norm.z - norm_parallel.z);
+		right_front_bottom_left		= Ogre::Vector3(next_pos.x + norm.x - norm_parallel.x, next_pos.y - size.y - norm_parallel.y, next_pos.z + norm.z - norm_parallel.z);
 
 		//top
 		rail.position(right_front_top_right); // 0
