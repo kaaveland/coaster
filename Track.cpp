@@ -137,6 +137,21 @@ void Track::setTrackRotation(int index, double radian)
 	//up[index] = Vector(0,1,0) + right * sin(radian);
 	
 }
+double Track::getTrackRotation(int index)
+{
+	assert (index >= 0 && index < nControlPoints);
+	return rotations[index];
+		
+	
+	//double t = (double)index/1.0;
+	//Vector3d right = getTangentVector(t).cross(getUp(t));
+	//if (
+	//right /= right.length();
+
+	//up[index] = Vector(0,1,0) + right * sin(radian);
+	
+}
+
 /*void Track::setTrackPoint(double index, Vector3d v)
 {
 	assert(index >= 0 && index < nControlPoints);

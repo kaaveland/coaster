@@ -48,6 +48,7 @@ public:
 	Vector3d getNonNormalizedNormalVector(double t) const;
 
 	Vector3d getUnitBinormal(double t) const;
+	double getTrackRotation(int index);
 
 
 	// Load and fill the track with points

@@ -82,6 +82,7 @@ protected:
 
 	Ogre::MeshManager *meshManager;
 	bool adjustHeight;
+	int controlPointSelected;
 
 	void resetRail(void);
 	//void createRailMesh(const Track track, const bool export_mesh);

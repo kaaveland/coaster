@@ -13,7 +13,8 @@ track(),
 mControllPointCount(0),
 adjustHeight(false),
 physicsCart(new PhysicsCart()),
-highscore_time(0)
+highscore_time(0),
+controlPointSelected(0)
 {
 }
 //-------------------------------------------------------------------------------------
@@ -271,6 +272,7 @@ bool Coaster::mouseMoved(const OIS::MouseEvent& arg)
 							if(pos != string::npos){
 								obj_name.replace(pos, controll.size(), ""); 
 								int ctrl_point = std::atoi(obj_name.c_str());
+								controlPointSelected = ctrl_point;
 								Vector3d v(0,0,0);
 								if(adjustHeight){
 									Vector3d railCurPos = track.getControlPoint(ctrl_point);
@@ -370,7 +372,7 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 				
 				//add track 120 over the ground
 				track.addPos(Vector3d(iter->worldFragment->singleIntersection.x, iter->worldFragment->singleIntersection.y+20, 
-					iter->worldFragment->singleIntersection.z), (double)((rand()%180)-90)/180*3.1415);	// TODO: fix setting angles in GUI
+					iter->worldFragment->singleIntersection.z), 0);
 				placedObjects.push_back(std::string(name));
 
 				position_added = true;
@@ -473,6 +475,15 @@ bool Coaster::keyPressed(const OIS::KeyEvent& arg)
 			break;
 		case OIS::KC_P:
 			cout << physicsCart->toString(); break;
+
+		case OIS::KC_Q:
+			track.setTrackRotation(controlPointSelected, track.getTrackRotation(controlPointSelected)+(3.14/32));
+			generateTrack();
+			break;
+		case OIS::KC_E:
+			track.setTrackRotation(controlPointSelected, track.getTrackRotation(controlPointSelected)-(3.14/32));
+			generateTrack();
+			break;
 
 		case OIS::KC_R:
 			this->resetRail();
