@@ -35,10 +35,10 @@ void Coaster::createScene(void)
 	//Add cart 
 	cartNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("cartNode", Ogre::Vector3(0, 0, 0));
     
-	Ogre::Entity* cartEnt = mSceneMgr->createEntity("Cart", "minecart.mesh");
+	Ogre::Entity* cartEnt = mSceneMgr->createEntity("Cart", "vogn.mesh");
 				  cartEnt->setQueryFlags(CART_MASK);
 	cartNode->attachObject(cartEnt);
-	//cartNode->yaw(Ogre::Degree(90));
+	cartNode->yaw(Ogre::Degree(180));
 	cartNode->setScale(0.1f, 0.1f, 0.1f);
 
 	placedObjects = std::vector<Ogre::String>(0);
@@ -273,6 +273,7 @@ bool Coaster::mouseMoved(const OIS::MouseEvent& arg)
 								obj_name.replace(pos, controll.size(), ""); 
 								int ctrl_point = std::atoi(obj_name.c_str());
 								controlPointSelected = ctrl_point;
+
 								Vector3d v(0,0,0);
 								if(adjustHeight){
 									Vector3d railCurPos = track.getControlPoint(ctrl_point);
@@ -343,6 +344,23 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 			if(iter->movable && iter->movable->getName().substr(0, 5) != "tile[")
 			{
 				mCurrentObject = iter->movable->getParentSceneNode();
+
+				for (vector<Ogre::String>::iterator it = placedObjects.begin(); it!=placedObjects.end(); ++it) {
+						if(*it == mCurrentObject->getName()){
+
+							string obj_name = string(*it);
+							Ogre::String controll = "Controll";
+							int pos = obj_name.find(controll);
+
+							//Controll point clicked
+							if(pos != string::npos){
+								obj_name.replace(pos, controll.size(), ""); 
+								int ctrl_point = std::atoi(obj_name.c_str());
+								controlPointSelected = ctrl_point;
+							}
+						}
+				}
+
 				break;
 			}
 			//otherwise we spawn a new one at the mouse location
