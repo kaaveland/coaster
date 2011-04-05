@@ -195,6 +195,9 @@ void PhysicsCart::calculateNextStep(double dT) {
 	}
 }
 
+double PhysicsCart::getSpeed() {
+	return this->v;
+}
 
 void PhysicsCart::setSpeed(double v) {
 	this->v = v;

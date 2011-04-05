@@ -43,6 +43,7 @@ public:
 	void setThrust(double thrust);
 
 	void setSpeed(double v);
+	double getSpeed(void);
 
 
 	Vector3d getPos() const;

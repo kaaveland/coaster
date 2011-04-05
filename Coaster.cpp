@@ -12,7 +12,9 @@ bRobotMode(true),
 track(),
 mControllPointCount(0),
 adjustHeight(false),
-physicsCart(new PhysicsCart())
+physicsCart(new PhysicsCart()),
+highscore_time(0),
+controlPointSelected(0)
 {
 }
 //-------------------------------------------------------------------------------------
@@ -112,10 +114,10 @@ void Coaster::createScene(void)
 	//Add cart 
 	cartNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("cartNode", Ogre::Vector3(0, 0, 0));
     
-	Ogre::Entity* cartEnt = mSceneMgr->createEntity("Cart", "minecart.mesh");
+	Ogre::Entity* cartEnt = mSceneMgr->createEntity("Cart", "vogn.mesh");
 				  cartEnt->setQueryFlags(CART_MASK);
 	cartNode->attachObject(cartEnt);
-	//cartNode->yaw(Ogre::Degree(90));
+	cartNode->yaw(Ogre::Degree(180));
 	cartNode->setScale(0.1f, 0.1f, 0.1f);
 
 	placedObjects = std::vector<Ogre::String>(0);
@@ -131,7 +133,7 @@ void Coaster::createScene(void)
 	
 	//Scene setup
 	mSceneMgr->setAmbientLight(Ogre::ColourValue(0.5f, 0.5f, 0.5f));
-	mSceneMgr->setSkyDome(true, "Examples/CloudySky", 5, 8);
+	mSceneMgr->setSkyDome(true, "Examples/CloudySky", 10, 8);
  
 	//world geometry
 	mSceneMgr->setWorldGeometry("island.cfg");
@@ -145,7 +147,7 @@ void Coaster::createScene(void)
  
 	//camera change setup
 	mCamera->setPosition(670, 860, 4570);
-	mCamera->pitch(Ogre::Degree(-30));
+	mCamera->pitch(Ogre::Degree(-10));
 	mCamera->yaw(Ogre::Degree(-45));
 	mCamera->setNearClipDistance(0.5f);
  
@@ -194,6 +196,8 @@ bool Coaster::frameRenderingQueued(const Ogre::FrameEvent& arg)
 {
 	//delta time
 	Ogre::Real dt = arg.timeSinceLastFrame;
+
+	highscore_time += dt;
 	
 	if(physicsCart->hasTrack()){
 		Vector3d pos = physicsCart->getPos();
@@ -221,6 +225,22 @@ bool Coaster::frameRenderingQueued(const Ogre::FrameEvent& arg)
 
 	}
 	
+	if (mDetailsPanel->isVisible())   // if details panel is visible, then update its contents
+    {
+
+		std::ostringstream strs;
+		strs.precision(1);
+		strs << fixed << physicsCart->getSpeed();
+		std::string speed = strs.str();
+
+		strs.str("");
+		strs << fixed << highscore_time;
+		std::string time = strs.str();
+		
+		mDetailsPanel->setParamValue(0, speed);
+		mDetailsPanel->setParamValue(1, time);
+		
+    }
 
 	//we want to run everything in the previous frameRenderingQueued call
 	//but we also want to do something afterwards, so lets  start off with this
@@ -332,6 +352,8 @@ bool Coaster::mouseMoved(const OIS::MouseEvent& arg)
 							if(pos != string::npos){
 								obj_name.replace(pos, controll.size(), ""); 
 								int ctrl_point = std::atoi(obj_name.c_str());
+								controlPointSelected = ctrl_point;
+
 								Vector3d v(0,0,0);
 								if(adjustHeight){
 									Vector3d railCurPos = track.getControlPoint(ctrl_point);
@@ -402,6 +424,23 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 			if(iter->movable && iter->movable->getName().substr(0, 5) != "tile[")
 			{
 				mCurrentObject = iter->movable->getParentSceneNode();
+
+				for (vector<Ogre::String>::iterator it = placedObjects.begin(); it!=placedObjects.end(); ++it) {
+						if(*it == mCurrentObject->getName()){
+
+							string obj_name = string(*it);
+							Ogre::String controll = "Controll";
+							int pos = obj_name.find(controll);
+
+							//Controll point clicked
+							if(pos != string::npos){
+								obj_name.replace(pos, controll.size(), ""); 
+								int ctrl_point = std::atoi(obj_name.c_str());
+								controlPointSelected = ctrl_point;
+							}
+						}
+				}
+
 				break;
 			}
 			//otherwise we spawn a new one at the mouse location
@@ -430,8 +469,8 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 				mCurrentObject->attachObject(ent);
 				
 				//add track 120 over the ground
-				track.addPos(Vector3d(iter->worldFragment->singleIntersection.x, iter->worldFragment->singleIntersection.y+10, 
-					iter->worldFragment->singleIntersection.z), (double)((rand()%180)-90)/180*3.1415);	// TODO: fix setting angles in GUI
+				track.addPos(Vector3d(iter->worldFragment->singleIntersection.x, iter->worldFragment->singleIntersection.y+20, 
+					iter->worldFragment->singleIntersection.z), 0);
 				placedObjects.push_back(std::string(name));
 
 				position_added = true;
@@ -535,6 +574,15 @@ bool Coaster::keyPressed(const OIS::KeyEvent& arg)
 		case OIS::KC_P:
 			cout << physicsCart->toString(); break;
 
+		case OIS::KC_Q:
+			track.setTrackRotation(controlPointSelected, track.getTrackRotation(controlPointSelected)+(3.14/32));
+			generateTrack();
+			break;
+		case OIS::KC_E:
+			track.setTrackRotation(controlPointSelected, track.getTrackRotation(controlPointSelected)-(3.14/32));
+			generateTrack();
+			break;
+
 		case OIS::KC_R:
 			this->resetRail();
 			break;
@@ -559,6 +607,8 @@ bool Coaster::keyPressed(const OIS::KeyEvent& arg)
 
 void Coaster::resetRail(void){
 	meshManager = mRoot->getMeshManager();
+
+	highscore_time = 0;
 
 	railNode->detachAllObjects();
 	if(mSceneMgr->hasEntity("Rails")){
