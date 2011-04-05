@@ -71,6 +71,8 @@ protected:
 	Ogre::SceneNode *railNode;
 	Ogre::SceneNode *cartNode;
 
+	Ogre::Real highscore_time;
+
 	PhysicsCart *physicsCart;
 
 	Ogre::String cameraName;
