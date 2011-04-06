@@ -63,6 +63,8 @@ protected:
 
 	virtual void exportScene(std::vector<Ogre::SceneNode *> nodes, std::ostream &out);
 	virtual std::vector<Ogre::SceneNode *> importScene(std::istream &in);
+	void debugExport();
+	void debugImport();
 
     virtual void createScene(void);
  
@@ -108,7 +110,13 @@ protected:
 
 	void resetRail(void);
 	void rotateObject(Ogre::Radian rad);
+
+	bool objectRotatingRight;
+	bool objectRotatingLeft;
+	bool objectScalingUp;
+	bool objectScalingDown;
 	//void createRailMesh(const Track track, const bool export_mesh);
 };
+
  
 #endif // #ifndef __Coaster_h_
