@@ -1,5 +1,4 @@
 #include "Coaster.h"
-#include "SoundEngine.h"
 //#include "tests.h"
 
 //-------------------------------------------------------------------------------------
@@ -14,7 +13,6 @@ track(),
 mControllPointCount(0),
 adjustHeight(false),
 physicsCart(new PhysicsCart()),
-soundEngine(),
 highscore_time(0),
 controlPointSelected(0)
 {
@@ -168,9 +166,6 @@ void Coaster::createScene(void)
 	mCamera->pitch(Ogre::Degree(-10));
 	mCamera->yaw(Ogre::Degree(-45));
 	mCamera->setNearClipDistance(0.5f);
-
-	// Position sound sources
-	soundEngine.addSound(SoundEngine::BLIZZARD01, physicsCart->getPos());
  
 	//CEGUI setup
 	mGUIRenderer = &CEGUI::OgreRenderer::bootstrapSystem();
@@ -642,9 +637,6 @@ bool Coaster::keyPressed(const OIS::KeyEvent& arg)
 			this->resetRail();
 			break;
 		case OIS::KC_S:
-			soundEngine.addSound(SoundEngine::BLIZZARD01, Vector3d(0,0,0));
-			soundEngine.setListenerPosition(Vector3d(0,0,0));
-			soundEngine.setListenerUp(Vector3d(0,1,0));
 	
 			break;
 			
