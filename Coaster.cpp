@@ -31,6 +31,7 @@ Coaster::~Coaster(void)
 // position
 // rotation
 // queryflags
+// scale
 // }
 
 void Coaster::exportOgreEntity(Ogre::SceneNode *scene, Ogre::Entity *ent, std::ostream &out)
@@ -45,13 +46,16 @@ void Coaster::exportOgreEntity(Ogre::SceneNode *scene, Ogre::Entity *ent, std::o
 	Ogre::Quaternion rotation = scene->getOrientation();
 	out << rotation.w << " " << rotation.x << " " << rotation.y << " " << rotation.z << std::endl;
 	out << ent->getQueryFlags() << std::endl;
+	Vector3d(scene->getScale()).dump(out);
 	out << "}" << std::endl;
 }
 
 void Coaster::exportScene(std::vector<Ogre::SceneNode *> nodes, std::ostream &out)
 {
 	for (int i = 0; i < nodes.size(); i++) {
-		exportOgreEntity(nodes[i], (Ogre::Entity *) nodes[i]->getAttachedObject(0), out);
+		if (nodes[i]->numAttachedObjects() > 0)
+			if (nodes[i]->getName() != "RailsNode" && nodes[i]->getName() != "cartNode")
+				exportOgreEntity(nodes[i], (Ogre::Entity *) nodes[i]->getAttachedObject(0), out);
 	}
 }
 
@@ -64,7 +68,7 @@ Ogre::SceneNode *Coaster::readOgreSceneNode(std::istream &in)
 		;
 
 	std::string sName, eName, mName;
-	Vector3d pos;
+	Vector3d pos, scale;
 	Ogre::Quaternion rotation;
 	int queryFlags;
 
@@ -74,16 +78,22 @@ Ogre::SceneNode *Coaster::readOgreSceneNode(std::istream &in)
 	pos.read(in);
 	in >> rotation.w >> rotation.x >> rotation.y >> rotation.z;
 	in >> queryFlags;
+	scale.read(in);
 
 	in >> verify;
 	if (verify != '}') 
 		;
 
-	Ogre::SceneNode *node = mSceneMgr->getRootSceneNode()->createChildSceneNode(sName, pos.ogreVector());
+	if(mSceneMgr->hasEntity(eName)){
+		mSceneMgr->destroyEntity(eName);
+	}
+	placedObjects.push_back(eName);
+	Ogre::SceneNode *node = ((Ogre::SceneNode *) mSceneMgr->getRootSceneNode()->getChild("world"))->createChildSceneNode(sName, pos.ogreVector());
 	node->setOrientation(rotation);
 	Ogre::Entity *ent = mSceneMgr->createEntity(eName, mName);
 	ent->setQueryFlags(queryFlags);
 	node->attachObject(ent);
+	node->setScale(scale.ogreVector());
 
 	return node;
 }
@@ -91,14 +101,18 @@ Ogre::SceneNode *Coaster::readOgreSceneNode(std::istream &in)
 std::vector<Ogre::SceneNode *> Coaster::importScene(std::istream &in)
 {
 	std::vector<Ogre::SceneNode *> sceneNodes;
+
+	((Ogre::SceneNode *) mSceneMgr->getRootSceneNode()->getChild("world"))->removeAndDestroyAllChildren();
+
 	while (in) {
 		char term;
-		in >> term;
-		if (term == '{') {
+		while ((in >> term) && term != '{') ;
+		if (term == '{')
 			in.unget();
-		} else
+		 else
 			return sceneNodes;
-		sceneNodes.push_back(readOgreSceneNode(in));
+		if (in)
+			sceneNodes.push_back(readOgreSceneNode(in));
 	}
 	return sceneNodes;
 }
@@ -113,6 +127,8 @@ void Coaster::createScene(void)
 	
 	//Add cart 
 	cartNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("cartNode", Ogre::Vector3(0, 0, 0));
+	// For all "creatable" entities
+	mSceneMgr->getRootSceneNode()->createChildSceneNode("world", Ogre::Vector3(0, 0, 0));
     
 	Ogre::Entity* cartEnt = mSceneMgr->createEntity("Cart", "vogn.mesh");
 				  cartEnt->setQueryFlags(CART_MASK);
@@ -547,10 +563,40 @@ bool Coaster::mouseReleased(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 	return true;
 }
 
+void Coaster::debugExport()
+{
+	std::vector<Ogre::SceneNode *> nodes;
+	std::ofstream sceneData("scene");
+	std::ofstream trackData("track");
+
+	Ogre::SceneNode *root = (Ogre::SceneNode *)mSceneMgr->getRootSceneNode()->getChild("world");
+
+	for (short node = 0; node < root->numChildren(); node++)
+		nodes.push_back((Ogre::SceneNode *) root->getChild(node));
+	
+	track.dump(std::cout);
+	track.dump(trackData);
+	exportScene(std::cout);
+	exportScene(nodes, sceneData);
+}
+
+void Coaster::debugImport()
+{
+		std::ifstream tData("track");
+		std::ifstream sData("scene");
+		track = Track();
+		track.read(tData);
+		importScene(sData);
+}
 bool Coaster::keyPressed(const OIS::KeyEvent& arg)
 {
-
 	switch (arg.key) {
+		case OIS::KC_F5:
+			debugExport();
+			break;
+		case OIS::KC_F9:
+			debugImport();
+			break;
 		case OIS::KC_SPACE:
 			bRobotMode = !bRobotMode;
 			changeViewPoint();
