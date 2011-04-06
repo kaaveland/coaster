@@ -3,6 +3,7 @@
 
 #include <istream>
 #include <ostream>
+#include <OgreVector3.h>
 
 struct Vector3d {
 
@@ -10,9 +11,11 @@ struct Vector3d {
 
 	Vector3d();
 	Vector3d(double x, double y, double z);
+	Vector3d(Ogre::Vector3 v);
 	
 	void read(std::istream &in);
 	void dump(std::ostream &out);
+	Ogre::Vector3 ogreVector();
 	
 	double const& operator[](unsigned i) const;
 	Vector3d& Vector3d::operator+=(const Vector3d &v);

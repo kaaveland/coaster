@@ -16,6 +16,13 @@ Vector3d::Vector3d(double x, double y, double z)
 	this->z = z;
 }
 
+Vector3d::Vector3d(Ogre::Vector3 v)
+{
+	this->x = v.x;
+	this->y = v.y;
+	this->z = v.z;
+}
+
 double const& Vector3d::operator[](unsigned i) const
 {
 	if (i==0) return x;
@@ -32,6 +39,11 @@ void Vector3d::read(std::istream &in)
 void Vector3d::dump(std::ostream &out)
 {
 	out << x << " " << y << " " << z << std::endl;
+}
+
+Ogre::Vector3 Vector3d::ogreVector()
+{
+	return Ogre::Vector3(this->x, this->y, this->z);
 }
 
 Vector3d& Vector3d::operator+=(const Vector3d &v)

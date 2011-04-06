@@ -43,6 +43,12 @@ public:
 	};
  
 protected:
+	virtual void exportOgreEntity(Ogre::SceneNode *scene, Ogre::Entity *ent, std::ostream &out);
+	Ogre::SceneNode *readOgreSceneNode(std::istream &in);
+
+	virtual void exportScene(std::vector<Ogre::SceneNode *> nodes, std::ostream &out);
+	virtual std::vector<Ogre::SceneNode *> importScene(std::istream &in);
+
     virtual void createScene(void);
  
 	virtual void chooseSceneManager(void);
@@ -72,6 +78,8 @@ protected:
 	Ogre::SceneNode *railNode;
 	Ogre::SceneNode *cartNode;
 
+	Ogre::Real highscore_time;
+
 	PhysicsCart *physicsCart;
 
 	Ogre::String cameraName;
@@ -81,6 +89,7 @@ protected:
 
 	Ogre::MeshManager *meshManager;
 	bool adjustHeight;
+	int controlPointSelected;
 
 	void resetRail(void);
 	//void createRailMesh(const Track track, const bool export_mesh);

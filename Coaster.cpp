@@ -15,6 +15,10 @@ mControllPointCount(0),
 adjustHeight(false),
 physicsCart(new PhysicsCart()),
 soundEngine()
+=======
+highscore_time(0),
+controlPointSelected(0)
+>>>>>>> 136cdedacd21316e7a14acebcaac807bbb2eaf93
 {
 }
 //-------------------------------------------------------------------------------------
@@ -22,7 +26,86 @@ Coaster::~Coaster(void)
 {
 	mSceneMgr->destroyQuery(mRayScnQuery);
 }
- 
+
+// Export scene/entity to &out in following format:
+// {
+// sceneName
+// entityName
+// meshName
+// position
+// rotation
+// queryflags
+// }
+
+void Coaster::exportOgreEntity(Ogre::SceneNode *scene, Ogre::Entity *ent, std::ostream &out)
+{
+	// Values to export
+	out << "{" << std::endl;
+	out << scene->getName() << std::endl;
+	out << ent->getName() << std::endl;
+	out << ent->getMesh().get()->getName() << std::endl; // Thankyouogre
+	Vector3d pos(scene->getPosition());
+	pos.dump(out);
+	Ogre::Quaternion rotation = scene->getOrientation();
+	out << rotation.w << " " << rotation.x << " " << rotation.y << " " << rotation.z << std::endl;
+	out << ent->getQueryFlags() << std::endl;
+	out << "}" << std::endl;
+}
+
+void Coaster::exportScene(std::vector<Ogre::SceneNode *> nodes, std::ostream &out)
+{
+	for (int i = 0; i < nodes.size(); i++) {
+		exportOgreEntity(nodes[i], (Ogre::Entity *) nodes[i]->getAttachedObject(0), out);
+	}
+}
+
+Ogre::SceneNode *Coaster::readOgreSceneNode(std::istream &in)
+{
+	char verify;
+
+	in >> verify;
+	if (verify != '{') // Bad, do something about this?
+		;
+
+	std::string sName, eName, mName;
+	Vector3d pos;
+	Ogre::Quaternion rotation;
+	int queryFlags;
+
+	in >> sName;
+	in >> eName;
+	in >> mName;
+	pos.read(in);
+	in >> rotation.w >> rotation.x >> rotation.y >> rotation.z;
+	in >> queryFlags;
+
+	in >> verify;
+	if (verify != '}') 
+		;
+
+	Ogre::SceneNode *node = mSceneMgr->getRootSceneNode()->createChildSceneNode(sName, pos.ogreVector());
+	node->setOrientation(rotation);
+	Ogre::Entity *ent = mSceneMgr->createEntity(eName, mName);
+	ent->setQueryFlags(queryFlags);
+	node->attachObject(ent);
+
+	return node;
+}
+
+std::vector<Ogre::SceneNode *> Coaster::importScene(std::istream &in)
+{
+	std::vector<Ogre::SceneNode *> sceneNodes;
+	while (in) {
+		char term;
+		in >> term;
+		if (term == '{') {
+			in.unget();
+		} else
+			return sceneNodes;
+		sceneNodes.push_back(readOgreSceneNode(in));
+	}
+	return sceneNodes;
+}
 //-------------------------------------------------------------------------------------
 void Coaster::createScene(void)
 {
@@ -35,10 +118,10 @@ void Coaster::createScene(void)
 	//Add cart 
 	cartNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("cartNode", Ogre::Vector3(0, 0, 0));
     
-	Ogre::Entity* cartEnt = mSceneMgr->createEntity("Cart", "minecart.mesh");
+	Ogre::Entity* cartEnt = mSceneMgr->createEntity("Cart", "vogn.mesh");
 				  cartEnt->setQueryFlags(CART_MASK);
 	cartNode->attachObject(cartEnt);
-	//cartNode->yaw(Ogre::Degree(90));
+	cartNode->yaw(Ogre::Degree(180));
 	cartNode->setScale(0.1f, 0.1f, 0.1f);
 
 	placedObjects = std::vector<Ogre::String>(0);
@@ -54,7 +137,7 @@ void Coaster::createScene(void)
 	
 	//Scene setup
 	mSceneMgr->setAmbientLight(Ogre::ColourValue(0.5f, 0.5f, 0.5f));
-	mSceneMgr->setSkyDome(true, "Examples/CloudySky", 5, 8);
+	mSceneMgr->setSkyDome(true, "Examples/CloudySky", 10, 8);
  
 	//world geometry
 	mSceneMgr->setWorldGeometry("island.cfg");
@@ -68,7 +151,7 @@ void Coaster::createScene(void)
  
 	//camera change setup
 	mCamera->setPosition(670, 860, 4570);
-	mCamera->pitch(Ogre::Degree(-30));
+	mCamera->pitch(Ogre::Degree(-10));
 	mCamera->yaw(Ogre::Degree(-45));
 	mCamera->setNearClipDistance(0.5f);
 
@@ -81,7 +164,6 @@ void Coaster::createScene(void)
 	//show the CEGUI cursor
 	CEGUI::SchemeManager::getSingleton().create((CEGUI::utf8*)"TaharezLook.scheme");
 	CEGUI::MouseCursor::getSingleton().setImage("TaharezLook", "MouseArrow");
-
 
 }
 
@@ -121,6 +203,8 @@ bool Coaster::frameRenderingQueued(const Ogre::FrameEvent& arg)
 {
 	//delta time
 	Ogre::Real dt = arg.timeSinceLastFrame;
+
+	highscore_time += dt;
 	
 	if(physicsCart->hasTrack()){
 		Vector3d pos = physicsCart->getPos();
@@ -148,6 +232,22 @@ bool Coaster::frameRenderingQueued(const Ogre::FrameEvent& arg)
 
 	}
 	
+	if (mDetailsPanel->isVisible())   // if details panel is visible, then update its contents
+    {
+
+		std::ostringstream strs;
+		strs.precision(1);
+		strs << fixed << physicsCart->getSpeed();
+		std::string speed = strs.str();
+
+		strs.str("");
+		strs << fixed << highscore_time;
+		std::string time = strs.str();
+		
+		mDetailsPanel->setParamValue(0, speed);
+		mDetailsPanel->setParamValue(1, time);
+		
+    }
 
 	//we want to run everything in the previous frameRenderingQueued call
 	//but we also want to do something afterwards, so lets  start off with this
@@ -259,6 +359,8 @@ bool Coaster::mouseMoved(const OIS::MouseEvent& arg)
 							if(pos != string::npos){
 								obj_name.replace(pos, controll.size(), ""); 
 								int ctrl_point = std::atoi(obj_name.c_str());
+								controlPointSelected = ctrl_point;
+
 								Vector3d v(0,0,0);
 								if(adjustHeight){
 									Vector3d railCurPos = track.getControlPoint(ctrl_point);
@@ -329,6 +431,23 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 			if(iter->movable && iter->movable->getName().substr(0, 5) != "tile[")
 			{
 				mCurrentObject = iter->movable->getParentSceneNode();
+
+				for (vector<Ogre::String>::iterator it = placedObjects.begin(); it!=placedObjects.end(); ++it) {
+					if(*it == mCurrentObject->getName()){
+
+						string obj_name = string(*it);
+						Ogre::String controll = "Controll";
+						int pos = obj_name.find(controll);
+
+						//Controll point clicked
+						if(pos != string::npos){
+							obj_name.replace(pos, controll.size(), ""); 
+							int ctrl_point = std::atoi(obj_name.c_str());
+							controlPointSelected = ctrl_point;
+						}
+					}
+				}
+
 				break;
 			}
 			//otherwise we spawn a new one at the mouse location
@@ -337,7 +456,7 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 				char name[16];
 				Ogre::Entity* ent;
  
-				//if we are in robot mode we spawn a robot at the mouse location
+				//if we are in robot mode we spawn a control point at the mouse location
 				if(bRobotMode)
 				{
 					sprintf(name, "%dControll", mControllPointCount++);
@@ -357,8 +476,8 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 				mCurrentObject->attachObject(ent);
 				
 				//add track 120 over the ground
-				track.addPos(Vector3d(iter->worldFragment->singleIntersection.x, iter->worldFragment->singleIntersection.y+10, 
-					iter->worldFragment->singleIntersection.z), (double)((rand()%180)-90)/180*3.1415);	// TODO: fix setting angles in GUI
+				track.addPos(Vector3d(iter->worldFragment->singleIntersection.x, iter->worldFragment->singleIntersection.y+20, 
+					iter->worldFragment->singleIntersection.z), 0);
 				placedObjects.push_back(std::string(name));
 
 				position_added = true;
@@ -462,6 +581,19 @@ bool Coaster::keyPressed(const OIS::KeyEvent& arg)
 		case OIS::KC_P:
 			cout << physicsCart->toString(); break;
 
+		case OIS::KC_Q:
+			if(physicsCart->hasTrack()){
+				track.setTrackRotation(controlPointSelected, track.getTrackRotation(controlPointSelected)+(3.14/32));
+				generateTrack();
+			}
+			break;
+		case OIS::KC_E:
+			if(physicsCart->hasTrack()){
+				track.setTrackRotation(controlPointSelected, track.getTrackRotation(controlPointSelected)-(3.14/32));
+				generateTrack();
+			}
+			break;
+
 		case OIS::KC_R:
 			this->resetRail();
 			break;
@@ -492,6 +624,8 @@ bool Coaster::keyPressed(const OIS::KeyEvent& arg)
 
 void Coaster::resetRail(void){
 	meshManager = mRoot->getMeshManager();
+
+	highscore_time = 0;
 
 	railNode->detachAllObjects();
 	if(mSceneMgr->hasEntity("Rails")){

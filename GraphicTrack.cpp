@@ -92,7 +92,7 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 	norm *= size.x/norm_length;
 	norm.y = 0;
 		
-	norm_parallel = norm*length_between_rails;
+	norm_parallel = right*length_between_rails;
 
 	left_front_top_right	= Ogre::Vector3(cur_pos.x - norm.x + norm_parallel.x, cur_pos.y + size.y, cur_pos.z - norm.z + norm_parallel.z);
 	left_front_top_left		= Ogre::Vector3(cur_pos.x + norm.x + norm_parallel.x, cur_pos.y + size.y, cur_pos.z + norm.z + norm_parallel.z);
