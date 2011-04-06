@@ -576,7 +576,7 @@ void Coaster::debugExport()
 	
 	track.dump(std::cout);
 	track.dump(trackData);
-	exportScene(std::cout);
+	exportScene(nodes, std::cout);
 	exportScene(nodes, sceneData);
 }
 
