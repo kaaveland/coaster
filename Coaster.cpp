@@ -14,11 +14,9 @@ track(),
 mControllPointCount(0),
 adjustHeight(false),
 physicsCart(new PhysicsCart()),
-soundEngine()
-=======
+soundEngine(),
 highscore_time(0),
 controlPointSelected(0)
->>>>>>> 136cdedacd21316e7a14acebcaac807bbb2eaf93
 {
 }
 //-------------------------------------------------------------------------------------
