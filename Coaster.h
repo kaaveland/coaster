@@ -42,6 +42,12 @@ public:
 	};
  
 protected:
+	virtual void exportOgreEntity(Ogre::SceneNode *scene, Ogre::Entity *ent, std::ostream &out);
+	Ogre::SceneNode *readOgreSceneNode(std::istream &in);
+
+	virtual void exportScene(std::vector<Ogre::SceneNode *> nodes, std::ostream &out);
+	virtual std::vector<Ogre::SceneNode *> importScene(std::istream &in);
+
     virtual void createScene(void);
  
 	virtual void chooseSceneManager(void);

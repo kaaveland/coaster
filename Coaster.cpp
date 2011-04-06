@@ -22,7 +22,86 @@ Coaster::~Coaster(void)
 {
 	mSceneMgr->destroyQuery(mRayScnQuery);
 }
- 
+
+// Export scene/entity to &out in following format:
+// {
+// sceneName
+// entityName
+// meshName
+// position
+// rotation
+// queryflags
+// }
+
+void Coaster::exportOgreEntity(Ogre::SceneNode *scene, Ogre::Entity *ent, std::ostream &out)
+{
+	// Values to export
+	out << "{" << std::endl;
+	out << scene->getName() << std::endl;
+	out << ent->getName() << std::endl;
+	out << ent->getMesh().get()->getName() << std::endl; // Thankyouogre
+	Vector3d pos(scene->getPosition());
+	pos.dump(out);
+	Ogre::Quaternion rotation = scene->getOrientation();
+	out << rotation.w << " " << rotation.x << " " << rotation.y << " " << rotation.z << std::endl;
+	out << ent->getQueryFlags() << std::endl;
+	out << "}" << std::endl;
+}
+
+void Coaster::exportScene(std::vector<Ogre::SceneNode *> nodes, std::ostream &out)
+{
+	for (int i = 0; i < nodes.size(); i++) {
+		exportOgreEntity(nodes[i], (Ogre::Entity *) nodes[i]->getAttachedObject(0), out);
+	}
+}
+
+Ogre::SceneNode *Coaster::readOgreSceneNode(std::istream &in)
+{
+	char verify;
+
+	in >> verify;
+	if (verify != '{') // Bad, do something about this?
+		;
+
+	std::string sName, eName, mName;
+	Vector3d pos;
+	Ogre::Quaternion rotation;
+	int queryFlags;
+
+	in >> sName;
+	in >> eName;
+	in >> mName;
+	pos.read(in);
+	in >> rotation.w >> rotation.x >> rotation.y >> rotation.z;
+	in >> queryFlags;
+
+	in >> verify;
+	if (verify != '}') 
+		;
+
+	Ogre::SceneNode *node = mSceneMgr->getRootSceneNode()->createChildSceneNode(sName, pos.ogreVector());
+	node->setOrientation(rotation);
+	Ogre::Entity *ent = mSceneMgr->createEntity(eName, mName);
+	ent->setQueryFlags(queryFlags);
+	node->attachObject(ent);
+
+	return node;
+}
+
+std::vector<Ogre::SceneNode *> Coaster::importScene(std::istream &in)
+{
+	std::vector<Ogre::SceneNode *> sceneNodes;
+	while (in) {
+		char term;
+		in >> term;
+		if (term == '{') {
+			in.unget();
+		} else
+			return sceneNodes;
+		sceneNodes.push_back(readOgreSceneNode(in));
+	}
+	return sceneNodes;
+}
 //-------------------------------------------------------------------------------------
 void Coaster::createScene(void)
 {
@@ -78,6 +157,7 @@ void Coaster::createScene(void)
 	//show the CEGUI cursor
 	CEGUI::SchemeManager::getSingleton().create((CEGUI::utf8*)"TaharezLook.scheme");
 	CEGUI::MouseCursor::getSingleton().setImage("TaharezLook", "MouseArrow");
+
 }
 
 void Coaster::changeViewPoint(void){
