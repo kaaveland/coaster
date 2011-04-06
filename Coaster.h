@@ -13,6 +13,7 @@
 #include "Vector3d.h"
 #include "GraphicTrack.h"
 #include "PhysicsCart.h"
+#include "SoundEngine.h"
  
 #include <CEGUISystem.h>
 #include <CEGUISchemeManager.h>
@@ -83,6 +84,9 @@ protected:
 
 	void resetRail(void);
 	//void createRailMesh(const Track track, const bool export_mesh);
+
+	SoundEngine soundEngine;
 };
+
  
 #endif // #ifndef __Coaster_h_

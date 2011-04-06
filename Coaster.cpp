@@ -1,4 +1,5 @@
 #include "Coaster.h"
+#include "SoundEngine.h"
 //#include "tests.h"
 
 //-------------------------------------------------------------------------------------
@@ -12,7 +13,8 @@ bRobotMode(true),
 track(),
 mControllPointCount(0),
 adjustHeight(false),
-physicsCart(new PhysicsCart())
+physicsCart(new PhysicsCart()),
+soundEngine()
 {
 }
 //-------------------------------------------------------------------------------------
@@ -69,6 +71,9 @@ void Coaster::createScene(void)
 	mCamera->pitch(Ogre::Degree(-30));
 	mCamera->yaw(Ogre::Degree(-45));
 	mCamera->setNearClipDistance(0.5f);
+
+	// Position sound sources
+	soundEngine.addSound(SoundEngine::BLIZZARD01, physicsCart->getPos());
  
 	//CEGUI setup
 	mGUIRenderer = &CEGUI::OgreRenderer::bootstrapSystem();
@@ -76,6 +81,8 @@ void Coaster::createScene(void)
 	//show the CEGUI cursor
 	CEGUI::SchemeManager::getSingleton().create((CEGUI::utf8*)"TaharezLook.scheme");
 	CEGUI::MouseCursor::getSingleton().setImage("TaharezLook", "MouseArrow");
+
+
 }
 
 void Coaster::changeViewPoint(void){
@@ -457,6 +464,12 @@ bool Coaster::keyPressed(const OIS::KeyEvent& arg)
 
 		case OIS::KC_R:
 			this->resetRail();
+			break;
+		case OIS::KC_S:
+			soundEngine.addSound(SoundEngine::BLIZZARD01, Vector3d(0,0,0));
+			soundEngine.setListenerPosition(Vector3d(0,0,0));
+			soundEngine.setListenerUp(Vector3d(0,1,0));
+	
 			break;
 			
 		case OIS::KC_RSHIFT:
