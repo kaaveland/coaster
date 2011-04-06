@@ -346,19 +346,19 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 				mCurrentObject = iter->movable->getParentSceneNode();
 
 				for (vector<Ogre::String>::iterator it = placedObjects.begin(); it!=placedObjects.end(); ++it) {
-						if(*it == mCurrentObject->getName()){
+					if(*it == mCurrentObject->getName()){
 
-							string obj_name = string(*it);
-							Ogre::String controll = "Controll";
-							int pos = obj_name.find(controll);
+						string obj_name = string(*it);
+						Ogre::String controll = "Controll";
+						int pos = obj_name.find(controll);
 
-							//Controll point clicked
-							if(pos != string::npos){
-								obj_name.replace(pos, controll.size(), ""); 
-								int ctrl_point = std::atoi(obj_name.c_str());
-								controlPointSelected = ctrl_point;
-							}
+						//Controll point clicked
+						if(pos != string::npos){
+							obj_name.replace(pos, controll.size(), ""); 
+							int ctrl_point = std::atoi(obj_name.c_str());
+							controlPointSelected = ctrl_point;
 						}
+					}
 				}
 
 				break;
@@ -369,7 +369,7 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 				char name[16];
 				Ogre::Entity* ent;
  
-				//if we are in robot mode we spawn a robot at the mouse location
+				//if we are in robot mode we spawn a control point at the mouse location
 				if(bRobotMode)
 				{
 					sprintf(name, "%dControll", mControllPointCount++);
@@ -495,12 +495,16 @@ bool Coaster::keyPressed(const OIS::KeyEvent& arg)
 			cout << physicsCart->toString(); break;
 
 		case OIS::KC_Q:
-			track.setTrackRotation(controlPointSelected, track.getTrackRotation(controlPointSelected)+(3.14/32));
-			generateTrack();
+			if(physicsCart->hasTrack()){
+				track.setTrackRotation(controlPointSelected, track.getTrackRotation(controlPointSelected)+(3.14/32));
+				generateTrack();
+			}
 			break;
 		case OIS::KC_E:
-			track.setTrackRotation(controlPointSelected, track.getTrackRotation(controlPointSelected)-(3.14/32));
-			generateTrack();
+			if(physicsCart->hasTrack()){
+				track.setTrackRotation(controlPointSelected, track.getTrackRotation(controlPointSelected)-(3.14/32));
+				generateTrack();
+			}
 			break;
 
 		case OIS::KC_R:
