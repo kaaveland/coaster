@@ -1,6 +1,7 @@
 #include "Coaster.h"
 //#include "tests.h"
 
+
 //-------------------------------------------------------------------------------------
 Coaster::Coaster(void):
 mCount(0),
@@ -16,12 +17,17 @@ physicsCart(new PhysicsCart()),
 highscore_time(0),
 controlPointSelected(0)
 {
+	
 }
 //-------------------------------------------------------------------------------------
 Coaster::~Coaster(void)
 {
 	mSceneMgr->destroyQuery(mRayScnQuery);
+	delete physicsCart;
+	delete soundEngine;
+
 }
+
 
 // Export scene/entity to &out in following format:
 // {
@@ -174,6 +180,16 @@ void Coaster::createScene(void)
 	CEGUI::SchemeManager::getSingleton().create((CEGUI::utf8*)"TaharezLook.scheme");
 	CEGUI::MouseCursor::getSingleton().setImage("TaharezLook", "MouseArrow");
 
+	// Setup sound
+	//Ogre::Vector3 middle(track.getPos(0.5).x, track.getPos(0.5).y, track.getPos(0.5).z);
+	Ogre::Vector3 middle(0,0,0);
+	testNode = this->mSceneMgr->getRootSceneNode()->createChildSceneNode("Testnode", middle);
+				
+	soundEngine = new SoundEngine(physicsCart, cartNode);
+	soundEngine->playBackgroundSounds(true);
+	
+	//soundEngine->addSound(SoundEngine::BLIZZARD01, cartNode);
+
 }
 
 void Coaster::changeViewPoint(void){
@@ -239,6 +255,12 @@ bool Coaster::frameRenderingQueued(const Ogre::FrameEvent& arg)
 			physicsCart->nextStep(dt);
 		}
 
+		// Update sound engine
+		if (cameraName == "CartCam")
+			soundEngine->frameStarted(cartNode, dt);
+		else if (cameraName == "PlayerCam") {
+			soundEngine->frameStarted(testNode, dt);	// TODO: insert a scene node for the 3rd person camera here
+		}
 	}
 	
 	if (mDetailsPanel->isVisible())   // if details panel is visible, then update its contents
@@ -772,7 +794,7 @@ extern "C" {
 			app.go();
 		} catch( Ogre::Exception& e ) {
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
-			MessageBox( NULL, e.getFullDescription().c_str(), "An exception has occured!", MB_OK | MB_ICONERROR | MB_TASKMODAL);
+			//MessageBox( NULL, e.getFullDescription().c_str(), "An exception has occured!", MB_OK | MB_ICONERROR | MB_TASKMODAL);
 #else
 			std::cerr << "An exception has occured: " <<
 				e.getFullDescription().c_str() << std::endl;

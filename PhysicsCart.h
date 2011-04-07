@@ -45,11 +45,14 @@ public:
 	void setSpeed(double v);
 	double getSpeed(void);
 
+	// Returns the current (positive) g factor. A factor of 0 means the cart is free-falling, a factor of 1.0 means 
+	// constant velocity or at rest.
+	double getGFactor() const;
 
 	Vector3d getPos() const;
 	Vector3d getUp() const;
 	Vector3d getForward() const;
-
+	
 	// Debugging/testing functions
 	string toString() const;	
 

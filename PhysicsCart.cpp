@@ -228,6 +228,13 @@ Vector3d PhysicsCart::getForward() const {
 
 }
 
+double PhysicsCart::getGFactor() const
+{
+	if (isFreefalling) return 0.0;
+
+	return sqrt(pow(calculate_a_T(0),2) + pow(calculate_a_N(0), 2)) / gvector.length();
+}
+
 string PhysicsCart::toString() const {
 	stringstream res;
 	res << "--PhysicsCart info--\n" << 
