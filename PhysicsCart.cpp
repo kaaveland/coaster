@@ -28,8 +28,8 @@ PhysicsCart::PhysicsCart() : gvector(0,-9.81,0)
 	Ix = 1.0;
 	friction_static = 1.0;
 	friction_glide = 1.0;
-	maxThrust = 500.0;
-	maxBreak = 500.0;
+	maxThrust = 5.0; // about 0.5 g 
+	maxBreak = 20.0; // about 2 g
 	wheelsOffsetx = 0;
 	wheelsOffsety = 0.5;		// Total widTh of cart becomes 1.0
 	thrustFactor = 0.0;

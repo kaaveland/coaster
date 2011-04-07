@@ -33,7 +33,7 @@ Track::Track(vector<Vector3d> const &pos, vector<double> const &rot)
 	// Do not use this constructor
 	assert(false);
 
-	assert(pos.size() == up.size());
+	assert(pos.size() == rot.size());
 	initValues();
 
 	this->nControlPoints = pos.size();

@@ -27,9 +27,11 @@ objectScalingDown(false)
 //-------------------------------------------------------------------------------------
 Coaster::~Coaster(void)
 {
-	mSceneMgr->destroyQuery(mRayScnQuery);
-	delete physicsCart;
-	delete soundEngine;
+	// Kommentert ut av Per Ivar. Denne linja krasjer
+	//mSceneMgr->destroyQuery(mRayScnQuery);
+	
+	//delete physicsCart;
+	//delete soundEngine;
 
 }
 
@@ -952,7 +954,9 @@ extern "C" {
 			app.go();
 		} catch( Ogre::Exception& e ) {
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
-			//MessageBox( NULL, e.getFullDescription().c_str(), "An exception has occured!", MB_OK | MB_ICONERROR | MB_TASKMODAL);
+			std::cerr << "An exception has occured: " <<
+				e.getFullDescription().c_str() << std::endl;
+			//MessageBoxA( NULL, e.getFullDescription().c_str(), "An exception has occured!", MB_OK | MB_ICONERROR | MB_TASKMODAL);
 #else
 			std::cerr << "An exception has occured: " <<
 				e.getFullDescription().c_str() << std::endl;
