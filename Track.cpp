@@ -23,13 +23,12 @@ void Track::initValues() {
 	this->smoothingValue = 50;
 	
 	pos = vector<Vector3d>(0);
-	up = vector<Vector3d>(0);
 	arcDistances = vector<double>(0);
 	rotations = vector<double>(0);
 		
 }
 
-Track::Track(vector<Vector3d> const &pos, vector<Vector3d> const &up)
+Track::Track(vector<Vector3d> const &pos, vector<double> const &rot)
 {
 	// Do not use this constructor
 	assert(false);
@@ -39,13 +38,13 @@ Track::Track(vector<Vector3d> const &pos, vector<Vector3d> const &up)
 
 	this->nControlPoints = pos.size();
 	this->pos = pos;
-	this->up = up;
+	this->rotations = rot;
 	this->arcDistances = vector<double>(nControlPoints);
 	//this->section_dS = vector<double>(nControlPoints);
 
 	this->delta_t = (double)1 / (double)pos.size();
 	calculateArcDistances();
-	makePlaneUpVectors();
+	//makePlaneUpVectors();
 	//	calculateSections_dS();
 
 }
@@ -101,18 +100,9 @@ void Track::setControlPoint(int index, Vector3d position)
 	//makePlaneUpVectors();
 }
 
-
-Vector3d Track::getControlUp(int index) const
-{
-	if (index < 0) index = 0;
-	else if (index >= nControlPoints) index = nControlPoints-1;
-	assert(index >= 0 && index < nControlPoints);
-
-	return up[index];
-}
-
 void Track::makePlaneUpVectors() 
 {
+	/*
 	for (int i=0; i < nControlPoints; i++) {
 		double t = (double)i/nControlPoints;
 
@@ -121,6 +111,7 @@ void Track::makePlaneUpVectors()
 		if (getNormalVector(t) * Vector3d(0,1,0) >= 0) up[i] = getNormalVector(t);	
 		else up[i] = -getNormalVector(t);
 	}
+	*/
 }
 
 void Track::setTrackRotation(int index, double radian)
@@ -202,32 +193,6 @@ Vector3d Track::getUp(double t) const
 	up = cos(angleInterpolated)*up + sin(angleInterpolated)*right;
 	return up.normalizedCopy();
 
-/*
-    // Compute local control point indices
-#define BOUNDS2(pp) { if (pp < 0) pp = 0; else if (pp >= (int)up.size()-1) pp = up.size() - 1; }
-    int p0 = p - 1;     BOUNDS2(p0);
-    int p1 = p;         BOUNDS2(p1);
-    int p2 = p + 1;     BOUNDS2(p2);
-    int p3 = p + 2;     BOUNDS2(p3);
-    // Relative (local) time 
-	
-	// Interpolate
-	//printf("lt: %f, p: %d, p0:%d, p1:%d, p2:%d, p3:%d \n", lt, p, p0, p1, p2, p3);
-
-	Vector3d upPos = Track::Eq(lt, getControlPoint(p0)+getControlUp(p0), getControlPoint(p1)+getControlUp(p1), getControlPoint(p2)+getControlUp(p2), getControlPoint(p3)+getControlUp(p3));
-	
-	Vector3d diff = upPos - getPos(t);
-	double rot = acos(diff/diff.length() * getNormalVector(t));
-	//Vector3d right = 
-	if (diff.length() < VECTORLENGHTMINIMUM) return Vector3d(0,0,0);
-	return diff/diff.length();
-*/
-}
-
-void Track::setUp(int index, Vector3d up)
-{
-	assert(index >= 0 && index < nControlPoints);
-	this->up[index] = up;		
 }
 
 // Solve the Catmull-Rom parametric equation for a given time(t) and vector quadruple (p1,p2,p3,p4)
@@ -268,7 +233,7 @@ void Track::addPos(const Vector3d v, double rotation_radians)
 	
 	//printf("Added point x:%f, y:%f, z:%f \n", getTrackPoint(nControlPoints-1));
 	this->arcDistances.resize(nControlPoints);
-	up.resize(nControlPoints);
+	//up.resize(nControlPoints);
 	
 	this->delta_t = 1.0/pos.size();
 	calculateArcDistances();
@@ -425,13 +390,11 @@ void Track::generateTrack(void)
 	const double PI = acos(-1.0);
 
 	this->pos.clear();
-	this->up.clear();
 	pos.resize(nControlPoints);
-	up.resize(nControlPoints);
 
 	for (int i = 0; i < nControlPoints; i++) {
 		Vector3d p(50.0*cos(1.0*i/nControlPoints *2*PI - PI/2), 50.0*sin(1.0*i/nControlPoints *2*PI - PI/2), 0.0);
-		up[i] = -p/p.length();
+		//up[i] = -p/p.length();
 		
 		p += Vector3d(0,100,0);	// move up 100 units
 		pos[i] = p;
@@ -533,7 +496,7 @@ int Track::getNumberOfPoints(void) const
 
 void Track::read(std::istream &in)
 {
-	enum { BEGIN, CONTROL, POS, UP, END, ERROR} state = BEGIN;
+	enum { BEGIN, CONTROL, POS, ROT, END, ERROR} state = BEGIN;
 	char buf[512];
 
 	while (in.getline(buf, 512) && state != END) {
@@ -547,23 +510,29 @@ void Track::read(std::istream &in)
 			parse >> nControlPoints; // Fill in control points
 		} else if (state == CONTROL && input.substr(0, 2) == "P:") {
 			state = POS; // Skip this line, but expect data on pos on following lines
-		} else if (state == POS && input.substr(0, 2) != "U:") {
+		} else if (state == POS && input.substr(0, 2) != "R:") {
 			Vector3d parsed;
 			parsed.read(parse);
 			pos.push_back(parsed);
-		} else if (state == POS && input.substr(0, 2) == "U:") {
-			state = UP; // Skip this line, but expect data on up on following lines
-		} else if (state == UP && input.size() > 1) {
-			Vector3d parsed;
-			parsed.read(parse);
-			up.push_back(parsed);
-		} else if (state == UP && input.size() < 2) {
+		} else if (state == POS && input.substr(0, 2) == "R:") {
+			state = ROT; // Skip this line, but expect data on pos on following lines
+		} else if (state == ROT && input.size() > 0) {
+			double parsed;
+			in >> parsed;
+			rotations.push_back(parsed);
+		} else if (state == ROT && input.size() < 2) {
 			state = END; // This means we're done
 		} else if (state == END)
 			continue; // Empty line after up has been parsed, ignore
 		else // Can only happen if input doesn't have strict
 			state = ERROR; // May want to try to recover or something here
 	}
+
+	this->arcDistances = vector<double>(nControlPoints);
+	//this->section_dS = vector<double>(nControlPoints);
+
+	this->delta_t = (double)1 / (double)pos.size();
+	calculateArcDistances();
 }
 
 void Track::dump(std::ostream &out)
@@ -572,7 +541,8 @@ void Track::dump(std::ostream &out)
 	out << "P: " << std::endl;
 	for (int i = 0; i < pos.size(); ++i)
 		pos[i].dump(out);
-	out << "U: " << std::endl;
-	for (int i = 0; i < up.size(); ++i)
-		up[i].dump(out);
+	out << "R: " << std::endl;
+	for (int i = 0; i < rotations.size(); ++i)
+		out << rotations[i] << std::endl;
+		
 }

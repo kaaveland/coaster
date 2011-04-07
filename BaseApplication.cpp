@@ -57,7 +57,7 @@ bool BaseApplication::configure(void)
     {
         // If returned true, user clicked OK so initialise
         // Here we choose to let the system create a default rendering window by passing 'true'
-        mWindow = mRoot->initialise(true, "Coaster Roller Xtreme 7");
+        mWindow = mRoot->initialise(true, "Coaster Island - Escape of the Eskimo");
 
         return true;
     }

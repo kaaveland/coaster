@@ -9,13 +9,18 @@ mCurrentObject(0),
 bLMouseDown(false),
 bRMouseDown(false),
 mRotateSpeed(0.1f),
-bRobotMode(true),
+editorMode(true),
 track(),
 mControllPointCount(0),
 adjustHeight(false),
 physicsCart(new PhysicsCart()),
 highscore_time(0),
-controlPointSelected(0)
+controlPointSelected(0),
+objectToBePlaced(RAIL_MASK),
+objectRotatingRight(false),
+objectRotatingLeft(false),
+objectScalingUp(false),
+objectScalingDown(false)
 {
 	
 }
@@ -94,6 +99,12 @@ Ogre::SceneNode *Coaster::readOgreSceneNode(std::istream &in)
 		mSceneMgr->destroyEntity(eName);
 	}
 	placedObjects.push_back(eName);
+	mCount++;
+
+	if(eName.find("Controll") != string::npos){
+		mControllPointCount++;
+	}
+
 	Ogre::SceneNode *node = ((Ogre::SceneNode *) mSceneMgr->getRootSceneNode()->getChild("world"))->createChildSceneNode(sName, pos.ogreVector());
 	node->setOrientation(rotation);
 	Ogre::Entity *ent = mSceneMgr->createEntity(eName, mName);
@@ -109,6 +120,9 @@ std::vector<Ogre::SceneNode *> Coaster::importScene(std::istream &in)
 	std::vector<Ogre::SceneNode *> sceneNodes;
 
 	((Ogre::SceneNode *) mSceneMgr->getRootSceneNode()->getChild("world"))->removeAndDestroyAllChildren();
+	placedObjects.clear();
+	mCount = 0;
+	mControllPointCount = 0;
 
 	while (in) {
 		char term;
@@ -136,11 +150,10 @@ void Coaster::createScene(void)
 	// For all "creatable" entities
 	mSceneMgr->getRootSceneNode()->createChildSceneNode("world", Ogre::Vector3(0, 0, 0));
     
-	Ogre::Entity* cartEnt = mSceneMgr->createEntity("Cart", "vogn.mesh");
+	Ogre::Entity* cartEnt = mSceneMgr->createEntity("Cart", "cart.mesh");
 				  cartEnt->setQueryFlags(CART_MASK);
 	cartNode->attachObject(cartEnt);
-	cartNode->yaw(Ogre::Degree(180));
-	cartNode->setScale(0.1f, 0.1f, 0.1f);
+	cartNode->setScale(0.05f, 0.05f, 0.05f);
 
 	placedObjects = std::vector<Ogre::String>(0);
 	
@@ -168,9 +181,9 @@ void Coaster::createScene(void)
     l->setPosition(20,80,50);
  
 	//camera change setup
-	mCamera->setPosition(670, 860, 4570);
-	mCamera->pitch(Ogre::Degree(-10));
-	mCamera->yaw(Ogre::Degree(-45));
+	mCamera->setPosition(2000, 500, 1000);
+	mCamera->pitch(Ogre::Degree(-15));
+	mCamera->yaw(Ogre::Degree(90));
 	mCamera->setNearClipDistance(0.5f);
  
 	//CEGUI setup
@@ -230,15 +243,28 @@ bool Coaster::frameRenderingQueued(const Ogre::FrameEvent& arg)
 	Ogre::Real dt = arg.timeSinceLastFrame;
 
 	highscore_time += dt;
-	
+
+	//rotation and scaling
+	if(objectRotatingRight){
+		this->rotateObject(Ogre::Radian(Ogre::Degree(15*dt)));
+	}
+	if(objectRotatingLeft){
+		this->rotateObject(Ogre::Radian(Ogre::Degree(-15*dt)));
+	}
+	if(objectScalingUp){
+		//this->scaleObject(1);
+	}
+	if(objectScalingDown){
+		//this->scaleObject(-1);
+	}
+
+	//physics cart:
 	if(physicsCart->hasTrack()){
 		Vector3d pos = physicsCart->getPos();
 		cartNode->setPosition(Ogre::Vector3(pos.x, pos.y, pos.z));
 
-		using namespace Ogre;
-
-		Ogre::Vector3 mForward = Vector3(physicsCart->getForward().x, physicsCart->getForward().y, physicsCart->getForward().z).normalisedCopy();
-		Ogre::Vector3 mUp = Vector3(physicsCart->getUp().x, physicsCart->getUp().y, physicsCart->getUp().z).normalisedCopy();
+		Ogre::Vector3 mForward = Ogre::Vector3(physicsCart->getForward().x, physicsCart->getForward().y, physicsCart->getForward().z).normalisedCopy();
+		Ogre::Vector3 mUp = Ogre::Vector3(physicsCart->getUp().x, physicsCart->getUp().y, physicsCart->getUp().z).normalisedCopy();
 		double dot = mForward.dotProduct(mUp);
 		if (dot > 0.1) {
  			cout << dot << "! ";
@@ -246,8 +272,8 @@ bool Coaster::frameRenderingQueued(const Ogre::FrameEvent& arg)
 
 		//Radian yaw = Math::ACos(Vector3::UNIT_X.dotProduct(mForward));
 		//Quaternion q3 (Radian(0), Vector3::NEGATIVE_UNIT_Z);
-		Vector3 mRight = mForward.crossProduct(mUp);
-		Quaternion tot(mRight, mUp, -mForward);
+		Ogre::Vector3 mRight = mForward.crossProduct(mUp);
+		Ogre::Quaternion tot(mRight, mUp, -mForward);
 		cartNode->setOrientation(tot);		//rotate cart
 
 		//next step
@@ -445,7 +471,7 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 		Ogre::Ray mouseRay = mCamera->getCameraToViewportRay(mousePos.d_x/float(arg.state.width), mousePos.d_y/float(arg.state.height));
 		mRayScnQuery->setRay(mouseRay);
 		mRayScnQuery->setSortByDistance(true);
-		mRayScnQuery->setQueryMask(bRobotMode ? ROBOT_MASK : NINJA_MASK);	//will return objects with the query mask in the results
+		mRayScnQuery->setQueryMask(objectToBePlaced);	//will return objects with the query mask in the results
  
 		/*
 		This next chunk finds the results of the raycast
@@ -486,33 +512,76 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 			{
 				char name[16];
 				Ogre::Entity* ent;
- 
-				//if we are in robot mode we spawn a control point at the mouse location
-				if(bRobotMode)
-				{
-					sprintf(name, "%dControll", mControllPointCount++);
-					ent = mSceneMgr->createEntity(name, "support_element.mesh");
-					ent->setQueryFlags(ROBOT_MASK);
-				}
-				//otherwise we spawn a ninja
-				else
-				{
-					sprintf(name, "Ninja%dNode", mCount++);
-					ent = mSceneMgr->createEntity(name, "ninja.mesh");
-					ent->setQueryFlags(NINJA_MASK);
- 
-				}
-				//attach the object to a scene node
-				mCurrentObject = mSceneMgr->getRootSceneNode()->createChildSceneNode(std::string(name) , iter->worldFragment->singleIntersection);
-				mCurrentObject->attachObject(ent);
 				
-				//add track 120 over the ground
-				track.addPos(Vector3d(iter->worldFragment->singleIntersection.x, iter->worldFragment->singleIntersection.y+20, 
-					iter->worldFragment->singleIntersection.z), 0);
+				switch(objectToBePlaced){
+					case RAIL_MASK:
+						sprintf(name, "%dControll", mControllPointCount++);
+						ent = mSceneMgr->createEntity(name, "support_element.mesh");
+						ent->setQueryFlags(RAIL_MASK);
+
+						//add track 20 over the ground
+						track.addPos(Vector3d(iter->worldFragment->singleIntersection.x, iter->worldFragment->singleIntersection.y+20, 
+							iter->worldFragment->singleIntersection.z), 0);
+						position_added = true;
+						break;
+					case BILLBOARD_MASK:
+						sprintf(name, "Billboard%dNode", mCount++);
+						ent = mSceneMgr->createEntity(name, "billboard.mesh");
+						ent->setQueryFlags(BILLBOARD_MASK);
+						break;
+					case HYTTE_MASK:
+						sprintf(name, "Hytte%dNode", mCount++);
+						ent = mSceneMgr->createEntity(name, "hytte_v3.mesh");
+						ent->setQueryFlags(HYTTE_MASK);
+						break;
+					case STONE12_MASK:
+						sprintf(name, "Stone12%dNode", mCount++);
+						ent = mSceneMgr->createEntity(name, "stone12.mesh");
+						ent->setQueryFlags(STONE12_MASK);
+						break;
+					case STONE17_MASK:
+						sprintf(name, "Stone17%dNode", mCount++);
+						ent = mSceneMgr->createEntity(name, "stone17.mesh");
+						ent->setQueryFlags(STONE17_MASK);
+						break;
+					case STONE117_MASK:
+						sprintf(name, "Stone117%dNode", mCount++);
+						ent = mSceneMgr->createEntity(name, "stone117.mesh");
+						ent->setQueryFlags(STONE117_MASK);
+						break;
+					case PALM_TREE_1_MASK:
+						sprintf(name, "PalmTree1%dNode", mCount++);
+						ent = mSceneMgr->createEntity(name, "palmtree1.mesh");
+						ent->setQueryFlags(PALM_TREE_1_MASK);
+						break;
+					case PALM_TREE_2_MASK:
+						sprintf(name, "PalmTree2%dNode", mCount++);
+						ent = mSceneMgr->createEntity(name, "palmtree2.mesh");
+						ent->setQueryFlags(PALM_TREE_2_MASK);
+						break;
+					case PALM_TREE_3_MASK:
+						sprintf(name, "PalmTree3%dNode", mCount++);
+						ent = mSceneMgr->createEntity(name, "palmtree3.mesh");
+						ent->setQueryFlags(PALM_TREE_3_MASK);
+						break;
+					case SUPPORT_ELEMENT_MASK:
+						sprintf(name, "SupportElement%dNode", mCount++);
+						ent = mSceneMgr->createEntity(name, "support_element.mesh");
+						ent->setQueryFlags(SUPPORT_ELEMENT_MASK);
+						break;
+					case YELLOW_SUB_MASK:
+						sprintf(name, "YellowSub%dNode", mCount++);
+						ent = mSceneMgr->createEntity(name, "yellow_sub_v8.mesh");
+						ent->setQueryFlags(YELLOW_SUB_MASK);
+						break;
+				}
+ 
+				//attach the object to a scene node
+				mCurrentObject = ((Ogre::SceneNode*)(mSceneMgr->getRootSceneNode()->getChild("world")))->createChildSceneNode(std::string(name) , iter->worldFragment->singleIntersection);
+				mCurrentObject->attachObject(ent);
+ 
 				placedObjects.push_back(std::string(name));
 
-				position_added = true;
- 
 				//lets shrink the object, only because the terrain is pretty small
 				mCurrentObject->setScale(0.1f, 0.1f, 0.1f);
 				break;
@@ -525,7 +594,7 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 		}
  
 		//now we show the bounding box so the user can see that this object is selected
-		if(mCurrentObject)
+		if(mCurrentObject && objectToBePlaced != RAIL_MASK)
 		{
 			mCurrentObject->showBoundingBox(true);
 		}
@@ -541,7 +610,24 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 	return true;
 }
 
+void Coaster::nextObject(void){
+	objectToBePlaced = objectToBePlaced<<1;
+	if(objectToBePlaced == END_MASK){
+		objectToBePlaced = BILLBOARD_MASK;
+	}
+	printf("%d obj\n", objectToBePlaced);
+}
+
+void Coaster::prevObject(void){
+	objectToBePlaced = objectToBePlaced>>1;
+	if(objectToBePlaced == 0){
+		objectToBePlaced = END_MASK<<1;
+	}
+	printf("%d obj\n", objectToBePlaced);
+}
+
 void Coaster::generateTrack(void){
+	if(track.getNumberOfPoints() > 3){
 	meshManager = mRoot->getMeshManager();
 
 	railNode->detachAllObjects();
@@ -563,12 +649,13 @@ void Coaster::generateTrack(void){
 
 	//start cart from start
 	physicsCart->moveTo(0.0);
+	highscore_time = 0;
 	Vector3d start_pos = physicsCart->getPos();
 	Ogre::Vector3 start_pos_ogre = Ogre::Vector3(start_pos.x, start_pos.y, start_pos.z);
 	cartNode->setPosition(start_pos_ogre);
 
 	printf("Rail generated\n");
-
+	}
 }
  
 bool Coaster::mouseReleased(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
@@ -583,6 +670,12 @@ bool Coaster::mouseReleased(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 		bRMouseDown = false;
 	}
 	return true;
+}
+
+void Coaster::rotateObject(Ogre::Radian rad){
+	if(mCurrentObject){
+		mCurrentObject->yaw(rad);
+	}
 }
 
 void Coaster::debugExport()
@@ -609,23 +702,32 @@ void Coaster::debugImport()
 		track = Track();
 		track.read(tData);
 		importScene(sData);
+		physicsCart->setTrack(&track);
+		generateTrack();
+		mCurrentObject = NULL;
 }
 bool Coaster::keyPressed(const OIS::KeyEvent& arg)
 {
+	if(editorMode){
 	switch (arg.key) {
 		case OIS::KC_F5:
+		case OIS::KC_X:
 			debugExport();
 			break;
 		case OIS::KC_F9:
+		case OIS::KC_I:
 			debugImport();
 			break;
 		case OIS::KC_SPACE:
-			bRobotMode = !bRobotMode;
+			editorMode = !editorMode;
+			if(editorMode){
+				printf("Edit mode\n");
+				}
 			changeViewPoint();
 			break;
 		case OIS::KC_0: 
-			this->physicsCart->moveTo(0); 
-			cartNode->setOrientation(1,0,0,0);
+			this->physicsCart->moveTo(0);
+			highscore_time = 0;
 			break;
 		case OIS::KC_5:
 			this->physicsCart->moveTo(0.5*track.getTrackLength()); break;
@@ -643,25 +745,32 @@ bool Coaster::keyPressed(const OIS::KeyEvent& arg)
 			cout << physicsCart->toString(); break;
 
 		case OIS::KC_Q:
-			if(physicsCart->hasTrack()){
+			if(physicsCart->hasTrack() && objectToBePlaced==RAIL_MASK){
 				track.setTrackRotation(controlPointSelected, track.getTrackRotation(controlPointSelected)+(3.14/32));
 				generateTrack();
+			} else {
+				objectRotatingRight = true;
 			}
 			break;
 		case OIS::KC_E:
-			if(physicsCart->hasTrack()){
+			if(physicsCart->hasTrack() && objectToBePlaced==RAIL_MASK){
 				track.setTrackRotation(controlPointSelected, track.getTrackRotation(controlPointSelected)-(3.14/32));
 				generateTrack();
+			} else {
+				objectRotatingLeft = true;
 			}
 			break;
-
 		case OIS::KC_R:
 			this->resetRail();
 			break;
-		case OIS::KC_S:
-	
+		case OIS::KC_UP:
+			this->nextObject();
 			break;
-			
+		case OIS::KC_DOWN:
+			this->prevObject();
+			break;
+		case OIS::KC_S:
+			break;
 		case OIS::KC_RSHIFT:
 			physicsCart->setBraking(0);
 			physicsCart->setThrust(0);
@@ -671,8 +780,40 @@ bool Coaster::keyPressed(const OIS::KeyEvent& arg)
 			adjustHeight = true;
 			cout << "Adjust height start.\n";
 			break;
+	}
 
-
+	} else {
+	switch (arg.key) {
+		case OIS::KC_SPACE:
+			editorMode = !editorMode;
+			if(editorMode){
+				printf("Edit mode\n");
+				}
+			changeViewPoint();
+			break;
+		case OIS::KC_0: 
+		case OIS::KC_R:
+			this->physicsCart->moveTo(0);
+			highscore_time = 0;
+			break;
+		case OIS::KC_5:
+			this->physicsCart->moveTo(0.5*track.getTrackLength()); break;
+		case OIS::KC_W:
+			physicsCart->setBraking(0.0);
+			physicsCart->setThrust(1.0); 
+			cout << "Accelerating.\n";
+			break;
+		case OIS::KC_S:
+			physicsCart->setThrust(0.0);
+			physicsCart->setBraking(1.0);
+			cout << "Breaking.\n";
+			break;
+		case OIS::KC_LSHIFT:
+			physicsCart->setBraking(0);
+			physicsCart->setThrust(0);
+			cout << "Coasting.\n";
+			break;
+	}
 	}
  
 	//then we return the base app keyPressed function so that we get all of the functionality
@@ -682,8 +823,6 @@ bool Coaster::keyPressed(const OIS::KeyEvent& arg)
 
 void Coaster::resetRail(void){
 	meshManager = mRoot->getMeshManager();
-
-	highscore_time = 0;
 
 	railNode->detachAllObjects();
 	if(mSceneMgr->hasEntity("Rails")){
@@ -722,11 +861,30 @@ void Coaster::resetRail(void){
 
 
 bool Coaster::keyReleased( const OIS::KeyEvent& arg ){
+
+	if(editorMode){
 	switch (arg.key) {
 		case OIS::KC_LSHIFT:
 			adjustHeight = false;
 			cout << "Adjust height end.\n";
 			break;
+		case OIS::KC_Q:
+			objectRotatingLeft = false;
+			break;
+		case OIS::KC_E:
+			objectRotatingRight = false;
+			break;
+	}
+	} else {
+	switch (arg.key) {
+		case OIS::KC_W:
+			physicsCart->setThrust(0);
+			break;
+		case OIS::KC_S:
+			physicsCart->setBraking(0);
+			break;
+
+	}
 	}
 	return BaseApplication::keyReleased(arg);
 }

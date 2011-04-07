@@ -19,7 +19,7 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
 	const float width = 0.15f;
 	const float height = 0.3f;
 	// times longer than width/2 is more correct
-	const float length_between_rails = 2.0f;
+	const float length_between_rails = 1.0f;
 
 	Ogre::ManualObject rail("RailObject");
 	Ogre::Vector3 size(width / 2, height/2, 0);

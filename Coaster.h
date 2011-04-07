@@ -34,13 +34,29 @@ public:
  
 	enum QueryFlags
 	{
-		NINJA_MASK = 1<<0,
-		ROBOT_MASK = 1<<1,
+		BILLBOARD_MASK = 1<<0,
+		HYTTE_MASK = 1<<1,
 		RAIL_MASK  = 1<<2,
 		CART_MASK  = 1<<3,
 		ISLAND_MASK = 1<<4,
-		CAMERA_MASK = 1<<5
+		CAMERA_MASK = 1<<5,
+		STONE12_MASK = 1<<6,
+		STONE17_MASK = 1<<7,
+		STONE117_MASK = 1<<8,
+		PALM_TREE_1_MASK = 1<<9,
+		PALM_TREE_2_MASK = 1<<10,
+		PALM_TREE_3_MASK = 1<<11,
+		SUPPORT_ELEMENT_MASK = 1<<12,
+		YELLOW_SUB_MASK = 1<<13,
+		END_MASK = 1<<14
 	};
+
+	//end mask sier hvilket objekt som er siste i listen, increase!
+
+	int objectToBePlaced;
+
+	void prevObject(void);
+	void nextObject(void);
  
 protected:
 	virtual void exportOgreEntity(Ogre::SceneNode *scene, Ogre::Entity *ent, std::ostream &out);
@@ -73,7 +89,7 @@ protected:
 	int mControllPointCount;
 	float mRotateSpeed;				//the rotation speed for the camera
  
-	bool bRobotMode;				//if true we place robots in the world
+	bool editorMode;				//if true we place robots in the world
 
 	void showWin32Console(void);
 	Track track;
@@ -94,6 +110,12 @@ protected:
 	int controlPointSelected;
 
 	void resetRail(void);
+	void rotateObject(Ogre::Radian rad);
+
+	bool objectRotatingRight;
+	bool objectRotatingLeft;
+	bool objectScalingUp;
+	bool objectScalingDown;
 	//void createRailMesh(const Track track, const bool export_mesh);
 
 	SoundEngine *soundEngine;
