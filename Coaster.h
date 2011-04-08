@@ -13,6 +13,7 @@
 #include "Vector3d.h"
 #include "GraphicTrack.h"
 #include "PhysicsCart.h"
+#include "SoundEngine.h"
  
 #include <CEGUISystem.h>
 #include <CEGUISchemeManager.h>
@@ -33,15 +34,39 @@ public:
  
 	enum QueryFlags
 	{
-		NINJA_MASK = 1<<0,
-		ROBOT_MASK = 1<<1,
+		BILLBOARD_MASK = 1<<0,
+		HYTTE_MASK = 1<<1,
 		RAIL_MASK  = 1<<2,
 		CART_MASK  = 1<<3,
 		ISLAND_MASK = 1<<4,
-		CAMERA_MASK = 1<<5
+		CAMERA_MASK = 1<<5,
+		STONE12_MASK = 1<<6,
+		STONE17_MASK = 1<<7,
+		STONE117_MASK = 1<<8,
+		PALM_TREE_1_MASK = 1<<9,
+		PALM_TREE_2_MASK = 1<<10,
+		PALM_TREE_3_MASK = 1<<11,
+		SUPPORT_ELEMENT_MASK = 1<<12,
+		YELLOW_SUB_MASK = 1<<13,
+		END_MASK = 1<<14
 	};
+
+	//end mask sier hvilket objekt som er siste i listen, increase!
+
+	int objectToBePlaced;
+
+	void prevObject(void);
+	void nextObject(void);
  
 protected:
+	virtual void exportOgreEntity(Ogre::SceneNode *scene, Ogre::Entity *ent, std::ostream &out);
+	Ogre::SceneNode *readOgreSceneNode(std::istream &in);
+
+	virtual void exportScene(std::vector<Ogre::SceneNode *> nodes, std::ostream &out);
+	virtual std::vector<Ogre::SceneNode *> importScene(std::istream &in);
+	void debugExport();
+	void debugImport();
+
     virtual void createScene(void);
  
 	virtual void chooseSceneManager(void);
@@ -64,12 +89,14 @@ protected:
 	int mControllPointCount;
 	float mRotateSpeed;				//the rotation speed for the camera
  
-	bool bRobotMode;				//if true we place robots in the world
+	bool editorMode;				//if true we place robots in the world
 
 	void showWin32Console(void);
 	Track track;
 	Ogre::SceneNode *railNode;
 	Ogre::SceneNode *cartNode;
+
+	Ogre::Real highscore_time;
 
 	PhysicsCart *physicsCart;
 
@@ -80,9 +107,20 @@ protected:
 
 	Ogre::MeshManager *meshManager;
 	bool adjustHeight;
+	int controlPointSelected;
 
 	void resetRail(void);
+	void rotateObject(Ogre::Radian rad);
+
+	bool objectRotatingRight;
+	bool objectRotatingLeft;
+	bool objectScalingUp;
+	bool objectScalingDown;
 	//void createRailMesh(const Track track, const bool export_mesh);
+
+	SoundEngine *soundEngine;
+	Ogre::SceneNode *testNode;
 };
+
  
 #endif // #ifndef __Coaster_h_

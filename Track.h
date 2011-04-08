@@ -17,7 +17,7 @@ public:
 	//	pos - vector containing the points along the curve
 	//  up - vector containing the up vectors along the curve
 	//
-	Track(vector<Vector3d> const &pos, vector<Vector3d> const &up);
+	Track(vector<Vector3d> const &pos, vector<double> const &rot);
 
 	Track(int nPoints);
 
@@ -30,7 +30,6 @@ public:
 	
 	/* void setTrackPoint(double index, Vector3d v); */
 
-	void setUp(int index, Vector3d v);
 
 	// Gives the track's unit up vector at the given t value.
 	Vector3d getUp(double t) const;
@@ -48,6 +47,7 @@ public:
 	Vector3d getNonNormalizedNormalVector(double t) const;
 
 	Vector3d getUnitBinormal(double t) const;
+	double getTrackRotation(int index);
 
 
 	// Load and fill the track with points
@@ -83,7 +83,6 @@ public:
 	// void setTrackLength(double length);
 	double getTrackLength() const;
 	Vector3d getControlPoint(int index) const;
-	Vector3d getControlUp(int index) const;
 	void setControlPoint(int index, Vector3d position);
 	void setTrackRotation(int index, double radian);
 
@@ -92,7 +91,6 @@ public:
 protected:
 	int nControlPoints;
 	std::vector<Vector3d> pos;
-	std::vector<Vector3d> up;
 	std::vector<double> rotations;
 	std::vector<double> arcDistances;	// A vector that contains the (accumulative) arc distances to each of the control points.
 	//std::vector<double> section_dS;		// A vector that contains the dS values for each segment
