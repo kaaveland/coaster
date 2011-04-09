@@ -179,19 +179,22 @@ void PhysicsCart::calculateNextStep(double dT) {
 		// If the acceleration required to keep in circular motion is LESS THAN the gravity component towards the
 		//  center of curvature, the cart will lose traction and fly! Should probably have a tolerance here (vertical attitudes).
 		double asdf = v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector;
-		if (v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector < 1e-12)
+		//printf("Case1: %e\n", v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector);
+		if (v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector < 10){ //1e-12
 			// Disabled for now
-			//isFreefalling = true;
-			;
+			isFreefalling = true;
+			
+		}
 	
 	} else {
 		// If the acceleration required to keep in circular motion is GREATER THAN the gravity component towards the
 		//  center of curvature, the cart will lose traction and fly! Should probably have a tolerance here (vertical attitudes).
 		double asdf = v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector;
-		if (v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector > 1e-12) 
+		//printf("Case2: %e\n", v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector);
+		if (v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector > 10){
 			// Disabled for now
-			// isFreefalling = true;
-			;
+			isFreefalling = true;
+		}
 	}
 }
 

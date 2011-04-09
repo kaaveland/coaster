@@ -31,7 +31,7 @@ fuel(max_fuel) // 3 seconds of fuel is max
 Coaster::~Coaster(void)
 {
 	// Kommentert ut av Per Ivar. Denne linja krasjer
-	//mSceneMgr->destroyQuery(mRayScnQuery);
+	mSceneMgr->destroyQuery(mRayScnQuery);
 	
 	//delete physicsCart;
 	//delete soundEngine;
@@ -39,115 +39,7 @@ Coaster::~Coaster(void)
 }
 
 
-// Export scene/entity to &out in following format:
-// {
-// sceneName
-// entityName
-// meshName
-// position
-// rotation
-// queryflags
-// scale
-// }
 
-void Coaster::exportOgreEntity(Ogre::SceneNode *scene, Ogre::Entity *ent, std::ostream &out)
-{
-	// Values to export
-	out << "{" << std::endl;
-	out << scene->getName() << std::endl;
-	out << ent->getName() << std::endl;
-	out << ent->getMesh().get()->getName() << std::endl; // Thankyouogre
-	Vector3d pos(scene->getPosition());
-	pos.dump(out);
-	Ogre::Quaternion rotation = scene->getOrientation();
-	out << rotation.w << " " << rotation.x << " " << rotation.y << " " << rotation.z << std::endl;
-	out << ent->getQueryFlags() << std::endl;
-	Vector3d(scene->getScale()).dump(out);
-	out << "}" << std::endl;
-}
-
-void Coaster::exportScene(std::vector<Ogre::SceneNode *> nodes, std::ostream &out)
-{
-	for (int i = 0; i < nodes.size(); i++) {
-		if (nodes[i]->numAttachedObjects() > 0)
-			if (nodes[i]->getName() != "RailsNode" && nodes[i]->getName() != "cartNode")
-				exportOgreEntity(nodes[i], (Ogre::Entity *) nodes[i]->getAttachedObject(0), out);
-	}
-}
-
-Ogre::SceneNode *Coaster::readOgreSceneNode(std::istream &in)
-{
-	char verify;
-
-	in >> verify;
-	if (verify != '{') // Bad, do something about this?
-		;
-
-	std::string sName, eName, mName;
-	Vector3d pos, scale;
-	Ogre::Quaternion rotation;
-	int queryFlags;
-
-	in >> sName;
-	in >> eName;
-	in >> mName;
-	pos.read(in);
-	in >> rotation.w >> rotation.x >> rotation.y >> rotation.z;
-	in >> queryFlags;
-	scale.read(in);
-
-	in >> verify;
-	if (verify != '}') 
-		;
-
-	if(mSceneMgr->hasEntity(eName)){
-		mSceneMgr->destroyEntity(eName);
-	}
-	placedObjects.push_back(eName);
-	mCount++;
-
-	if(eName.find("Controll") != string::npos){
-		mControllPointCount++;
-	}
-
-	Ogre::SceneNode *node = ((Ogre::SceneNode *) mSceneMgr->getRootSceneNode()->getChild("world"))->createChildSceneNode(sName, pos.ogreVector());
-	node->setOrientation(rotation);
-	Ogre::Entity *ent = mSceneMgr->createEntity(eName, mName);
-	ent->setQueryFlags(queryFlags);
-	node->attachObject(ent);
-	node->setScale(scale.ogreVector());
-
-	return node;
-}
-
-std::vector<Ogre::SceneNode *> Coaster::importScene(std::istream &in)
-{
-	std::vector<Ogre::SceneNode *> sceneNodes;
-
-	((Ogre::SceneNode *) mSceneMgr->getRootSceneNode()->getChild("world"))->removeAndDestroyAllChildren();
-
-	for (vector<Ogre::String>::iterator it = placedObjects.begin(); it!=placedObjects.end(); ++it) {
-		if(mSceneMgr->hasEntity(*it)){
-			mSceneMgr->destroyEntity(*it);
-		}
-	}
-
-	placedObjects.clear();
-	mCount = 0;
-	mControllPointCount = 0;
-
-	while (in) {
-		char term;
-		while ((in >> term) && term != '{') ;
-		if (term == '{')
-			in.unget();
-		 else
-			return sceneNodes;
-		if (in)
-			sceneNodes.push_back(readOgreSceneNode(in));
-	}
-	return sceneNodes;
-}
 //-------------------------------------------------------------------------------------
 void Coaster::createScene(void)
 {
@@ -195,7 +87,7 @@ void Coaster::createScene(void)
 	//camera change setup
 	mCamera->setPosition(2000, 500, 1000);
 	mCamera->pitch(Ogre::Degree(-15));
-	mCamera->yaw(Ogre::Degree(90));
+	mCamera->yaw(Ogre::Degree(-90));
 	mCamera->setNearClipDistance(0.5f);
  
 	//CEGUI setup
@@ -284,10 +176,22 @@ bool Coaster::frameRenderingQueued(const Ogre::FrameEvent& arg)
 
 	//rotation and scaling
 	if(objectRotatingRight){
-		this->rotateObject(Ogre::Radian(Ogre::Degree(15*dt)));
+		if(physicsCart->hasTrack() && objectToBePlaced==SUPPORT_ELEMENT_MASK){
+			printf("Turn track right\n");
+			track.setTrackRotation(controlPointSelected, track.getTrackRotation(controlPointSelected)+(3.14/128));
+			generateTrack();
+		} else {
+			this->rotateObject(Ogre::Radian(Ogre::Degree(15*dt)));
+		}
 	}
 	if(objectRotatingLeft){
-		this->rotateObject(Ogre::Radian(Ogre::Degree(-15*dt)));
+		if(physicsCart->hasTrack() && objectToBePlaced==SUPPORT_ELEMENT_MASK){
+			printf("Turn track left\n");
+			track.setTrackRotation(controlPointSelected, track.getTrackRotation(controlPointSelected)-(3.14/128));
+			generateTrack();
+		} else {
+			this->rotateObject(Ogre::Radian(Ogre::Degree(-15*dt)));
+		}
 	}
 	if(objectScalingUp){
 		this->scaleObject(1.001);
@@ -632,7 +536,7 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 		}
  
 		//now we show the bounding box so the user can see that this object is selected
-		if(mCurrentObject && objectToBePlaced != SUPPORT_ELEMENT_MASK)
+		if(mCurrentObject && objectToBePlaced != RAIL_MASK)
 		{
 			mCurrentObject->showBoundingBox(true);
 		}
@@ -653,6 +557,9 @@ void Coaster::nextObject(void){
 	if(objectToBePlaced == END_MASK){
 		objectToBePlaced = BILLBOARD_MASK;
 	}
+	if(objectToBePlaced == RAIL_MASK){
+		nextObject();
+	}
 	printf("%d obj\n", objectToBePlaced);
 }
 
@@ -660,6 +567,10 @@ void Coaster::prevObject(void){
 	objectToBePlaced = objectToBePlaced>>1;
 	if(objectToBePlaced == 0){
 		objectToBePlaced = END_MASK<<1;
+	}
+
+	if(objectToBePlaced == RAIL_MASK){
+		prevObject();
 	}
 	printf("%d obj\n", objectToBePlaced);
 }
@@ -716,10 +627,10 @@ void Coaster::rotateObject(Ogre::Radian rad){
 	}
 }
 
-void Coaster::scaleObject(float scale){
+void Coaster::scaleObject(float scaleRatio){
 	if(mCurrentObject){
 		Ogre::Vector3 scale = mCurrentObject->getScale();
-		mCurrentObject->setScale(scale*scale);
+		mCurrentObject->setScale(scale*scaleRatio);
 	}
 }
 
@@ -790,27 +701,17 @@ bool Coaster::keyPressed(const OIS::KeyEvent& arg)
 			cout << physicsCart->toString(); break;
 
 		case OIS::KC_Q:
-			if(physicsCart->hasTrack() && objectToBePlaced==SUPPORT_ELEMENT_MASK){
-				track.setTrackRotation(controlPointSelected, track.getTrackRotation(controlPointSelected)+(3.14/32));
-				generateTrack();
+			if(adjustHeight){
+				objectScalingUp = true;
 			} else {
-				if(adjustHeight){
-					objectScalingUp = true;
-				} else {
-					objectRotatingLeft = true;
-				}
+				objectRotatingLeft = true;
 			}
 			break;
 		case OIS::KC_E:
-			if(physicsCart->hasTrack() && objectToBePlaced==SUPPORT_ELEMENT_MASK){
-				track.setTrackRotation(controlPointSelected, track.getTrackRotation(controlPointSelected)-(3.14/32));
-				generateTrack();
+			if(adjustHeight){
+				objectScalingDown = true;
 			} else {
-				if(adjustHeight){
-					objectScalingDown = true;
-				} else {
-					objectRotatingRight = true;
-				}
+				objectRotatingRight = true;
 			}
 			break;
 		case OIS::KC_R:
@@ -954,6 +855,117 @@ bool Coaster::keyReleased( const OIS::KeyEvent& arg ){
 	}
 	}
 	return BaseApplication::keyReleased(arg);
+}
+
+
+// Export scene/entity to &out in following format:
+// {
+// sceneName
+// entityName
+// meshName
+// position
+// rotation
+// queryflags
+// scale
+// }
+
+void Coaster::exportOgreEntity(Ogre::SceneNode *scene, Ogre::Entity *ent, std::ostream &out)
+{
+	// Values to export
+	out << "{" << std::endl;
+	out << scene->getName() << std::endl;
+	out << ent->getName() << std::endl;
+	out << ent->getMesh().get()->getName() << std::endl; // Thankyouogre
+	Vector3d pos(scene->getPosition());
+	pos.dump(out);
+	Ogre::Quaternion rotation = scene->getOrientation();
+	out << rotation.w << " " << rotation.x << " " << rotation.y << " " << rotation.z << std::endl;
+	out << ent->getQueryFlags() << std::endl;
+	Vector3d(scene->getScale()).dump(out);
+	out << "}" << std::endl;
+}
+
+void Coaster::exportScene(std::vector<Ogre::SceneNode *> nodes, std::ostream &out)
+{
+	for (int i = 0; i < nodes.size(); i++) {
+		if (nodes[i]->numAttachedObjects() > 0)
+			if (nodes[i]->getName() != "RailsNode" && nodes[i]->getName() != "cartNode")
+				exportOgreEntity(nodes[i], (Ogre::Entity *) nodes[i]->getAttachedObject(0), out);
+	}
+}
+
+Ogre::SceneNode *Coaster::readOgreSceneNode(std::istream &in)
+{
+	char verify;
+
+	in >> verify;
+	if (verify != '{') // Bad, do something about this?
+		;
+
+	std::string sName, eName, mName;
+	Vector3d pos, scale;
+	Ogre::Quaternion rotation;
+	int queryFlags;
+
+	in >> sName;
+	in >> eName;
+	in >> mName;
+	pos.read(in);
+	in >> rotation.w >> rotation.x >> rotation.y >> rotation.z;
+	in >> queryFlags;
+	scale.read(in);
+
+	in >> verify;
+	if (verify != '}') 
+		;
+
+	if(mSceneMgr->hasEntity(eName)){
+		mSceneMgr->destroyEntity(eName);
+	}
+	placedObjects.push_back(eName);
+	mCount++;
+
+	if(eName.find("Controll") != string::npos){
+		mControllPointCount++;
+	}
+
+	Ogre::SceneNode *node = ((Ogre::SceneNode *) mSceneMgr->getRootSceneNode()->getChild("world"))->createChildSceneNode(sName, pos.ogreVector());
+	node->setOrientation(rotation);
+	Ogre::Entity *ent = mSceneMgr->createEntity(eName, mName);
+	ent->setQueryFlags(queryFlags);
+	node->attachObject(ent);
+	node->setScale(scale.ogreVector());
+
+	return node;
+}
+
+std::vector<Ogre::SceneNode *> Coaster::importScene(std::istream &in)
+{
+	std::vector<Ogre::SceneNode *> sceneNodes;
+
+	((Ogre::SceneNode *) mSceneMgr->getRootSceneNode()->getChild("world"))->removeAndDestroyAllChildren();
+
+	for (vector<Ogre::String>::iterator it = placedObjects.begin(); it!=placedObjects.end(); ++it) {
+		if(mSceneMgr->hasEntity(*it)){
+			mSceneMgr->destroyEntity(*it);
+		}
+	}
+
+	placedObjects.clear();
+	mCount = 0;
+	mControllPointCount = 0;
+
+	while (in) {
+		char term;
+		while ((in >> term) && term != '{') ;
+		if (term == '{')
+			in.unget();
+		 else
+			return sceneNodes;
+		if (in)
+			sceneNodes.push_back(readOgreSceneNode(in));
+	}
+	return sceneNodes;
 }
 
 

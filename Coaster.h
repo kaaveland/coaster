@@ -105,7 +105,7 @@ protected:
 	Ogre::String cameraName;
 	void changeViewPoint(void);
 	std::vector<Ogre::String> placedObjects;
-	void Coaster::generateTrack(void);
+	void generateTrack(void);
 
 	Ogre::MeshManager *meshManager;
 	bool adjustHeight;
