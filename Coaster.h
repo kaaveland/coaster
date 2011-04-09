@@ -97,6 +97,8 @@ protected:
 	Ogre::SceneNode *cartNode;
 
 	Ogre::Real highscore_time;
+	Ogre::Real max_fuel;
+	Ogre::Real fuel; // seconds of fuel active
 
 	PhysicsCart *physicsCart;
 
@@ -111,11 +113,15 @@ protected:
 
 	void resetRail(void);
 	void rotateObject(Ogre::Radian rad);
+	void scaleObject(float scale);
 
 	bool objectRotatingRight;
 	bool objectRotatingLeft;
 	bool objectScalingUp;
 	bool objectScalingDown;
+	bool addNewThing;
+
+	
 	//void createRailMesh(const Track track, const bool export_mesh);
 
 	SoundEngine *soundEngine;

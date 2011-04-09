@@ -211,6 +211,10 @@ void PhysicsCart::setThrust(double factor) {
 	thrustFactor = factor;
 }
 
+double PhysicsCart::getThrust(void) {
+	return thrustFactor;
+}
+
 Vector3d PhysicsCart::getPos() const {
 	return vPos;
 }

@@ -225,7 +225,9 @@ Vector3d Track::Eq(double t, const Vector3d p1, const Vector3d p2, const Vector3
 
 void Track::addPos(const Vector3d v, double rotation_radians)
 {
+	
 	nControlPoints += 1;
+	printf("Pos add n:%d x:%f y:%f, z:%f, rotation: %f\n",nControlPoints, v.x, v.y, v.z, rotation_radians);
 	//printf("Add point x:%f y:%f z:%f \n", v.x, v.y, v.z);
     pos.push_back(v);
 	rotations.push_back(rotation_radians);

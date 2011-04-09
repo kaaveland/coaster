@@ -44,6 +44,7 @@ public:
     virtual ~BaseApplication(void);
 
     virtual void go(void);
+	void changeCameraMovement(void);
 
 protected:
     virtual bool setup();
@@ -87,8 +88,10 @@ protected:
     OgreBites::SdkTrayManager* mTrayMgr;
     OgreBites::SdkCameraMan* mCameraMan;       // basic camera controller
     OgreBites::ParamsPanel* mDetailsPanel;     // sample details panel
+	OgreBites::ParamsPanel* mDetailsPanel2;     // sample details panel2
     bool mCursorWasVisible;                    // was cursor visible before dialog appeared
     bool mShutDown;
+	bool mMoveCamera;
 
     //OIS Input devices
     OIS::InputManager* mInputManager;

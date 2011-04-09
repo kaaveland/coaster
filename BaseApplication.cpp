@@ -27,11 +27,13 @@ BaseApplication::BaseApplication(void)
     mTrayMgr(0),
     mCameraMan(0),
     mDetailsPanel(0),
+	mDetailsPanel2(0),
     mCursorWasVisible(false),
     mShutDown(false),
     mInputManager(0),
     mMouse(0),
-    mKeyboard(0)
+    mKeyboard(0),
+	mMoveCamera(true)
 {
 }
 
@@ -117,7 +119,7 @@ void BaseApplication::createFrameListener(void)
     //mTrayMgr->showLogo(OgreBites::TL_BOTTOMRIGHT);
     mTrayMgr->hideCursor();
 
-	/*
+	
     // create a params panel for displaying sample details
     Ogre::StringVector items;
     items.push_back("cam.pX");
@@ -132,18 +134,18 @@ void BaseApplication::createFrameListener(void)
     items.push_back("Filtering");
     items.push_back("Poly Mode");
 
-    mDetailsPanel = mTrayMgr->createParamsPanel(OgreBites::TL_NONE, "DetailsPanel", 200, items);
-    mDetailsPanel->setParamValue(9, "Bilinear");
-    mDetailsPanel->setParamValue(10, "Solid");
-    mDetailsPanel->hide();
-	*/
+    mDetailsPanel2 = mTrayMgr->createParamsPanel(OgreBites::TL_BOTTOMRIGHT, "DetailsPanel2", 200, items);
+    mDetailsPanel2->setParamValue(9, "Bilinear");
+    mDetailsPanel2->setParamValue(10, "Solid");
+    //mDetailsPanel2->hide();
+	
 
 	 // create a params panel for displaying speed so on
-    Ogre::StringVector items;
-    items.push_back("Speed");
-    items.push_back("Time");
+    Ogre::StringVector items2;
+    items2.push_back("Speed");
+    items2.push_back("Time");
 
-    mDetailsPanel = mTrayMgr->createParamsPanel(OgreBites::TL_BOTTOMLEFT, "DetailsPanel", 300, items);
+    mDetailsPanel = mTrayMgr->createParamsPanel(OgreBites::TL_BOTTOMLEFT, "DetailsPanel", 300, items2);
 
     mRoot->addFrameListener(this);
 }
@@ -264,18 +266,18 @@ bool BaseApplication::frameRenderingQueued(const Ogre::FrameEvent& evt)
     if (!mTrayMgr->isDialogVisible())
     {
         mCameraMan->frameRenderingQueued(evt);   // if dialog isn't up, then update the camera
-        /*
-		if (mDetailsPanel->isVisible())   // if details panel is visible, then update its contents
+        
+		if (mDetailsPanel2->isVisible())   // if details panel is visible, then update its contents
         {
-            mDetailsPanel->setParamValue(0, Ogre::StringConverter::toString(mCamera->getDerivedPosition().x));
-            mDetailsPanel->setParamValue(1, Ogre::StringConverter::toString(mCamera->getDerivedPosition().y));
-            mDetailsPanel->setParamValue(2, Ogre::StringConverter::toString(mCamera->getDerivedPosition().z));
-            mDetailsPanel->setParamValue(4, Ogre::StringConverter::toString(mCamera->getDerivedOrientation().w));
-            mDetailsPanel->setParamValue(5, Ogre::StringConverter::toString(mCamera->getDerivedOrientation().x));
-            mDetailsPanel->setParamValue(6, Ogre::StringConverter::toString(mCamera->getDerivedOrientation().y));
-            mDetailsPanel->setParamValue(7, Ogre::StringConverter::toString(mCamera->getDerivedOrientation().z));
+            mDetailsPanel2->setParamValue(0, Ogre::StringConverter::toString(mCamera->getDerivedPosition().x));
+            mDetailsPanel2->setParamValue(1, Ogre::StringConverter::toString(mCamera->getDerivedPosition().y));
+            mDetailsPanel2->setParamValue(2, Ogre::StringConverter::toString(mCamera->getDerivedPosition().z));
+            mDetailsPanel2->setParamValue(4, Ogre::StringConverter::toString(mCamera->getDerivedOrientation().w));
+            mDetailsPanel2->setParamValue(5, Ogre::StringConverter::toString(mCamera->getDerivedOrientation().x));
+            mDetailsPanel2->setParamValue(6, Ogre::StringConverter::toString(mCamera->getDerivedOrientation().y));
+            mDetailsPanel2->setParamValue(7, Ogre::StringConverter::toString(mCamera->getDerivedOrientation().z));
         }
-		*/
+		
     }
 
     return true;
@@ -291,15 +293,15 @@ bool BaseApplication::keyPressed( const OIS::KeyEvent &arg )
     }
     else if (arg.key == OIS::KC_G)   // toggle visibility of even rarer debugging details
     {
-        if (mDetailsPanel->getTrayLocation() == OgreBites::TL_NONE)
+        if (mDetailsPanel2->getTrayLocation() == OgreBites::TL_NONE)
         {
-            mTrayMgr->moveWidgetToTray(mDetailsPanel, OgreBites::TL_TOPRIGHT, 0);
-            mDetailsPanel->show();
+            mTrayMgr->moveWidgetToTray(mDetailsPanel2, OgreBites::TL_TOPRIGHT, 0);
+            mDetailsPanel2->show();
         }
         else
         {
-            mTrayMgr->removeWidgetFromTray(mDetailsPanel);
-            mDetailsPanel->hide();
+            mTrayMgr->removeWidgetFromTray(mDetailsPanel2);
+            mDetailsPanel2->hide();
         }
     }
     else if (arg.key == OIS::KC_T)   // cycle polygon rendering mode
@@ -308,7 +310,7 @@ bool BaseApplication::keyPressed( const OIS::KeyEvent &arg )
         Ogre::TextureFilterOptions tfo;
         unsigned int aniso;
 
-        switch (mDetailsPanel->getParamValue(9).asUTF8()[0])
+        switch (mDetailsPanel2->getParamValue(9).asUTF8()[0])
         {
         case 'B':
             newVal = "Trilinear";
@@ -333,7 +335,7 @@ bool BaseApplication::keyPressed( const OIS::KeyEvent &arg )
 
         Ogre::MaterialManager::getSingleton().setDefaultTextureFiltering(tfo);
         Ogre::MaterialManager::getSingleton().setDefaultAnisotropy(aniso);
-        mDetailsPanel->setParamValue(9, newVal);
+        mDetailsPanel2->setParamValue(9, newVal);
     }
     else if (arg.key == OIS::KC_O)   // cycle polygon rendering mode
     {
@@ -356,7 +358,7 @@ bool BaseApplication::keyPressed( const OIS::KeyEvent &arg )
         }
 
         mCamera->setPolygonMode(pm);
-        mDetailsPanel->setParamValue(10, newVal);
+        mDetailsPanel2->setParamValue(10, newVal);
     }
     else if(arg.key == OIS::KC_F5)   // refresh all textures
     {
@@ -371,14 +373,22 @@ bool BaseApplication::keyPressed( const OIS::KeyEvent &arg )
         mShutDown = true;
     }
 
-    mCameraMan->injectKeyDown(arg);
+	if(mMoveCamera){
+		mCameraMan->injectKeyDown(arg);
+	}
     return true;
 }
 
 bool BaseApplication::keyReleased( const OIS::KeyEvent &arg )
 {
-    mCameraMan->injectKeyUp(arg);
+	if(mMoveCamera){
+		mCameraMan->injectKeyUp(arg);
+	}
     return true;
+}
+
+void BaseApplication::changeCameraMovement(){
+	mMoveCamera = !mMoveCamera;
 }
 
 bool BaseApplication::mouseMoved( const OIS::MouseEvent &arg )

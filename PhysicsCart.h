@@ -41,6 +41,7 @@ public:
 	//
 	// Values outside the range [0.0, 1.0] will cause the thrust to be set to 0.0 and 1.0, respectively.
 	void setThrust(double thrust);
+	double getThrust(void);
 
 	void setSpeed(double v);
 	double getSpeed(void);
