@@ -338,9 +338,14 @@ bool Coaster::frameRenderingQueued(const Ogre::FrameEvent& arg)
 		strs.str("");
 		strs << fixed << highscore_time;
 		std::string time = strs.str();
+
+		strs.str("");
+		strs << fixed << fuel;
+		std::string fuel_str = strs.str();
 		
 		mDetailsPanel->setParamValue(0, speed);
 		mDetailsPanel->setParamValue(1, time);
+		mDetailsPanel->setParamValue(2, fuel_str);
 		
     }
 

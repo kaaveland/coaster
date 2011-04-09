@@ -144,6 +144,7 @@ void BaseApplication::createFrameListener(void)
     Ogre::StringVector items2;
     items2.push_back("Speed");
     items2.push_back("Time");
+    items2.push_back("Fuel");
 
     mDetailsPanel = mTrayMgr->createParamsPanel(OgreBites::TL_BOTTOMLEFT, "DetailsPanel", 300, items2);
 
