@@ -82,6 +82,8 @@ private:
 	Vector3d vForward;
 	double brakingFactor;
 	double thrustFactor;
+	double airResistanceFactor;
+	double airResistanceExponent;
 	
 	// Simulation "constants"
 	const Vector3d gvector;// = Vector3d(0,-9.81,0);

@@ -28,12 +28,14 @@ PhysicsCart::PhysicsCart() : gvector(0,-9.81,0)
 	Ix = 1.0;
 	friction_static = 1.0;
 	friction_glide = 1.0;
-	maxThrust = 5.0; // about 0.5 g 
-	maxBreak = 20.0; // about 2 g
+	maxThrust = 10.0; // about 1 g 
+	maxBreak = 20.0; // about 3 g
 	wheelsOffsetx = 0;
 	wheelsOffsety = 0.5;		// Total widTh of cart becomes 1.0
 	thrustFactor = 0.0;
 	brakingFactor = 0.0;
+	airResistanceFactor = 2.5e-4;
+	airResistanceExponent = 1.8;
 
 	// Assign initial values
 	v = 0;
@@ -101,7 +103,8 @@ double PhysicsCart::calculate_a_T(double deltaDistance) const
 	
 	double a_T = thrustFactor*maxThrust/mass 
 		- direction*brakingFactor*maxBreak
-		+ gvector * track->getTangentVector(new_t);	// Possibly air resistance
+		+ gvector * track->getTangentVector(new_t)
+		- direction*airResistanceFactor*pow(v, airResistanceExponent);
 
 	return a_T;
 }
@@ -119,9 +122,9 @@ void PhysicsCart::nextStep(double dT)
 	if (dT > MAXDELTATIME_LAG) return;
 	calculateNextStep(dT); return;
 
-	int repeats = (int)(dT / MAXDELTATIME) + 1;
-	for (double i = 1; i <= repeats; i++)
-		calculateNextStep(dT * (i/repeats));
+	//int repeats = (int)(dT / MAXDELTATIME) + 1;
+	//for (double i = 1; i <= repeats; i++)
+	//	calculateNextStep(dT * (i/repeats));
 }
 
 void PhysicsCart::calculateNextStep(double dT) {
@@ -132,6 +135,8 @@ void PhysicsCart::calculateNextStep(double dT) {
 		//vAccel = gvector;
 		vPos +=  vVelocity * dT; // + 0.5 * vAccel * dT * dT;
 		vVelocity += gvector * dT;
+		vVelocity -= vVelocity.normalizedCopy() * airResistanceFactor*pow(v, airResistanceExponent) * dT;
+		v = vVelocity.length();
 		return;
 	}
 	
@@ -180,7 +185,7 @@ void PhysicsCart::calculateNextStep(double dT) {
 		//  center of curvature, the cart will lose traction and fly! Should probably have a tolerance here (vertical attitudes).
 		double asdf = v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector;
 		//printf("Case1: %e\n", v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector);
-		if (v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector < 10){ //1e-12
+		if (v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector < -1.0*gvector.length() ){ //1e-12
 			// Disabled for now
 			isFreefalling = true;
 			
@@ -191,7 +196,7 @@ void PhysicsCart::calculateNextStep(double dT) {
 		//  center of curvature, the cart will lose traction and fly! Should probably have a tolerance here (vertical attitudes).
 		double asdf = v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector;
 		//printf("Case2: %e\n", v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector);
-		if (v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector > 10){
+		if (v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector > 1.0*gvector.length()){
 			// Disabled for now
 			isFreefalling = true;
 		}

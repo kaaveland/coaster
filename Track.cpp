@@ -158,7 +158,7 @@ double Track::getTrackLength() const
 
 Vector3d Track::getUnitBinormal(double t) const
 {
-	assert ((getTangentVector(t).cross(getUp(t))).normalizedCopy() != NULLVECTOR);
+	//assert ((getTangentVector(t).cross(getUp(t))).normalizedCopy() != NULLVECTOR);
 	return (getTangentVector(t).cross(getUp(t))).normalizedCopy();
 }
 
