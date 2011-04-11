@@ -62,7 +62,7 @@ queryFlagMap()
 Coaster::~Coaster(void)
 {
 	// Kommentert ut av Per Ivar. Denne linja krasjer
-	mSceneMgr->destroyQuery(mRayScnQuery);
+	if (mSceneMgr) mSceneMgr->destroyQuery(mRayScnQuery);
 	
 	//delete physicsCart;
 	//delete soundEngine;
