@@ -23,9 +23,40 @@ objectScalingUp(false),
 objectScalingDown(false),
 addNewThing(false),
 max_fuel(3),
-fuel(max_fuel) // 3 seconds of fuel is max
+fuel(max_fuel), // 3 seconds of fuel is max
+queryFlagMap()
 {
-	
+		
+		//BILLBOARD_MASK = 1<<0,
+		//HYTTE_MASK = 1<<1,
+		//RAIL_MASK  = 1<<2,
+		//CART_MASK  = 1<<3,
+		//ISLAND_MASK = 1<<4,
+		//CAMERA_MASK = 1<<5,
+		//STONE12_MASK = 1<<6,
+		//STONE17_MASK = 1<<7,
+		//STONE117_MASK = 1<<8,
+		//PALM_TREE_1_MASK = 1<<9,
+		//PALM_TREE_2_MASK = 1<<10,
+		//PALM_TREE_3_MASK = 1<<11,
+		//SUPPORT_ELEMENT_MASK = 1<<12,
+		//YELLOW_SUB_MASK = 1<<13,
+		//END_MASK = 1<<14
+	queryFlagMap[1 << 0] = "billboard.mesh";
+	queryFlagMap[1 << 1] = "hytte.mesh";
+	queryFlagMap[1 << 2] = "railMesh.mesh";
+	queryFlagMap[1 << 3] = "cart.mesh";
+	queryFlagMap[1 << 4] = "island.mesh";
+	queryFlagMap[1 << 5] = "camera.mesh";
+	queryFlagMap[1 << 6] = "stone12.mesh";
+	queryFlagMap[1 << 7] = "stone17.mesh";
+	queryFlagMap[1 << 8] = "stone117.mesh";
+	queryFlagMap[1 << 9] = "palm_tree1.mesh";
+	queryFlagMap[1 << 10] = "palm_tree2.mesh";
+	queryFlagMap[1 << 11] = "palm_tree3.mesh";
+	queryFlagMap[1 << 12] = "support_element.mesh";
+	queryFlagMap[1 << 13] = "yellow_sub.mesh";
+	queryFlagMap[1 << 14] = "end_mask";
 }
 //-------------------------------------------------------------------------------------
 Coaster::~Coaster(void)
@@ -560,7 +591,7 @@ void Coaster::nextObject(void){
 	if(objectToBePlaced == RAIL_MASK){
 		nextObject();
 	}
-	printf("%d obj\n", objectToBePlaced);
+	printf("%s obj\n", queryFlagMap[objectToBePlaced].c_str());
 }
 
 void Coaster::prevObject(void){
@@ -572,7 +603,7 @@ void Coaster::prevObject(void){
 	if(objectToBePlaced == RAIL_MASK){
 		prevObject();
 	}
-	printf("%d obj\n", objectToBePlaced);
+	printf("%s obj\n", queryFlagMap[objectToBePlaced].c_str());
 }
 
 void Coaster::generateTrack(void){
