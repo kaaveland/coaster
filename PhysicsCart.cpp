@@ -34,8 +34,8 @@ PhysicsCart::PhysicsCart() : gvector(0,-9.81,0)
 	wheelsOffsety = 0.5;		// Total widTh of cart becomes 1.0
 	thrustFactor = 0.0;
 	brakingFactor = 0.0;
-	airResistanceFactor = 2.5e-4;
-	airResistanceExponent = 1.8;
+	airResistanceFactor = 6.0e-4;
+	airResistanceExponent = 1.7;
 
 	// Assign initial values
 	v = 0;
@@ -209,6 +209,11 @@ double PhysicsCart::getSpeed() {
 
 void PhysicsCart::setSpeed(double v) {
 	this->v = v;
+}
+
+bool PhysicsCart::isFreeFalling() const
+{
+	return isFreefalling;
 }
 
 void PhysicsCart::setBraking(double factor) {

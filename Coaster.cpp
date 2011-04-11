@@ -102,8 +102,8 @@ void Coaster::createScene(void)
 	Ogre::Vector3 middle(0,0,0);
 	//testNode = this->mSceneMgr->getRootSceneNode()->createChildSceneNode("Testnode", middle);
 				
-	//soundEngine = new SoundEngine(physicsCart, cartNode);
-	//soundEngine->playBackgroundSounds(true);
+	soundEngine = new SoundEngine(physicsCart, cartNode);
+	soundEngine->playBackgroundSounds(true);
 	
 	//soundEngine->addSound(SoundEngine::BLIZZARD01, cartNode);
 
@@ -225,7 +225,7 @@ bool Coaster::frameRenderingQueued(const Ogre::FrameEvent& arg)
 
 		// Update sound engine
 		if (cameraName == "CartCam")
-			;//soundEngine->frameStarted(cartNode, dt);
+			soundEngine->frameStarted(cartNode, dt);
 		else if (cameraName == "PlayerCam") {
 			;//soundEngine->frameStarted(testNode, dt);	// TODO: insert a scene node for the 3rd person camera here
 		}

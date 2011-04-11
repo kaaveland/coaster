@@ -8,7 +8,7 @@
 using std::cout;
 
 // Value for stepping up wind noise
-#define SPEEDSTEP 50.0
+#define SPEEDSTEP 150.0
 
 
 SoundEngine::SoundEngine(PhysicsCart *physicsCart, Ogre::SceneNode *cartNode)
@@ -16,11 +16,14 @@ SoundEngine::SoundEngine(PhysicsCart *physicsCart, Ogre::SceneNode *cartNode)
 	hasScreamed1 = false;
 	hasScreamed2 = false;
 	timeSinceLastScream = 10e6;
+	distSinceLastTrackSound = 10e6;
 	isPlayingBackgroundSounds = false;
 	wind1Channel = INVALID_SOUND_CHANNEL;
 	wind2Channel = INVALID_SOUND_CHANNEL;
-	wind3Channel = INVALID_SOUND_CHANNEL;
+	wind3Channel = INVALID_SOUND_CHANNEL;	
+	screamChannel = INVALID_SOUND_CHANNEL;
 	blizzard1Channel = INVALID_SOUND_CHANNEL;
+	trackSingleChannel = INVALID_SOUND_CHANNEL;
 
 	soundFiles[BLIZZARD01]	= "Blizzard 01.wav";
 	soundFiles[WIND1]		= "Wind 01.wav";
@@ -34,6 +37,7 @@ SoundEngine::SoundEngine(PhysicsCart *physicsCart, Ogre::SceneNode *cartNode)
 	soundFiles[SCREAM5]		= "Screams 05.wav";
 	soundFiles[TRAIN_SLOW]	= "Train 01.wav";
 	soundFiles[TRAIN_FAST]	= "Train 02.wav";	
+	soundFiles[TRAIN_SINGLE] = "Train single.ogg";
 	soundFiles[CRASH1]		= "Crash 01.wav";
 	soundFiles[LAUGH1]		= "Laughs 01.wav";
 
@@ -55,7 +59,7 @@ SoundEngine::~SoundEngine(void)
 bool SoundEngine::loadFiles() {
 
 	std::set<SOUNDCLIP> loopedSounds;
-	loopedSounds.insert(BLIZZARD01); loopedSounds.insert(TRAIN_FAST); loopedSounds.insert(TRAIN_SLOW); 
+	loopedSounds.insert(TRAIN_FAST); loopedSounds.insert(TRAIN_SLOW); 
 	loopedSounds.insert(WIND1); loopedSounds.insert(WIND2); loopedSounds.insert(WIND3);
 	
 	
@@ -92,10 +96,10 @@ void SoundEngine::playBackgroundSounds(bool play)
 		soundManager->GetSoundChannel(blizzard1Channel)->setVolume(0.2);
 
 		soundManager->PlaySound(soundIndexes[SOUNDCLIP::WIND1], cartNode, &wind1Channel);
-		soundManager->GetSoundChannel(wind1Channel)->setVolume(0.02);
+		soundManager->GetSoundChannel(wind1Channel)->setVolume(0.00);
 
 		soundManager->PlaySound(soundIndexes[SOUNDCLIP::WIND2], cartNode, &wind2Channel);
-		soundManager->GetSoundChannel(wind2Channel)->setVolume(0.02);
+		soundManager->GetSoundChannel(wind2Channel)->setVolume(0.00);
 	} else {
 		soundManager->StopSound(&wind1Channel);
 		soundManager->StopSound(&wind2Channel);
@@ -106,12 +110,28 @@ double minmax(double x) { if (x<0.0) return 0.0; if(x > 1.0) return 1.0; return 
 
 void SoundEngine::frameStarted(Ogre::SceneNode *listener, Ogre::Real timeElapsed)
 {
-	int channelIndex = INVALID_SOUND_CHANNEL;
+	if (screamChannel != INVALID_SOUND_CHANNEL) 
+		soundManager->GetSoundChannel(trackSingleChannel)->setVolume(0.4);
+
 	timeSinceLastScream += timeElapsed;
+	distSinceLastTrackSound += physicsCart->getSpeed() * timeElapsed;
 	
 	if (isPlayingBackgroundSounds) {
-		soundManager->GetSoundChannel(wind1Channel)->setVolume(0.2 * minmax(physicsCart->getSpeed() / SPEEDSTEP) + 0.01);
-		soundManager->GetSoundChannel(wind2Channel)->setVolume(0.2 * minmax(physicsCart->getSpeed() - SPEEDSTEP*0.9 / SPEEDSTEP));
+		soundManager->GetSoundChannel(wind1Channel)->setVolume(0.05 * minmax(abs(physicsCart->getSpeed()) / 260) + 0.01);
+		soundManager->GetSoundChannel(wind2Channel)->setVolume(0.05 * minmax(abs(physicsCart->getSpeed()) - SPEEDSTEP*0.9 / 260));
+	}
+
+	//if (physicsCart->isFreeFalling()) soundManager->GetSoundChannel(trackSingleChannel)->stop();
+
+	if (abs(distSinceLastTrackSound) > 100 && !physicsCart->isFreeFalling()) {
+		if (trackSingleChannel != INVALID_SOUND_CHANNEL) {
+			soundManager->GetSoundChannel(trackSingleChannel)->stop();
+			soundManager->GetSoundChannel(trackSingleChannel)->setVolume(1.0 * minmax(abs(physicsCart->getSpeed()) / 260) + 1e-4);
+
+		}
+		soundManager->PlaySound(soundIndexes[TRAIN_SINGLE], cartNode, &trackSingleChannel);
+		soundManager->GetSoundChannel(trackSingleChannel)->setVolume(1.0 * minmax(abs(physicsCart->getSpeed()) / 260) + 1e-4);
+		distSinceLastTrackSound = 0;
 	}
 
 
@@ -121,30 +141,32 @@ void SoundEngine::frameStarted(Ogre::SceneNode *listener, Ogre::Real timeElapsed
 	if (gFactor >= 2.0 && gFactor < 4.0 && timeSinceLastScream > 10.0) {
 		int random = rand() % 100;
 		if (random < 20)
-			soundManager->PlaySound(soundIndexes[SCREAM1], cartNode, &channelIndex);
+			soundManager->PlaySound(soundIndexes[SCREAM1], cartNode, &screamChannel);
 		else if (random > 80)
-			soundManager->PlaySound(soundIndexes[SCREAM2], cartNode, &channelIndex);
+			soundManager->PlaySound(soundIndexes[SCREAM2], cartNode, &screamChannel);
 
 		timeSinceLastScream = 0;
 	
-	} else if (gFactor > 4.0 && gFactor < 15.0 && timeSinceLastScream > 10.0) {
+	} else if (gFactor > 2.0 && gFactor < 4.0 && timeSinceLastScream > 10.0) {
 		int random = rand() % 100;
 		if (random < 30)
-			soundManager->PlaySound(soundIndexes[SCREAM3], cartNode, &channelIndex);
+			soundManager->PlaySound(soundIndexes[SCREAM3], cartNode, &screamChannel);
 			
 		else if (random > 70)
 			
-			soundManager->PlaySound(soundIndexes[SCREAM4], cartNode, &channelIndex);
+			soundManager->PlaySound(soundIndexes[SCREAM4], cartNode, &screamChannel);
 		timeSinceLastScream = 0;
 
-	} else if (gFactor > 15.0 && physicsCart->getSpeed() > 80 && timeSinceLastScream > 5.0) {
-		soundManager->PlaySound(soundIndexes[SCREAM5], cartNode, &channelIndex);
+	} else if (gFactor > 4.0 && physicsCart->getSpeed() > 80 && timeSinceLastScream > 5.0) {
+		soundManager->PlaySound(soundIndexes[SCREAM5], cartNode, &screamChannel);
 		timeSinceLastScream = 0;
 
-	} else if (physicsCart->getSpeed() > 80 && timeSinceLastScream > 10.0) {
+	} else if (physicsCart->isFreeFalling() && timeSinceLastScream > 7.0) {
 		int random = rand() % 100;
-		if (random < 50) 
-			soundManager->PlaySound(soundIndexes[LAUGH1], cartNode, &channelIndex);
+		if (random < 40) 
+			soundManager->PlaySound(soundIndexes[SCREAM2], cartNode, &screamChannel);
+		else if (random > 60)
+			soundManager->PlaySound(soundIndexes[SCREAM1], cartNode, &screamChannel);
 
 		timeSinceLastScream = 0;
 	}
