@@ -99,7 +99,9 @@ double PhysicsCart::calculate_a_T(double deltaDistance) const
 	double new_t = current_t + track->deltaDistanceTodeltaT(deltaDistance, current_t);
 	int direction = 0;
 	/* if (abs(v) > SPEEDCUTOFF_FRICTION )*/
-	direction = (int)(v/abs(v));	// Positive if going forward on track
+	if(v != 0){
+		direction = (int)(v/abs(v));	// Positive if going forward on track
+	}
 	
 	double a_T = thrustFactor*maxThrust/mass 
 		- direction*brakingFactor*maxBreak

@@ -1,0 +1,1364 @@
+diff --git a/.gitignore b/.gitignore
+deleted file mode 100644
+index 6fa8c3d..0000000
+--- a/.gitignore
++++ /dev/null
+@@ -1,5 +0,0 @@
+-Coaster.*
+-Debug/*
+-Intermediate/*
+-Release/*
+-basicTutorial/*
+diff --git a/Coaster.cpp b/Coaster.cpp
+index 50d4d7a..f3abd63 100644
+--- a/Coaster.cpp
++++ b/Coaster.cpp
+@@ -1,6 +1,5 @@
+ #include "Coaster.h"
+-//#include "tests.h"
+-
++ 
+ //-------------------------------------------------------------------------------------
+ Coaster::Coaster(void):
+ mCount(0),
+@@ -39,10 +38,9 @@ void Coaster::createScene(void)
+ 	//Add cart 
+ 	cartNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("cartNode", Ogre::Vector3(0, 0, 0));
+     
+-	Ogre::Entity* cartEnt = mSceneMgr->createEntity("Cart", "minecart.mesh");
++	Ogre::Entity* cartEnt = mSceneMgr->createEntity("Cart", "vogn.mesh");
+ 				  cartEnt->setQueryFlags(CART_MASK);
+ 	cartNode->attachObject(cartEnt);
+-	cartNode->setScale(0.1f, 0.1f, 0.1f);
+ 
+ 
+ 	
+@@ -93,14 +91,14 @@ bool Coaster::frameRenderingQueued(const Ogre::FrameEvent& arg)
+ {
+ 	//delta time
+ 	Ogre::Real dt = arg.timeSinceLastFrame;
+-	
++	/*
+ 	if(physicsCart.hasTrack()){
+ 		Vector3d pos = physicsCart.getPos();
+ 		Ogre::Vector3 ogre_pos= Ogre::Vector3(pos.x, pos.y, pos.z);
+ 		cartNode->setPosition(ogre_pos);
+ 		physicsCart.nextStep(dt);
+ 	}
+-	
++	*/
+ 
+ 	//we want to run everything in the previous frameRenderingQueued call
+ 	//but we also want to do something afterwards, so lets  start off with this
+@@ -186,12 +184,6 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
+ {
+ 	if(id == OIS::MB_Left)
+ 	{
+-		//this->track = test3();
+-		//track.setTrackLength(1000);
+-		//physicsCart.setTrack(&track);
+-		//physicsCart.moveTo(1.0);
+-			
+-
+ 		//show that the current object has been deselected by removing the bounding box visual
+ 		if(mCurrentObject)
+ 		{
+@@ -216,7 +208,7 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
+ 
+ 		Ogre::MeshManager *meshManager = mRoot->getMeshManager();
+ 
+-		bool position_added = true;
++		bool position_added = false;
+  
+ 		for(iter; iter != result.end(); iter++)
+ 		{
+@@ -279,11 +271,10 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
+ 			rail->setQueryFlags(RAIL_MASK);
+ 			railNode->attachObject(rail);
+ 
+-			physicsCart.moveTo(1.0);
++			physicsCart.moveTo(0);
+ 			Vector3d start_pos = physicsCart.getPos();
+ 			Ogre::Vector3 start_pos_ogre = Ogre::Vector3(start_pos.x, start_pos.y, start_pos.z);
+ 			cartNode->setPosition(start_pos_ogre);
+-			printf("Rail generated\n");
+ 			
+ 		}
+  
+diff --git a/GraphicTrack.cpp b/GraphicTrack.cpp
+index 0f8a315..7862d60 100644
+--- a/GraphicTrack.cpp
++++ b/GraphicTrack.cpp
+@@ -23,8 +23,8 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
+ 	Ogre::ManualObject rail("RailObject");
+ 	Ogre::Vector3 size(width / 2, height/2, 0);
+ 
+-	size_t index_count =  track.getSmoothedDelta()*(8*track.getNumberOfPoints())+2;
+-	size_t ver_count = 4*6*track.getNumberOfPoints()*track.getSmoothedDelta();
++	size_t index_count =  track.getSmoothValue()*(8*track.getNumberOfPoints())+2;
++	size_t ver_count = 4*6*track.getNumberOfPoints()*track.getSmoothValue();
+ 
+ 	rail.estimateIndexCount(index_count);
+ 	rail.estimateVertexCount(ver_count);
+@@ -38,7 +38,7 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
+ 
+ 	//printf("Points: %d \n", track.getNumberOfPoints());
+ 
+-	double td = track.getSmoothedDelta();
++	double td = track.getDelta();
+ 	double t = td;
+ 
+ 	Vector3d last_pos = track.getPos(0);
+@@ -46,7 +46,7 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
+ 	Vector3d next_pos = track.getPos(t);
+ 	
+ 	Vector3d diff, norm, last_norm, tangent, last_tangent, up, last_up, norm_parallel;
+-	double norm_length;
++	double norm_scale, norm_length;
+ 
+ 	//normal in crosspoint
+ 	norm = Vector3d(1,0,0);
+@@ -97,7 +97,7 @@ void GraphicTrack::createRailMesh(Track* track2, const bool export_mesh)
+ 	right_front_bottom_left		= Ogre::Vector3(cur_pos.x + norm.x - norm_parallel.x, cur_pos.y - size.y, cur_pos.z + norm.z - norm_parallel.z);
+ 
+ 	t += td;
+-	for(int i=0; i<(track.getNumberOfPoints()-2)*track.getSmoothedDelta(); i++){
++	for(int i=0; i<(track.getNumberOfPoints()-2)*track.getSmoothValue(); i++){
+ 	
+ 		last_pos = cur_pos;
+ 		cur_pos = next_pos;
+diff --git a/PhysicsCart.cpp b/PhysicsCart.cpp
+index 6cc83b3..6403d06 100644
+--- a/PhysicsCart.cpp
++++ b/PhysicsCart.cpp
+@@ -8,18 +8,11 @@
+ #include <cassert>
+ 
+ #define NULL 0
+-#define WILLFLYTOLERANCE 1e-12
+-#define MAXDELTATIME 1e-1
+-#define MAXDELTATIME_LAG 1.0
+-#define SPEEDCUTOFF_FRICTION 1e-12
++#define WILLFLYTOLERANCE 1d-12
+ 
+ using std::stringstream;
+ using std::cout;
+ 
+-int inline signum(double d) {
+-	return (int)((d > 0) - (d < 0));
+-}
+-
+ PhysicsCart::PhysicsCart()
+ {
+ 	// Set "constants"
+@@ -27,26 +20,22 @@ PhysicsCart::PhysicsCart()
+ 	Ix = 1.0;
+ 	friction_static = 1.0;
+ 	friction_glide = 1.0;
++	gravityAccel = 10.0;
+ 	maxThrust = 1.0;
+ 	wheelsOffsetx = 0;
+ 	wheelsOffsety = 0.5;		// Total widTh of cart becomes 1.0
+ 	thrustFactor = brakingFactor = 0.0;
+-	brakingFactor = 10.0;
+ 
+ 	// Assign initial values
+ 	v = 0;
+ 	vVelocity = Vector3d(0,0,0);
+ 	vAccel = Vector3d(0,0,0);
+ 	currentDistance = 0;
+-	current_t = 0;
++	accumDeltaPos = 0.0;
+ 
+-	gvector = Vector3d(0,-10,0);
+-	
+ 	isFreefalling = false;
+ 	track = NULL;
+ 
+-	step = 0;
+-
+ #ifdef DEBUG
+ 	std::cout << "PhysicsCart constructed. \n";
+ #endif
+@@ -69,97 +58,72 @@ bool PhysicsCart::hasTrack() const
+ 
+ void PhysicsCart::moveTo(double distance) {
+ 	assert(track != NULL);
+-	if (distance < 0.0) distance = 0.0;
+-	if (distance > track->getTrackLength()) distance = track->getTrackLength();
++	assert(t >= 0 && t <= 1);
+ 
+-	// Not going to work,  unless iterate over track's get
+ 	currentDistance = distance;
+-	vPos = track->getPos(track->distanceToT(distance));	// FIX
+-	vUp = track->getUp(track->distanceToT(distance));	// FIX
+-	
+-	vVelocity = Vector3d(0,0,0);
+-	v = 0;
+-	vAccel = Vector3d(0,0,0);
+-	
++	vPos = track->getPos(distance);
++	vUp = track->getUp(distance);
++	vVelocity = track->getTangentVector(distance) * this->v;		// Align travel with track direction
++
+ 	isFreefalling = false;
+ }
+ 
+-// Calculates a_T. delta_distance specifies the distance forward or backward to calculate for. If delta_distance is 0.0, 
+-// a_T will be calculated at the PhysicsCart's current distance.
+-double PhysicsCart::calculate_a_T(double deltaDistance) const
+-{	
+-	double new_t = track->distanceToT(currentDistance + deltaDistance);
+-	int direction = 0;
+-	if (abs(v) > SPEEDCUTOFF_FRICTION ) direction = (int)v/abs(v);	// Positive if going forward on track
++void PhysicsCart::nextStep(double dT) {
+ 	
+-	double a_T = thrustFactor*maxThrust/mass 
+-		- 0.0*direction*brakingFactor
+-		+ gvector * track->getTangentVector(new_t);	// Possibly air resistance
+-
+-	return a_T;
+-}
+-
+-double PhysicsCart::calculate_a_N(double deltaDistance) const
+-{
+-	double new_t = track->distanceToT(currentDistance + deltaDistance);
+-	return v*v*track->getCurvature(new_t);
+-}
+-
+-void PhysicsCart::nextStep(double dT)
+-{
+-	assert(track != NULL);
+-
+-	if (dT > MAXDELTATIME_LAG) return;
+-	calculateNextStep(dT); return;
+-
+-	int repeats = (int)(dT / MAXDELTATIME) + 1;
+-	for (double i = 1; i <= repeats; i++)
+-		calculateNextStep(dT * (i/repeats));
+-}
++	const Vector3d gvector(0,-gravityAccel,0);	// OOPS
+ 
+-void PhysicsCart::calculateNextStep(double dT) {
+-		
+-	//cout << toString() << "Moving " << dT << " seconds.\nCurrent distance: " << currentDistance << " / " << track->getTrackLength() << "\n";
++	if (track == NULL) track = new Track(0);	// If no track is set, create a blank track
++	if (currentDistance < 0 || currentDistance >= track->getNumberOfPoints())
++		isFreefalling = true;			// We have gone outside of the track, set to free fall mode.
+ 	
+-	if (currentDistance < 0.0 || currentDistance >= track->getTrackLength())
+-	isFreefalling = true;			// We have gone outside of the track, set to free fall mode
++	double ds_estimate = 0.0;
++	bool isGoingForward = (track->getTangentVector(currentDistance) * vVelocity >= 0.0);
++	int forward = isGoingForward ? 1 : -1;
++	assert (isGoingForward);
++
++	// Update position
++	if (!isFreefalling) {
++		//pos = track->getPos(currentDistance+deltaIndex);				// We "snap" to the start of the segment. NO!
++		this->vPos += dT * vVelocity;		// TESTING
++				
++		// Find the current ds for the track (perhaps this one will be constant? That would be good...)
++		ds_estimate = (track->getPos(currentDistance + forward) - track->getPos(currentDistance)).length();
++		//cout << "ds is " << ds_estimate << "\n";
++
++		// Update velocity
++		vVelocity += dT * vAccel;	// velocity = velocity + accel*dT. Align with tangent vector here too?
++		v = vVelocity.length();
+ 
+-	if (isFreefalling) {
++	} else {
++		this->vPos += dT * vVelocity;		// pos = pos + velocity*dT
+ 		vAccel = gvector;
+-		vPos +=  vVelocity * dT + 0.5 * vAccel * dT * dT;
+-		vVelocity += vAccel * dT;
+-		v = vVelocity.length();
+ 
+-		return;
++		// Update velocity
++		vVelocity += dT * vAccel;	// velocity = velocity + accel*dT
++		v = vVelocity.length();
++				
++		return;			// RETURN --> Free fall. Do nothing more.
+ 	}
+-
+-	//const double trackDeltaDistance = track->getDelta();
+-	//const double current_t = track->metersToT(currentDistance);
+-
+-	int direction = 1; //signum(vVelocity * track->getTangentVector(current_t));
+-	double delta_distance_predicted = dT * v;
+-	//assert (delta_distance_predicted < track->getSmoothedDelta() * track->getSmoothingValue());	
+-	// If not, we will get varying speeds etc. TODO: use minimum segment length or max possible distance per time step to get smoot response
+-	
+-	if (currentDistance + direction*delta_distance_predicted < 0.0 || 
+-		currentDistance + direction*delta_distance_predicted > track->getTrackLength()) { 
+-			isFreefalling = true; 
+-			return;
+-		}	// Out of the track
+ 	
+-	double a_T = 0.5 * (calculate_a_T(0.0) + calculate_a_T(direction*delta_distance_predicted));	// Heun's method
+-	double a_N = 0.5 * (calculate_a_N(0.0) + calculate_a_N(direction*delta_distance_predicted));	//
+-	double delta_distance_corrected = (dT * v + 0.5 * a_T * dT*dT);
+-	v = v + a_T * dT;
++	// Update up vector -- so far it will always be equal to the track segment's current up vector
++	vUp = track->getUp(currentDistance);
++
+ 	
+-	// Snap to track (direction and position)
+-	vVelocity = v * track->getTangentVector(currentDistance + delta_distance_corrected);
+-	vPos = track->getPos(track->distanceToT(currentDistance + delta_distance_corrected));
+-	currentDistance += delta_distance_corrected;
+-			
+-	bool insideCurve = (vUp * track->getNormalVector(currentDistance) >= 0.0);	// true if "inside" curvature
+-	// cout << "a_N is " << a_N << "\n";
++	// Calculate how many segments we will travel during dT. TODO: interpolate
++	Vector3d vDeltaPos = dT * vVelocity;						// ds = v*dT. Note that vVelocity is "updated" once above.
++	int deltaIndex = (int)(vDeltaPos.length()/ds_estimate);		// Change of index, always positive
++	assert (deltaIndex >= 0);
++	//if (deltaIndex < 1) accumDeltaPos += ds_estimate;
++
++	//cout << "deltaIndex is " << deltaIndex << "\n";
+ 		
++	// ---- Not free-falling --- //
++	bool insideCurve = (vUp * track->getNormalVector(currentDistance) >= 0.0);	// true if "inside" curvature
++	double a_N = v*v*track->getCurvature(currentDistance);
++	//cout << "a_N is " << a_N << "\n";
++
++
++
+ 	if (insideCurve) {		// TODO: Simplify
+ 		// If the acceleration required to keep in circular motion is LESS THAN the gravity component towards the
+ 		//  center of curvature, the cart will lose traction and fly! Should probably have a tolerance here (vertical attitudes).
+@@ -174,11 +138,27 @@ void PhysicsCart::calculateNextStep(double dT) {
+ 			isFreefalling = true;
+ 		
+ 	}
++
++	Vector3d accNormal = a_N * track->getNormalVector(currentDistance);
++	
++	// a_T = thrust - braking + G_N
++	double a_T = thrustFactor*maxThrust/mass 
++		- brakingFactor*friction_static*a_N/mass
++		+ gvector * (*track).getTangentVector(currentDistance);	// Possibly air resistance
++	Vector3d accTangential = a_T * track->getTangentVector(currentDistance);	// When going backwards, perhaps currentDistance-1?
++	//cout << "a_T is " << a_T << "\n";
++
++	// Update acceleration vector (state)
++	vAccel = accNormal + accTangential;
++
++	// Increase section index.
++	currentDistance += (forward)*deltaIndex;
+ }
+ 
+ 
+ void PhysicsCart::setSpeed(double v) {
+-
++	assert (v >= 0.0);
++	
+ 	vVelocity = v * track->getTangentVector(currentDistance);
+ 	this->v = v;
+ }
+@@ -194,7 +174,7 @@ Vector3d PhysicsCart::getUp() const {
+ string PhysicsCart::toString() const {
+ 	stringstream res;
+ 	res << "--PhysicsCart info--\n" << 
+-		"Currently on distance: " << currentDistance << "\n" <<
++		"Currently on segment with index: " << currentDistance << "\n" <<
+ 		"isFreefalling = " << isFreefalling << "\n" <<
+ 		"Position = [ " << vPos.x << ", " << vPos.y << ", " << vPos.z << "]\n" <<
+ 		"Up vecto = [" << vUp.x << ", " << vUp.y << ", " << vUp.z << "]\n" << 
+@@ -203,8 +183,9 @@ string PhysicsCart::toString() const {
+ 		"--Track info current index--\n" <<
+ 		"Position = [" << track->getPos(currentDistance).x << ", " << track->getPos(currentDistance).y << ", " << track->getPos(currentDistance).z << "]\n" <<
+ 		"Normal v = [" << track->getNormalVector(currentDistance).x << ", " << track->getNormalVector(currentDistance).y << ", " << track->getNormalVector(currentDistance).z << "]\n" <<
+-		"Tangent  = [" << track->getTangentVector(currentDistance).x << ", " << track->getTangentVector(currentDistance).y << ", " << track->getTangentVector(currentDistance).z << "]\n" <<
+-		"Curvature = " << track->getCurvature(currentDistance) << "\n";
++		"Tangent  = [" << track->getTangentVector(currentDistance).x << ", " << track->getTangentVector(currentDistance).y << ", " << track->getTangentVector(currentDistance).z << "]\n";
+ 		
++
++
+ 	return res.str();
+-}
++}
+\ No newline at end of file
+diff --git a/PhysicsCart.h b/PhysicsCart.h
+index de9d628..4b33794 100644
+--- a/PhysicsCart.h
++++ b/PhysicsCart.h
+@@ -76,24 +76,14 @@ private:
+ 	double thrustFactor;
+ 	
+ 	// Simulation "constants"
+-	Vector3d gvector;
++	double gravityAccel;
+ 
+ 	// Simulation properties
+-	double currentDistance;			// Which distance the cart has travelled
+-	double current_t;				// jepp
+-	
+-	// Helper functions
+-	double calculate_a_T(double deltaDistance) const;
+-	double calculate_a_N(double deltaDistance) const;
+-
+-	void calculateNextStep(double dT);
++	double currentDistance;			// Which Track section index the cart currently is in
++	double accumDeltaPos;		// Used in cases where the time step is too small  BLA BLA BLA BLA MS VS SUCKS
+ 
+ 	Track *track;					// Current main (center) track
+ 	bool isFreefalling;
+ 
+-	// Debugging
+-	int step;
+-
+-
+ };
+ 
+diff --git a/Track.cpp b/Track.cpp
+index 45b6059..6e3daf4 100644
+--- a/Track.cpp
++++ b/Track.cpp
+@@ -3,7 +3,6 @@
+ #include "Track.h"
+ #include "Vector3d.h"
+ #include <cassert>
+-#include <math.h>
+ 
+ #define NULL 0
+ #define DEBUG
+@@ -12,116 +11,79 @@
+ #include <iostream>
+ #endif
+ 
+-void Track::initValues() {
+-	this->trackLength = 1;
+-	this->nControlPoints = 0;
+-	this->delta_t = 1;
+-	this->smoothingValue = 50;
+-	this->lastAccessedTrackIndex = 0;
+-
+-}
+-
+ Track::Track(vector<Vector3d> const &pos, vector<Vector3d> const &up)
+ {
+ 	assert(pos.size() == up.size());
+-	initValues();
+ 
+-	this->nControlPoints = pos.size();
++	this->nPoints = pos.size();
+ 	this->pos = pos;
+ 	this->up = up;
+-	this->arcDistances = vector<double>(1);
+-	this->section_dS = vector<double>(1);
+ 
+ 	this->delta_t = (double)1 / (double)pos.size();
+-	calculateArcDistances();
+-	calculateSections_dS();
+ 
+ }
+ 
+ Track::Track(void) {
+-	initValues();
+-
+-	this->nControlPoints = 0;
++	this->nPoints = 0;
+ 	this->delta_t = 1;
+-	this->trackLength = 1.0;
+-
+-	this->arcDistances = vector<double>();
+-	this->section_dS = vector<double>();
+ 
+-	calculateArcDistances();
+-	calculateSections_dS();
+-	
+ 	//this->generateTrack();
+ }
+ 
+-/*Track::Track(int nControlPoints) {
+-	Track();
+-	this->nControlPoints = nControlPoints;
+-	pos.resize(nControlPoints);
+-	up.resize(nControlPoints);
+-	this->delta_t = (double)1 / (double)nControlPoints;
+-	
++Track::Track(int nPoints) {
++	this->nPoints = nPoints;
++	pos.resize(nPoints);
++	up.resize(nPoints);
++	this->delta_t = (double)1 / (double)nPoints;
++
+ 	//this->generateTrack();
+-}*/
++}
+ 
+ Track::~Track(void)
+ {
+ 		
+ }
+ 
+-double Track::getSmoothedDelta(void) const
++double Track::getDelta(void) const
+ {
+-	return this->delta_t/this->smoothingValue;
++	return this->delta_t/this->smoothValue;
+ }
+ 
+-int Track::getSmoothingValue(void) const
++int Track::getSmoothValue(void) const
+ {
+-	return this->smoothingValue;
++	return this->smoothValue;
+ }
+ 
+ 
+-Vector3d Track::getControlPoint(int index) const
++Vector3d Track::getTrackPoint(int index) const
+ {
+ 	if (index < 0) index = 0;
+-	else if (index >= nControlPoints) index = nControlPoints-1;
+-	assert(index >= 0 && index < nControlPoints);
++	else if (index >= nPoints) index = nPoints-1;
++	assert(index >= 0 && index < nPoints);
+ 
+ 	return pos[index];
+ }
+ 
+-/*void Track::setTrackPoint(double index, Vector3d v)
++void Track::setTrackPoint(int index, Vector3d v)
+ {
+-	assert(index >= 0 && index < nControlPoints);
++	assert(index >= 0 && index < nPoints);
+ 
+-	pos[index] = v;
+-}*/
++	//TODO: delete old?
+ 
+-/*void Track::setTrackLength(double length) {
+-	trackLength = length;
+-}*/
+-
+-double Track::getTrackLength() const
+-{
+-	return trackLength;
++	pos[index] = v;
+ }
+ 
+-Vector3d Track::getControlUp(int index) const
++Vector3d Track::getUp(int index) const
+ {
+-	assert(index >= 0 && index < nControlPoints);
+-	return Vector3d(0,1,0);
+-	//return up[index];
+-}
++	assert(index >= 0 && index < nPoints);
+ 
+-Vector3d Track::getUp(double t) const
+-{
+-	//assert
+-	//interpol
+ 	return Vector3d(0,1,0);
++	//return up[index];
+ }
+ 
+ void Track::setUp(int index, Vector3d v)
+ {
+-	assert(index >= 0 && index < nControlPoints);
++	assert(index >= 0 && index < nPoints);
+ 	
+ 	up[index] = v;
+ }
+@@ -154,21 +116,13 @@ Vector3d Track::Eq(double t, const Vector3d p1, const Vector3d p2, const Vector3
+ 	return (p1*b1 + p2*b2 + p3*b3 + p4*b4);
+ }
+ 
+-// Not going to work now. Need to recalculate distance array
+ void Track::addPos(const Vector3d v)
+ {
+-	nControlPoints += 1;
+-	delta_t = (double)1 / (double)nControlPoints;
++	nPoints += 1;
++	delta_t = (double)1 / (double)nPoints;
+ 	//printf("Add point x:%f y:%f z:%f \n", v.x, v.y, v.z);
+     pos.push_back(v);
+-	//printf("Added point x:%f, y:%f, z:%f \n", getTrackPoint(nControlPoints-1));
+-	this->arcDistances = vector<double>(pos.size());
+-	this->section_dS = vector<double>(pos.size());
+-
+-	this->delta_t = (double)1 / (double)pos.size();
+-	calculateArcDistances();
+-	calculateSections_dS();
+-
++	//printf("Added point x:%f, y:%f, z:%f \n", getTrackPoint(nPoints-1));
+ }
+ 
+ Vector3d Track::getPos(double t) const
+@@ -185,73 +139,31 @@ Vector3d Track::getPos(double t) const
+ 	double lt = (t - delta_t*(double)p) / delta_t;
+ 	// Interpolate
+ 	//printf("lt: %f, p: %d, p0:%d, p1:%d, p2:%d, p3:%d \n", lt, p, p0, p1, p2, p3);
+-	return Track::Eq(lt, getControlPoint(p0), getControlPoint(p1), getControlPoint(p2), getControlPoint(p3));
++	return Track::Eq(lt, getTrackPoint(p0), getTrackPoint(p1), getTrackPoint(p2), getTrackPoint(p3));
+ }
+ 
+-double Track::distanceToT(double distance) const 
+-{
+-	// Check bounds
+-	if (distance <= 0.0) return 0.0;
+-	if (distance >= trackLength) return 1.0;
+-
+-	bool searchForward = (distance >= arcDistances[lastAccessedTrackIndex]);
+-	int searchIndex = lastAccessedTrackIndex;
+-
+-	// Find the segment that meters will "land on"
+-	bool found = false;
+-	while (!found) {
+-		if (searchForward) {
+-			if (arcDistances[searchIndex+1] > distance)
+-				found = true;
+-			else 
+-				searchIndex += searchForward;
+-		}
+-		else {
+-			if (arcDistances[searchIndex-1] < distance)
+-				found = true;
+-			else
+-				searchIndex--;
+-			
+-		}
+-	}
+ 
+-	assert(distance - arcDistances[searchIndex] >= 0.0);
+-	double t = (double)searchIndex / (double)nControlPoints + 1.0/nControlPoints * (distance - arcDistances[searchIndex]) / section_dS[searchIndex];
++double Track::getDistance(int index) const
++{
++	assert(index >= 0 && index < nPoints);
+ 
+-	return t;
++	// Possibly other calculation?
++	// return ds*index;
++	return -1.0;
+ }
+ 
+-//double Track::getDistanceTo(double t) const
+-//{
+-//	assert(false);
+-//	return 0.0;
+-//
+-//	assert(t >= 0.0 && t <= 1.0);
+-//	
+-//	int index = (int)(t*nControlPoints);
+-//	double start_t = index * delta_t;
+-//	double local_t = t - start_t;
+-//
+-//	if (index == nControlPoints-1) return arcDistances[nControlPoints-1];
+-//
+-//	double distance = arcDistances[index];		// This is the arc distance to the start of the segment that contains the point with parameter t
+-//	distance += (arcDistances[index+1]-arcDistances[index]) * (local_t/delta_t);	// Linear interpolation between this and next control point
+-//
+-//	return distance;
+-//}
+-
+ Vector3d Track::getTangentVector(double index) const
+ {
+-	if (index < 0) index = 0; 
+-	else if (index >= 1-getSmoothedDelta()) index = 1-getSmoothedDelta();
++	if (index < 0) index = 0;
++	else if (index >= 1-getDelta()) index = 1-getDelta();
+ 	assert(index >= 0 && index <= 1);
+ 
+-
+ 	//printf("GetTangent t: %f \n", index);
+ 
++
+ 	Vector3d pos0, pos1;
+ 	pos0 = getPos(index);
+-	pos1 = getPos(index+getSmoothedDelta());
++	pos1 = getPos(index+getDelta());
+ 		
+ 	Vector3d tangent = pos1 - pos0;
+ 	double length = tangent.length();
+@@ -267,14 +179,14 @@ double Track::getCurvature(double index) const
+ 	if (index < 0 || index >= 1) return 0.0;
+ 	assert(index >= 0 && index <= 1);
+ 
+-	// printf("GetCurvature t: %f \n", index);
++	//printf("GetCurvature t: %f \n", index);
+ 
+ 	Vector3d pos0, pos1;
+ 	pos0 = this->getPos(index);
+-	pos1 = this->getPos(index+getSmoothedDelta());
++	pos1 = this->getPos(index+getDelta());
+ 	double ds = (pos1 - pos0).length();
+ 	
+-	Vector3d dT = getTangentVector(index+getSmoothedDelta()) - getTangentVector(index);
++	Vector3d dT = getTangentVector(index-getDelta()) - getTangentVector(index);
+ 	dT /= ds;
+ 
+ 	return dT.length();
+@@ -284,24 +196,21 @@ double Track::getCurvature(double index) const
+ Vector3d Track::getNormalVector(double index) const
+ {
+ 	// TODO: assert that normal is not of inf length!
+-	// assert(index >= 0 && index <= 1);
++	assert(index >= 0 && index <= 1);
+ 
+-	// printf("GetNormal t: %f \n", index);
++	//printf("GetNormal t: %f \n", index);
+ 
+ 	// We need one point back and one point forward for the normal vector, so on the boundaries we hack.
+-	if (index <= 0) return getNormalVector(getSmoothedDelta());
+-	if (index >= 1) return getNormalVector(1-getSmoothedDelta());
++	if (index <= 0) return getNormalVector(getDelta());
++	if (index >= 1) return getNormalVector(1-getDelta());
+ 	
+ 	Vector3d T0, T1;
+-	T0 = getTangentVector(index-getSmoothedDelta());
++	T0 = getTangentVector(index-getDelta());
+ 	T1 = getTangentVector(index);
+ 		
+ 	// The normal vector points towards T1-T0
+ 	Vector3d normal = T1 - T0;
+ 	double length = normal.length();
+-
+-	normal /= length;
+-		
+ 	if(length < 0.0001){
+ 		//WARNING: Should not happen
+ 		normal = Vector3d(0, 1, 0);
+@@ -310,29 +219,59 @@ Vector3d Track::getNormalVector(double index) const
+ 	return normal;
+ }
+ 
+-
+ void Track::generateTrack(void)
+ {
+ 
+-	// Generate test track 2
+-	// Loop/circle radius 50.0 with center in origo.
+-	const int nControlPoints = 1000;
+ 	const double PI = acos(-1.0);
+-
+-	this->pos.clear();
+-	this->up.clear();
+-	pos.resize(nControlPoints);
+-	up.resize(nControlPoints);
+-
+-	for (int i = 0; i < nControlPoints; i++) {
+-		Vector3d p(50.0*cos(1.0*i/nControlPoints *2*PI - PI/2), 50.0*sin(1.0*i/nControlPoints *2*PI - PI/2), 0.0);
+-		up[i] = -p/p.length();
+-		
+-		p += Vector3d(0,100,0);	// move up 100 units
+-		pos[i] = p;
++	Vector3d v(0,0,0);
++	Vector3d v_0(0,0,0);
++
++	v.x = 0;
++	v.z = 20;
++	this->setTrackPoint(0, v);
++	this->setUp(0, v_0);
++
++	v.x = 20;
++	v.z = 0;
++	this->setTrackPoint(1, v);
++	this->setUp(0, v_0);
++
++	v.x = 0;
++	v.z = -20;
++	this->setTrackPoint(2, v);
++	this->setUp(0, v_0);
++
++	v.x = -20;
++	v.y = 20;
++	v.z = 0;
++	this->setTrackPoint(3, v);
++	this->setUp(0, v_0);
++
++	v.x = 10;
++	v.y = -20;
++	v.z = 20;
++	this->setTrackPoint(4, v);
++	this->setUp(0, v_0);
++
++	v.x = 40;
++	v.y = -60;
++	v.z = 40;
++	this->setTrackPoint(5, v);
++	this->setUp(0, v_0);
++
++
++	/*
++	for (int i = 0; i < this->nPoints; i++) {
++		v.x = 5*i;
++		v.y = 100;
++		v.z = v.z*2;
++		this->setTrackPoint(i, v);
++
++		this->setUp(i, v_0);
+ 	}
++	*/
+ 	
+-} 
++}
+ 
+ /*
+ void Track::getParallelTrack(double offset, Track &track) const 
+@@ -341,11 +280,11 @@ void Track::getParallelTrack(double offset, Track &track) const
+ 	std::cout << "Generating data for parallel Track...";
+ #endif
+ 
+-	assert(nControlPoints == track.nControlPoints);
++	assert(nPoints == track.nPoints);
+ 	
+ 	Vector3d perpendicularVector, up, tangent;
+ 	
+-	for (int i = 0; i < nControlPoints-1; i++) {	
++	for (int i = 0; i < nPoints-1; i++) {	
+ 		// Get the up and tangential vector for this section
+ 		up *= getUp(i);
+ 		tangent = getTangentVector(i);
+@@ -374,43 +313,8 @@ void Track::getParallelTrack(double offset, Track &track) const
+ }
+ */
+ 
+-void Track::calculateArcDistances()
+-{
+-	assert(arcDistances.size() == nControlPoints);
+-	
+-	if (nControlPoints == 0) return;
+-
+-	arcDistances[0] = 0.0;
+-	for (int i=1; i<nControlPoints; i++) {
+-		
+-		arcDistances[i] = arcDistances[i-1];
+-		double tstart = (double)i/nControlPoints;
+-
+-		// Step throug this segment and accumulate arc lengths
+-		for (double dt = 0.0; dt < 1.0/nControlPoints; dt += delta_t/smoothingValue)
+-			arcDistances[i] += (getPos(dt + delta_t/smoothingValue) - getPos(dt)).length(); 
+-	}
+-
+-	this->trackLength = arcDistances[nControlPoints-1];
+-}
+-
+-void Track::calculateSections_dS() {
+-	assert (section_dS.size() == nControlPoints);
+-	if (nControlPoints == 0) return;
+-
+-	for (int i=0; i < nControlPoints - 1; i++) {
+-		section_dS[i] = (arcDistances[i+1]-arcDistances[i]);
+-	}
+-	section_dS[nControlPoints-1] = 0.0;
+-}
+-
+-double Track::getSection_dS(double t) const 
+-{
+-	return section_dS[(int)(nControlPoints*t)];
+-}
+-
+ int Track::getNumberOfPoints(void) const
+ {
+-	return this->nControlPoints;
++	return this->nPoints;
+ }
+ 
+diff --git a/Track.h b/Track.h
+index 5a0a92a..4e8fdc4 100644
+--- a/Track.h
++++ b/Track.h
+@@ -24,13 +24,12 @@ public:
+ 	
+ 	~Track(void);
+ 	
+-	/* void setTrackPoint(double index, Vector3d v); */
++	void setTrackPoint(int index, Vector3d v);
+ 
+-	void setUp(int index, Vector3d v);
++	// Gives the track's unit up vector at the given segment.
++	Vector3d getUp(int index) const;
+ 
+-	// Gives the track's unit up vector at the given t value.
+-	Vector3d getControlUp(int index) const;
+-	Vector3d getUp(double t) const;
++	void setUp(int index, Vector3d v);
+ 	
+ 	// Gives the unit tangent vector at the given segment.
+ 	Vector3d getTangentVector(double index) const;
+@@ -44,7 +43,7 @@ public:
+ 
+ 
+ 	// Load and fill the track with points
+-	/* void generateTrack(void); */
++	void generateTrack(void);
+ 
+ 	// Calculates the data for a track that is parallel to this instance, offset at
+ 	// the given distance. The new track is offset at the given distance perpendicular both to the Track's up vector
+@@ -58,46 +57,31 @@ public:
+ 	 // Operations
+     void addPos(const Vector3d v);
+ 	Vector3d getPos(double t) const;   // t = 0...1; 0=pos[0] ... 1=pos[max]
+-	double distanceToT(double distance) const;	// meters = [0, trackLength];
+ 
+     // Static method for computing the Catmull-Rom parametric equation
+     // given a time (t) and a vector quadruple (p1,p2,p3,p4).
+     Vector3d Eq(double t, const Vector3d p1, const Vector3d p2, const Vector3d p3, const Vector3d p4) const;
+ 
+-	double getSmoothedDelta(void) const;
+-	int getSmoothingValue(void) const;
+-
+-	// Returns the arc distance from start to the point of the given track parameter.
+-	//double getDistanceTo(double t) const;	
+-	double getSection_dS(double t) const;
+-	
+-	// Set the (dimensional/in meters) length of the track
+-	// void setTrackLength(double length);
+-	double getTrackLength() const;
++	double getDelta(void) const;
++	int getSmoothValue(void) const;
+ 
+ protected:
+-	int nControlPoints;
++	int nPoints;
+ 	std::vector<Vector3d> pos;
+ 	std::vector<Vector3d> up;
+-	std::vector<double> arcDistances;	// A vector that contains the (accumulative) arc distances to each of the control points.
+-	std::vector<double> section_dS;		// A vector that contains the dS values for each segment
+ 	double delta_t;
+-	int smoothingValue;
+-	double trackLength;
++	static int const smoothValue = 50;
+ 	//double trackLength, ds;
+ 
+ 	// returns vector at distance [0,1]
+-	//Vector3d inline getVectorAt(double distance) const;
+-		
++	Vector3d inline getVectorAt(double distance) const;
++	
++	// Returns the distance travelled to the start of the given track section.
++	double inline getDistance(int index) const;	
++	
+ private:
+-	Vector3d getControlPoint(int n) const;
+-	void generateTrack();
+-	void initValues();
+-	void calculateArcDistances();
+-	void calculateSections_dS();
++	Vector3d getTrackPoint(int index) const;
+ 
+-	int lastAccessedTrackIndex;
+-	
+ };
+ 
+ #endif // __Track_h_
+\ No newline at end of file
+diff --git a/tests.cpp b/tests.cpp
+new file mode 100644
+index 0000000..56428ae
+--- /dev/null
++++ b/tests.cpp
+@@ -0,0 +1,177 @@
++#include <cmath>
++#include <iostream>
++#include <string>
++#include <fstream>
++#include <vector>
++#include "Vector3d.h"
++#include "Track.h"
++#include "PhysicsCart.h"
++
++using namespace std;
++
++void printVector(Vector3d v) {
++	cout << "[" << v[0] << ", " << v[1] << ", " << v[2] << "]";
++}
++
++double inline vectorDot(Vector3d v0, Vector3d v1)
++{
++	return (v0[0]*v1[0] + v0[1]*v1[1] + v0[2]*v1[2]);
++}
++
++
++void test1() {
++
++	// Generate test track 1 [OK]
++	// Half-sine wave.
++	
++	const int nPoints = 1000;
++	const double PI = acos(-1.0);
++
++
++	vector<Vector3d> points;
++	points.resize(nPoints);
++	vector<Vector3d> up;
++	up.resize(nPoints);
++
++	for (int i = 0; i < nPoints; i++) {
++		points[i].x = PI*i/(nPoints-1);
++		points[i].y = sin(PI* 1.0*i/(nPoints-1));
++		points[i].z = 0.0;
++		up[i].x = 0.0;
++		up[i].y = 0.0;
++		up[i].z = 1.0;
++	}
++
++	int index = 1;//nPoints/2;
++		
++	// Track tests
++	Track track(points, up);
++	Vector3d temp, norm, tang;
++	
++	temp = track.getPos(index);
++	cout << "Pos: "; printVector(temp); cout << endl;
++		
++	norm = track.getNormalVector(index);
++	cout << "Normal: ";  printVector(norm); cout << endl;
++
++	tang = track.getTangentVector(index);
++	cout << "Tangent: ";  printVector(tang);; cout << endl;
++	cout << "Curvature: " << track.getCurvature(index) << endl;
++
++	cout << "N dot T: " << vectorDot(norm, tang) << endl;
++
++	temp = track.getUp(index);
++	cout << "Up: "; printVector(temp); cout << endl;
++	
++	// Create parallel track test [OK]
++	/* Track parallel(nPoints);
++	track.getParallelTrack(1.0, parallel);
++
++	temp = parallel.getPos(index);
++	cout << "Pos: "; printVector(temp); cout << endl;
++	temp = parallel.getPos(0);
++	cout << "Pos(i=0): "; printVector(temp); cout << endl;
++
++	temp = parallel.getNormalVector(index);
++	cout << "Normal: "; printVector(temp); cout << endl;
++
++	temp = parallel.getTangentVector(index);
++	cout << "Tangent: "; printVector(temp); cout << endl;
++	cout << "Curvature: " << track.getCurvature(index) << endl;
++
++	temp = parallel.getUp(index);
++	cout << "Up: "; printVector(temp); cout << endl;
++
++	cout << "\nEND TRACK TESTS\n";
++	*/
++
++	// Cart test 1
++	
++	PhysicsCart cart;
++	cart.setTrack(&track);
++	cart.moveToIndex(nPoints/2+100);
++	for (int i=0; i < 1000; i++) {	// 10 seconds of simulation
++
++		cart.nextStep(0.01);
++		cout << cart.toString() << endl;
++		cin.get();
++	}
++	
++		
++	cin.get();
++
++
++}
++
++void test2() {
++	// Generate test track 2
++	// Loop/circle radius 1.0 with center in origo.
++	const int nPoints = 1000;
++	const double PI = acos(-1.0);
++
++	vector<Vector3d> points;
++	points.resize(nPoints);
++	vector<Vector3d> up;
++	up.resize(nPoints);
++
++	for (int i = 0; i < nPoints; i++) {
++		Vector3d pos(1.0*cos(1.0*i/nPoints *2*PI - PI/2), 1.0*sin(1.0*i/nPoints *2*PI - PI/2), 0.0);
++		points[i] = pos;
++		up[i] = -pos;
++	}
++
++	int index = 1;//nPoints/2;
++		
++	// Track tests
++	Track track(points, up);
++	Vector3d temp, norm, tang;
++	
++	temp = track.getPos(index);
++	cout << "Pos: "; printVector(temp); cout << endl;
++		
++	norm = track.getNormalVector(index);
++	cout << "Normal: ";  printVector(norm); cout << endl;
++
++	tang = track.getTangentVector(index);
++	cout << "Tangent: ";  printVector(tang);; cout << endl;
++	cout << "Curvature: " << track.getCurvature(index) << endl;
++
++	cout << "N dot T: " << vectorDot(norm, tang) << endl;
++
++	temp = track.getUp(index);
++	cout << "Up: "; printVector(temp); cout << endl;
++	
++	
++	// Cart test 1
++	
++	PhysicsCart cart;
++	cart.setTrack(&track);
++	cart.moveToIndex(0);
++	cart.setSpeed(20.0);
++	
++	for (int i=0; i < 100000; i++) {
++
++		cart.nextStep(0.001);
++		cout << cart.toString() << endl;
++		cin.get();
++	}
++	
++		
++	cin.get();
++
++
++
++}
++
++void testVector3d() {
++	Vector3d x(1,0,0);
++	Vector3d y(0,1,0);
++	cout << "Dot: " << x*y << endl;
++	cout << "Cross: "; printVector(x.cross(y));
++	cout << "\nSum: "; printVector(x+y);
++	cout << "\nDiff: "; printVector(x-y);
++	cout << "\nx * 2.5 = "; printVector(x * 2.5);
++	cout << "\n2.5 * x = "; printVector(2.5 * x);
++	cin.get();
++	
++}
+diff --git a/tests.h b/tests.h
+deleted file mode 100644
+index 9b2f28d..0000000
+--- a/tests.h
++++ /dev/null
+@@ -1,224 +0,0 @@
+-#include <cmath>
+-#include <iostream>
+-#include <string>
+-#include <fstream>
+-#include <vector>
+-#include "Vector3d.h"
+-#include "Track.h"
+-#include "PhysicsCart.h"
+-
+-using namespace std;
+-
+-void static printVector(Vector3d v) {
+-	cout << "[" << v[0] << ", " << v[1] << ", " << v[2] << "]";
+-}
+-
+-double static inline vectorDot(Vector3d v0, Vector3d v1)
+-{
+-	return (v0[0]*v1[0] + v0[1]*v1[1] + v0[2]*v1[2]);
+-}
+-
+-static void test4() {
+-
+-	vector<Vector3d> points;
+-	points.push_back(Vector3d(0,0,0));
+-	points.push_back(Vector3d(0.4,0,0));
+-	points.push_back(Vector3d(0.8,0,0));
+-	points.push_back(Vector3d(1.0,0,0));
+-	Track track(points, points);
+-	Vector3d punkt = track.getPos(0.5);
+-	printf("%lf %lf %lf\n", punkt.x, punkt.y, punkt.z);
+-	
+-	char c;
+-	cin >> c;
+-	system("pause");
+-}
+-
+-static Track test3() {
+-
+-	vector<Vector3d> points(6);
+-	points.clear();
+-
+-	points.push_back(Vector3d(0,400,0));
+-	points.push_back(Vector3d(50,320,10));
+-	points.push_back(Vector3d(200,120,40));
+-	points.push_back(Vector3d(300,150,50));
+-	points.push_back(Vector3d(450,240,90));
+-	points.push_back(Vector3d(400,410,200));
+-
+-	vector<Vector3d> up(6);
+-	up.clear();
+-
+-	for (int i=0; i <= 5; i++) up.push_back(Vector3d(0,1,0));
+-	
+-
+-	return Track(points, up);
+-}
+-
+-static Track* test1() {
+-
+-	// Generate test track 1 [OK]
+-	// Half-sine wave.
+-	
+-	const int nPoints = 1000;
+-	const double PI = acos(-1.0);
+-
+-
+-	vector<Vector3d> points;
+-	points.resize(nPoints);
+-	vector<Vector3d> up;
+-	up.resize(nPoints);
+-
+-	for (int i = 0; i < nPoints; i++) {
+-		points[i].x = PI*i/(nPoints-1);
+-		points[i].y = sin(PI* 1.0*i/(nPoints-1));
+-		points[i].z = 0.0;
+-		up[i].x = 0.0;
+-		up[i].y = 0.0;
+-		up[i].z = 1.0;
+-	}
+-
+-	int index = 1;//nPoints/2;
+-		
+-	// Track tests
+-	Track* track = new Track(points, up);
+-	Vector3d temp, norm, tang;
+-	
+-	temp = track->getPos(index);
+-	cout << "Pos: "; printVector(temp); cout << endl;
+-		
+-	norm = track->getNormalVector(index);
+-	cout << "Normal: ";  printVector(norm); cout << endl;
+-
+-	tang = track->getTangentVector(index);
+-	cout << "Tangent: ";  printVector(tang);; cout << endl;
+-	cout << "Curvature: " << track->getCurvature(index) << endl;
+-
+-	cout << "N dot T: " << vectorDot(norm, tang) << endl;
+-
+-	temp = track->getUp(index);
+-	cout << "Up: "; printVector(temp); cout << endl;
+-
+-	return track;
+-	
+-	// Create parallel track test [OK]
+-	/* Track parallel(nPoints);
+-	track->getParallelTrack(1->0, parallel);
+-
+-	temp = parallel->getPos(index);
+-	cout << "Pos: "; printVector(temp); cout << endl;
+-	temp = parallel->getPos(0);
+-	cout << "Pos(i=0): "; printVector(temp); cout << endl;
+-
+-	temp = parallel->getNormalVector(index);
+-	cout << "Normal: "; printVector(temp); cout << endl;
+-
+-	temp = parallel->getTangentVector(index);
+-	cout << "Tangent: "; printVector(temp); cout << endl;
+-	cout << "Curvature: " << track->getCurvature(index) << endl;
+-
+-	temp = parallel->getUp(index);
+-	cout << "Up: "; printVector(temp); cout << endl;
+-
+-	cout << "\nEND TRACK TESTS\n";
+-	*/
+-
+-	// Cart test 1
+-	
+-//	PhysicsCart cart;
+-	//cart.setTrack(&track);
+-
+-	
+-	//cart.moveTo(0.0);
+-	//cart.setSpeed(4.0);
+-	
+-	
+-	/*for (int i=0; i < 1000; i++) {	// 10 seconds of simulation
+-
+-		cart.nextStep(0.01);
+-		cout << cart.toString() << endl;
+-		//char c;
+-		//cin.get(c);
+-		//if (tolower(c) == 'r') goto restart;
+-		//else if (tolower(c) == 'q') return;
+-	}*/
+-	
+-		
+-	//cin.get();
+-
+-
+-}
+-
+-static void test2(Track &track) {
+-	// Generate test track 2
+-	// Loop/circle radius 1.0 with center in origo.
+-	const int nPoints = 1000;
+-	const double PI = acos(-1.0);
+-
+-	vector<Vector3d> points;
+-	points.resize(nPoints);
+-	vector<Vector3d> up;
+-	up.resize(nPoints);
+-
+-	for (int i = 0; i < nPoints; i++) {
+-		Vector3d pos(1.0*cos(1.0*i/nPoints *2*PI - PI/2), 1.0*sin(1.0*i/nPoints *2*PI - PI/2), 0.0);
+-		points[i] = pos;
+-		up[i] = -pos;
+-	}
+-
+-	double index = 0.0;//nPoints/2;
+-		
+-	// Track tests
+-	track = Track(points, up);
+-	Vector3d temp, norm, tang;
+-	
+-	temp = track.getPos(index);
+-	cout << "Pos: "; printVector(temp); cout << endl;
+-		
+-	norm = track.getNormalVector(index);
+-	cout << "Normal: ";  printVector(norm); cout << endl;
+-
+-	tang = track.getTangentVector(index);
+-	cout << "Tangent: ";  printVector(tang);; cout << endl;
+-	cout << "Curvature: " << track.getCurvature(index) << endl;
+-
+-	cout << "N dot T: " << vectorDot(norm, tang) << endl;
+-
+-	temp = track.getUp((int)index);
+-	cout << "Up: "; printVector(temp); cout << endl;
+-	
+-	
+-	// Cart test 1
+-	
+-	PhysicsCart cart;
+-	cart.setTrack(&track);
+-	//track.setTrackLength(PI);
+-	cart.moveTo(0.0);
+-	cart.setSpeed(20.0);
+-	
+-	/*for (int i=0; i < 100000; i++) {
+-
+-		cart.nextStep(0.001);
+-		//cout << cart.toString() << endl;
+-		//cin.get();
+-	}*/
+-	
+-		
+-	//cin.get();
+-
+-
+-
+-}
+-
+-static void testVector3d() {
+-	Vector3d x(1,0,0);
+-	Vector3d y(0,1,0);
+-	cout << "Dot: " << x*y << endl;
+-	cout << "Cross: "; printVector(x.cross(y));
+-	cout << "\nSum: "; printVector(x+y);
+-	cout << "\nDiff: "; printVector(x-y);
+-	cout << "\nx * 2.5 = "; printVector(x * 2.5);
+-	cout << "\n2.5 * x = "; printVector(2.5 * x);
+-	cin.get();
+-	
+-}
