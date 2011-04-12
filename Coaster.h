@@ -53,6 +53,7 @@ public:
 		YELLOW_SUB_MASK = 1<<11,
 		END_MASK = 1<<12
 	};
+	std::map<int, std::string> queryFlagMap;
 
 	//end mask sier hvilket objekt som er siste i listen, increase!
 

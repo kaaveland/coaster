@@ -31,6 +31,7 @@ public:
 		CRASH1,
 		TRAIN_SLOW,
 		TRAIN_FAST,
+		TRAIN_SINGLE,
 		LAUGH1
 	};
 
@@ -48,10 +49,13 @@ private:
 	int wind1Channel;
 	int wind2Channel;
 	int wind3Channel;
+	int screamChannel;
+	int trackSingleChannel;
 
 	bool hasScreamed1; 
 	bool hasScreamed2;
 	double timeSinceLastScream;
+	double distSinceLastTrackSound;
 	bool isPlayingBackgroundSounds;
 
 	Ogre::SceneNode *cartNode;
