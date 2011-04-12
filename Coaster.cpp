@@ -24,7 +24,9 @@ objectScalingDown(false),
 addNewThing(false),
 max_fuel(3),
 fuel(max_fuel), // 3 seconds of fuel is max
-queryFlagMap()
+queryFlagMap(),
+mCurrentSkyBox(0),
+finished(false)
 {
 		
 		//BILLBOARD_MASK = 1<<0,
@@ -55,6 +57,18 @@ queryFlagMap()
 	queryFlagMap[1 << 10] = "support_element.mesh";
 	queryFlagMap[1 << 11] = "yellow_sub.mesh";
 	queryFlagMap[1 << 12] = "end_mask";
+
+	mSkyBoxes[0] = "Sky/ClubTropicana";
+	mSkyBoxes[1] = "Sky/EarlyMorning";
+	mSkyBoxes[2] = "Sky/Clouds";
+
+	mSunPosition[0] = Ogre::Vector3(0,10000,0);
+	mSunPosition[1] = Ogre::Vector3(0,10000,90000);
+	mSunPosition[2] = Ogre::Vector3(0,10000,0);
+
+	mSunColor[0] = Ogre::Vector3(1, 0.9, 0.6);
+	mSunColor[1] = Ogre::Vector3(1,0.6,0.4);
+	mSunColor[2] = Ogre::Vector3(0.45,0.45,0.45);
 }
 //----------------------------------------------------------------------%---------------
 Coaster::~Coaster(void)
@@ -168,14 +182,15 @@ void Coaster::createScene(void)
     l->setPosition(20,80,50);
  
 	//camera change setup
-	mCamera->setPosition(2000, 500, 1000);
+	mCamera->setPosition(2080, 573, 300);
 	mCamera->pitch(Ogre::Degree(-15));
-	mCamera->yaw(Ogre::Degree(-90));
+	mCamera->yaw(Ogre::Degree(90));
 	mCamera->setNearClipDistance(0.5f);
  
 	//CEGUI setup
 	mGUIRenderer = &CEGUI::OgreRenderer::bootstrapSystem();
- 
+
+
 	//show the CEGUI cursor
 	CEGUI::SchemeManager::getSingleton().create((CEGUI::utf8*)"TaharezLook.scheme");
 	CEGUI::MouseCursor::getSingleton().setImage("TaharezLook", "MouseArrow");
@@ -189,8 +204,9 @@ void Coaster::createScene(void)
 	soundEngine->playBackgroundSounds(true);
 	
 	//soundEngine->addSound(SoundEngine::BLIZZARD01, cartNode);
-
-	//debugImport();
+	
+	debugImport();
+	changeViewPoint();
 }
 
 void Coaster::changeViewPoint(void){
@@ -242,7 +258,11 @@ bool Coaster::frameRenderingQueued(const Ogre::FrameEvent& arg)
 	//delta time
 	Ogre::Real dt = arg.timeSinceLastFrame;
 
-	highscore_time += dt;
+	mHydrax->update(dt);
+
+	if(!finished){
+		highscore_time += dt;
+	}
 	if(physicsCart->getThrust() > 0){
 		// if full thrust (1) then burn full fuel
 		fuel -= physicsCart->getThrust()*dt;
@@ -272,7 +292,6 @@ bool Coaster::frameRenderingQueued(const Ogre::FrameEvent& arg)
 		if(physicsCart->hasTrack() && objectToBePlaced==SUPPORT_ELEMENT_MASK){
 			printf("Turn track left\n");
 			track.setTrackRotation(controlPointSelected, track.getTrackRotation(controlPointSelected)-(3.14/128));
-			printf("CTrl: %d After rotation: %f\n", controlPointSelected, track.getTrackRotation(controlPointSelected));
 			generateTrack();
 		} else {
 			this->rotateObject(Ogre::Radian(Ogre::Degree(-15*dt)));
@@ -308,6 +327,11 @@ bool Coaster::frameRenderingQueued(const Ogre::FrameEvent& arg)
 			physicsCart->nextStep(dt);
 		}
 
+		double cur_t = physicsCart->getCurrentT();
+		if(cur_t > 0.999){
+			finished = true;
+		}
+
 		// Update sound engine
 		if (cameraName == "CartCam")
 			soundEngine->frameStarted(cartNode, dt);
@@ -328,15 +352,14 @@ bool Coaster::frameRenderingQueued(const Ogre::FrameEvent& arg)
 		strs << fixed << highscore_time;
 		std::string time = strs.str();
 
-		strs.str("");
-		strs << fixed << fuel;
-		std::string fuel_str = strs.str();
-		
 		mDetailsPanel->setParamValue(0, speed);
 		mDetailsPanel->setParamValue(1, time);
-		mDetailsPanel->setParamValue(2, fuel_str);
 		
     }
+
+	if(mSpeedBar->isVisible()){
+		mSpeedBar->setProgress(fuel/max_fuel);
+	}
 
 	//we want to run everything in the previous frameRenderingQueued call
 	//but we also want to do something afterwards, so lets  start off with this
@@ -609,6 +632,7 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 
 				//lets shrink the object, only because the terrain is pretty small
 				if(objectToBePlaced == PALM_TREE_MASK){
+					mCurrentObject->pitch(Ogre::Degree(90));
 					mCurrentObject->setScale(1.5f, 1.5f, 1.5f);
 				} else {
 					mCurrentObject->setScale(0.1f, 0.1f, 0.1f);
@@ -772,8 +796,15 @@ bool Coaster::keyPressed(const OIS::KeyEvent& arg)
 			this->physicsCart->moveTo(0);
 			highscore_time = 0;
 			break;
-		case OIS::KC_5:
-			this->physicsCart->moveTo(0.5*track.getTrackLength()); break;
+		case OIS::KC_1: this->physicsCart->moveTo(0.1*track.getTrackLength()); break;
+		case OIS::KC_2: this->physicsCart->moveTo(0.2*track.getTrackLength()); break;
+		case OIS::KC_3: this->physicsCart->moveTo(0.3*track.getTrackLength()); break;
+		case OIS::KC_4: this->physicsCart->moveTo(0.4*track.getTrackLength()); break;
+		case OIS::KC_5: this->physicsCart->moveTo(0.5*track.getTrackLength()); break;
+		case OIS::KC_6: this->physicsCart->moveTo(0.6*track.getTrackLength()); break;
+		case OIS::KC_7: this->physicsCart->moveTo(0.7*track.getTrackLength()); break;
+		case OIS::KC_8: this->physicsCart->moveTo(0.8*track.getTrackLength()); break;
+		case OIS::KC_9: this->physicsCart->moveTo(0.9*track.getTrackLength()); break;
 		case OIS::KC_M:
 			physicsCart->setBraking(0.0);
 			this->physicsCart->setThrust(1.0); 
@@ -1120,7 +1151,7 @@ extern "C" {
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
 			std::cerr << "An exception has occured: " <<
 				e.getFullDescription().c_str() << std::endl;
-			//MessageBoxA( NULL, e.getFullDescription().c_str(), "An exception has occured!", MB_OK | MB_ICONERROR | MB_TASKMODAL);
+			MessageBoxA( NULL, e.getFullDescription().c_str(), "An exception has occured!", MB_OK | MB_ICONERROR | MB_TASKMODAL);
 #else
 			std::cerr << "An exception has occured: " <<
 				e.getFullDescription().c_str() << std::endl;

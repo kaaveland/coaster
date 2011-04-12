@@ -27,7 +27,7 @@ BaseApplication::BaseApplication(void)
     mTrayMgr(0),
     mCameraMan(0),
     mDetailsPanel(0),
-	mDetailsPanel2(0),
+	//mDetailsPanel2(0),
     mCursorWasVisible(false),
     mShutDown(false),
     mInputManager(0),
@@ -120,7 +120,7 @@ void BaseApplication::createFrameListener(void)
     //mTrayMgr->showLogo(OgreBites::TL_BOTTOMRIGHT);
     mTrayMgr->hideCursor();
 
-	
+	/*
     // create a params panel for displaying sample details
     Ogre::StringVector items;
     items.push_back("cam.pX");
@@ -138,16 +138,19 @@ void BaseApplication::createFrameListener(void)
     mDetailsPanel2 = mTrayMgr->createParamsPanel(OgreBites::TL_BOTTOMRIGHT, "DetailsPanel2", 200, items);
     mDetailsPanel2->setParamValue(9, "Bilinear");
     mDetailsPanel2->setParamValue(10, "Solid");
-    //mDetailsPanel2->hide();
+    mDetailsPanel2->hide();
+	*/
 	
 
 	 // create a params panel for displaying speed so on
     Ogre::StringVector items2;
     items2.push_back("Speed");
     items2.push_back("Time");
-    items2.push_back("Fuel");
 
-    mDetailsPanel = mTrayMgr->createParamsPanel(OgreBites::TL_BOTTOMLEFT, "DetailsPanel", 300, items2);
+    mDetailsPanel = mTrayMgr->createParamsPanel(OgreBites::TL_BOTTOMRIGHT, "DetailsPanel", 300, items2);
+	mSpeedBar = mTrayMgr->createProgressBar(OgreBites::TL_BOTTOMLEFT, "SpeedoMeter", "Fuel", 300, 100);
+	mSpeedBar->setCaption("Fuel");
+	mSpeedBar->setComment("Fuel");
 
     mRoot->addFrameListener(this);
 }
@@ -269,6 +272,7 @@ bool BaseApplication::frameRenderingQueued(const Ogre::FrameEvent& evt)
     {
         mCameraMan->frameRenderingQueued(evt);   // if dialog isn't up, then update the camera
         
+/*
 		if (mDetailsPanel2->isVisible())   // if details panel is visible, then update its contents
         {
             mDetailsPanel2->setParamValue(0, Ogre::StringConverter::toString(mCamera->getDerivedPosition().x));
@@ -279,7 +283,8 @@ bool BaseApplication::frameRenderingQueued(const Ogre::FrameEvent& evt)
             mDetailsPanel2->setParamValue(6, Ogre::StringConverter::toString(mCamera->getDerivedOrientation().y));
             mDetailsPanel2->setParamValue(7, Ogre::StringConverter::toString(mCamera->getDerivedOrientation().z));
         }
-		
+	
+*/
     }
 
     return true;
@@ -289,12 +294,14 @@ bool BaseApplication::keyPressed( const OIS::KeyEvent &arg )
 {
     if (mTrayMgr->isDialogVisible()) return true;   // don't process any more keys if dialog is up
 
+	/*
     if (arg.key == OIS::KC_F)   // toggle visibility of advanced frame stats
     {
         mTrayMgr->toggleAdvancedFrameStats();
     }
     else if (arg.key == OIS::KC_G)   // toggle visibility of even rarer debugging details
     {
+		/*
         if (mDetailsPanel2->getTrayLocation() == OgreBites::TL_NONE)
         {
             mTrayMgr->moveWidgetToTray(mDetailsPanel2, OgreBites::TL_TOPRIGHT, 0);
@@ -305,6 +312,7 @@ bool BaseApplication::keyPressed( const OIS::KeyEvent &arg )
             mTrayMgr->removeWidgetFromTray(mDetailsPanel2);
             mDetailsPanel2->hide();
         }
+		
     }
     else if (arg.key == OIS::KC_T)   // cycle polygon rendering mode
     {
@@ -362,7 +370,8 @@ bool BaseApplication::keyPressed( const OIS::KeyEvent &arg )
         mCamera->setPolygonMode(pm);
         mDetailsPanel2->setParamValue(10, newVal);
     }
-    else if(arg.key == OIS::KC_F5)   // refresh all textures
+	
+    else*/ if(arg.key == OIS::KC_F5)   // refresh all textures
     {
         Ogre::TextureManager::getSingleton().reloadAll();
     }

@@ -93,6 +93,10 @@ void PhysicsCart::moveTo(double distance) {
 	isFreefalling = false;
 }
 
+double PhysicsCart::getCurrentT(void) const {
+	return current_t;
+}
+
 // Calculates a_T. delta_distance specifies the distance forward or backward to calculate for. If delta_distance is 0.0, 
 // a_T will be calculated at the PhysicsCart's current distance.
 double PhysicsCart::calculate_a_T(double deltaDistance) const

@@ -72,6 +72,7 @@ public:
 	Ogre::Vector3 mSunColor[_def_SkyBoxNum];
 
 	int mCurrentSkyBox;
+	bool finished;
 
 	// Just to wshow skyboxes information
 	Ogre::TextAreaOverlayElement* mTextArea;

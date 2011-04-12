@@ -55,6 +55,7 @@ public:
 	Vector3d getUp() const;
 	Vector3d getForward() const;
 
+	double getCurrentT(void) const;
 	
 	// Debugging/testing functions
 	string toString() const;	

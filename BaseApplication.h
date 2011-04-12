@@ -88,7 +88,8 @@ protected:
     OgreBites::SdkTrayManager* mTrayMgr;
     OgreBites::SdkCameraMan* mCameraMan;       // basic camera controller
     OgreBites::ParamsPanel* mDetailsPanel;     // sample details panel
-	OgreBites::ParamsPanel* mDetailsPanel2;     // sample details panel2
+	//OgreBites::ParamsPanel* mDetailsPanel2;     // sample details panel2
+	OgreBites::ProgressBar* mSpeedBar;
     bool mCursorWasVisible;                    // was cursor visible before dialog appeared
     bool mShutDown;
 	bool mMoveCamera;
