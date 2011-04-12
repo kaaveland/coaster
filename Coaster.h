@@ -18,9 +18,14 @@
 #include <CEGUISystem.h>
 #include <CEGUISchemeManager.h>
 #include <RendererModules/Ogre/CEGUIOgreRenderer.h>
+#include <OgreTextAreaOverlayElement.h>
 
 #include <Terrain/OgreTerrain.h>
 #include <Terrain/OgreTerrainGroup.h>
+
+#include "Hydrax/Hydrax.h"
+#include "Hydrax/Noise/Perlin/Perlin.h"
+#include "Hydrax/Modules/ProjectedGrid/ProjectedGrid.h"
 
 using namespace std;
  
@@ -43,12 +48,10 @@ public:
 		STONE12_MASK = 1<<6,
 		STONE17_MASK = 1<<7,
 		STONE117_MASK = 1<<8,
-		PALM_TREE_1_MASK = 1<<9,
-		PALM_TREE_2_MASK = 1<<10,
-		PALM_TREE_3_MASK = 1<<11,
-		SUPPORT_ELEMENT_MASK = 1<<12,
-		YELLOW_SUB_MASK = 1<<13,
-		END_MASK = 1<<14
+		PALM_TREE_MASK = 1<<9,
+		SUPPORT_ELEMENT_MASK = 1<<10,
+		YELLOW_SUB_MASK = 1<<11,
+		END_MASK = 1<<12
 	};
 
 	//end mask sier hvilket objekt som er siste i listen, increase!
@@ -57,6 +60,23 @@ public:
 
 	void prevObject(void);
 	void nextObject(void);
+
+	#define _def_SkyBoxNum 3
+
+	// Hydrax pointer
+	Hydrax::Hydrax *mHydrax;
+
+	Ogre::String mSkyBoxes[_def_SkyBoxNum];
+	Ogre::Vector3 mSunPosition[_def_SkyBoxNum];
+	Ogre::Vector3 mSunColor[_def_SkyBoxNum];
+
+	int mCurrentSkyBox;
+
+	// Just to wshow skyboxes information
+	Ogre::TextAreaOverlayElement* mTextArea;
+	static float rnd_(const float& min, const float& max);
+	void changeSkyBox();
+	void createTextArea();
  
 protected:
 	virtual void exportOgreEntity(Ogre::SceneNode *scene, Ogre::Entity *ent, std::ostream &out);
