@@ -521,9 +521,9 @@ void Track::read(std::istream &in)
 			state = ROT; // Skip this line, but expect data on pos on following lines
 		} else if (state == ROT && input.size() > 0) {
 			double parsed;
-			in >> parsed;
+			parse >> parsed;
 			rotations.push_back(parsed);
-		} else if (state == ROT && input.size() < 2) {
+		} else if (state == ROT && input.size() < 1) {
 			state = END; // This means we're done
 		} else if (state == END)
 			continue; // Empty line after up has been parsed, ignore
