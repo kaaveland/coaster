@@ -140,7 +140,7 @@ void PhysicsCart::calculateNextStep(double dT) {
 		//vAccel = gvector;
 		vPos +=  vVelocity * dT; // + 0.5 * vAccel * dT * dT;
 		vVelocity += gvector * dT;
-		vVelocity += vVelocity.normalizedCopy() * (thrustFactor * maxThrust/mass - airResistanceFactor*pow(abs(v), airResistanceExponent) * dT;
+		vVelocity += vVelocity.normalizedCopy() * (thrustFactor * maxThrust/mass - airResistanceFactor*pow(abs(v), airResistanceExponent)) * dT;
 		v = vVelocity.length();
 		return;
 	}
