@@ -97,17 +97,18 @@ void PhysicsCart::moveTo(double distance) {
 // a_T will be calculated at the PhysicsCart's current distance.
 double PhysicsCart::calculate_a_T(double deltaDistance) const
 {	
+
 	double new_t = current_t + track->deltaDistanceTodeltaT(deltaDistance, current_t);
 	int direction = 0;
 	/* if (abs(v) > SPEEDCUTOFF_FRICTION )*/
-	if(v != 0){
+	if(abs(v) != 0){
 		direction = (int)(v/abs(v));	// Positive if going forward on track
 	}
 	
 	double a_T = thrustFactor*maxThrust/mass 
 		- direction*brakingFactor*maxBreak
 		+ gvector * track->getTangentVector(new_t)
-		- direction*airResistanceFactor*pow(v, airResistanceExponent);
+		- direction*airResistanceFactor*pow(abs(v), airResistanceExponent);
 
 	return a_T;
 }
@@ -131,14 +132,16 @@ void PhysicsCart::nextStep(double dT)
 }
 
 void PhysicsCart::calculateNextStep(double dT) {
-		
+	if (v < 0.001) {
+		cout << "break";
+	}
 	//cout << toString() << "Moving " << dT << " seconds.\nCurrent distance: " << currentDistance << " / " << track->getTrackLength() << "\n";
 
 	if (isFreefalling) {
 		//vAccel = gvector;
 		vPos +=  vVelocity * dT; // + 0.5 * vAccel * dT * dT;
 		vVelocity += gvector * dT;
-		vVelocity -= vVelocity.normalizedCopy() * airResistanceFactor*pow(v, airResistanceExponent) * dT;
+		vVelocity += vVelocity.normalizedCopy() * (thrustFactor * maxThrust/mass - airResistanceFactor*pow(abs(v), airResistanceExponent)) * dT;
 		v = vVelocity.length();
 		return;
 	}
@@ -166,6 +169,7 @@ void PhysicsCart::calculateNextStep(double dT) {
 	v = v + a_T * dT;
 	
 	// Update distance and current t value
+	if (fabs(current_t) == std::numeric_limits<double>::infinity()) assert(false);
 	current_t += track->deltaDistanceTodeltaT(delta_distance_corrected, current_t);
 	currentDistance += delta_distance_corrected;
 	
@@ -188,7 +192,7 @@ void PhysicsCart::calculateNextStep(double dT) {
 		//  center of curvature, the cart will lose traction and fly! Should probably have a tolerance here (vertical attitudes).
 		double asdf = v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector;
 		//printf("Case1: %e\n", v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector);
-		if (v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector < -1.0*gvector.length() ){ //1e-12
+		if (v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector < -0.1*gvector.length() ){ //1e-12
 			// Disabled for now
 			isFreefalling = true;
 			

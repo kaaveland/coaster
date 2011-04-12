@@ -291,6 +291,7 @@ double Track::deltaDistanceTodeltaT(double ds, double current_t) const
 
 //	assert(distance - arcDistances[searchIndex] >= 0.0);
 	double ds_dt = (getPos(current_t+getSmoothedDelta()) - getPos(current_t)).length() / getSmoothedDelta();
+	assert (abs(ds_dt) != 0.0);
 	double dt = ds / ds_dt;
 		//(double)searchIndex / (double)nControlPoints + 
 		//delta_t * (distance-arcDistances[searchIndex]) / (arcDistances[searchIndex+1]-arcDistances[searchIndex]);
@@ -339,7 +340,7 @@ Vector3d Track::getTangentVector(double t) const
 
 double Track::getCurvature(double t) const
 {
-	if (t < 0 || t >= 1) return 0.0;
+	if (!(t >= 0 && t <= 1)) return 0.0;
 	assert(t >= 0 && t <= 1);
 
 	// printf("GetCurvature t: %f \n", t);
@@ -521,10 +522,9 @@ void Track::read(std::istream &in)
 			state = ROT; // Skip this line, but expect data on pos on following lines
 		} else if (state == ROT && input.size() > 0) {
 			double parsed;
-			in >> parsed;
-			printf("Rot: %f\n", parsed);
+			parse >> parsed;
 			rotations.push_back(parsed);
-		} else if (state == ROT && input.size() < 2) {
+		} else if (state == ROT && input.size() < 1) {
 			state = END; // This means we're done
 		} else if (state == END)
 			continue; // Empty line after up has been parsed, ignore

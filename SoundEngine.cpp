@@ -24,6 +24,7 @@ SoundEngine::SoundEngine(PhysicsCart *physicsCart, Ogre::SceneNode *cartNode)
 	screamChannel = INVALID_SOUND_CHANNEL;
 	blizzard1Channel = INVALID_SOUND_CHANNEL;
 	trackSingleChannel = INVALID_SOUND_CHANNEL;
+	rocketTrusterChannel = INVALID_SOUND_CHANNEL;
 
 	soundFiles[BLIZZARD01]	= "Blizzard 01.wav";
 	soundFiles[WIND1]		= "Wind 01.wav";
@@ -38,8 +39,8 @@ SoundEngine::SoundEngine(PhysicsCart *physicsCart, Ogre::SceneNode *cartNode)
 	soundFiles[TRAIN_SLOW]	= "Train 01.wav";
 	soundFiles[TRAIN_FAST]	= "Train 02.wav";	
 	soundFiles[TRAIN_SINGLE] = "Train single.ogg";
-	soundFiles[CRASH1]		= "Crash 01.wav";
 	soundFiles[LAUGH1]		= "Laughs 01.wav";
+	soundFiles[ROCKETTHRUSTER] = "Rocket Thrusters.wav";
 
 	soundManager = new SoundManager();
 	soundManager->Initialize();
@@ -61,6 +62,7 @@ bool SoundEngine::loadFiles() {
 	std::set<SOUNDCLIP> loopedSounds;
 	loopedSounds.insert(TRAIN_FAST); loopedSounds.insert(TRAIN_SLOW); 
 	loopedSounds.insert(WIND1); loopedSounds.insert(WIND2); loopedSounds.insert(WIND3);
+	loopedSounds.insert(ROCKETTHRUSTER);
 	
 	
 
@@ -92,14 +94,17 @@ void SoundEngine::playBackgroundSounds(bool play)
 	if (play) {
 		isPlayingBackgroundSounds = true;
 
-		soundManager->PlaySound(soundIndexes[SOUNDCLIP::BLIZZARD01], cartNode, &blizzard1Channel);
-		soundManager->GetSoundChannel(blizzard1Channel)->setVolume(0.2);
+		soundManager->PlaySound(soundIndexes[BLIZZARD01], cartNode, &blizzard1Channel);
+		soundManager->GetSoundChannel(blizzard1Channel)->setVolume(0.2f);
 
-		soundManager->PlaySound(soundIndexes[SOUNDCLIP::WIND1], cartNode, &wind1Channel);
-		soundManager->GetSoundChannel(wind1Channel)->setVolume(0.00);
+		soundManager->PlaySound(soundIndexes[WIND1], cartNode, &wind1Channel);
+		soundManager->GetSoundChannel(wind1Channel)->setVolume(0.00f);
 
-		soundManager->PlaySound(soundIndexes[SOUNDCLIP::WIND2], cartNode, &wind2Channel);
-		soundManager->GetSoundChannel(wind2Channel)->setVolume(0.00);
+		soundManager->PlaySound(soundIndexes[WIND2], cartNode, &wind2Channel);
+		soundManager->GetSoundChannel(wind2Channel)->setVolume(0.00f);
+
+		soundManager->PlaySound(soundIndexes[ROCKETTHRUSTER], cartNode, &rocketTrusterChannel);
+		soundManager->GetSoundChannel(rocketTrusterChannel)->setPaused(true);
 	} else {
 		soundManager->StopSound(&wind1Channel);
 		soundManager->StopSound(&wind2Channel);
@@ -111,14 +116,14 @@ double minmax(double x) { if (x<0.0) return 0.0; if(x > 1.0) return 1.0; return 
 void SoundEngine::frameStarted(Ogre::SceneNode *listener, Ogre::Real timeElapsed)
 {
 	if (screamChannel != INVALID_SOUND_CHANNEL) 
-		soundManager->GetSoundChannel(trackSingleChannel)->setVolume(0.4);
+		soundManager->GetSoundChannel(trackSingleChannel)->setVolume(0.4f);
 
 	timeSinceLastScream += timeElapsed;
 	distSinceLastTrackSound += physicsCart->getSpeed() * timeElapsed;
 	
 	if (isPlayingBackgroundSounds) {
-		soundManager->GetSoundChannel(wind1Channel)->setVolume(0.05 * minmax(abs(physicsCart->getSpeed()) / 260) + 0.01);
-		soundManager->GetSoundChannel(wind2Channel)->setVolume(0.05 * minmax(abs(physicsCart->getSpeed()) - SPEEDSTEP*0.9 / 260));
+		soundManager->GetSoundChannel(wind1Channel)->setVolume((float)(0.05 * minmax(abs(physicsCart->getSpeed()) / 260) + 0.01));
+		soundManager->GetSoundChannel(wind2Channel)->setVolume((float)(0.05 * minmax(abs(physicsCart->getSpeed()) - SPEEDSTEP*0.9 / 260)));
 	}
 
 	//if (physicsCart->isFreeFalling()) soundManager->GetSoundChannel(trackSingleChannel)->stop();
@@ -126,11 +131,11 @@ void SoundEngine::frameStarted(Ogre::SceneNode *listener, Ogre::Real timeElapsed
 	if (abs(distSinceLastTrackSound) > 100 && !physicsCart->isFreeFalling()) {
 		if (trackSingleChannel != INVALID_SOUND_CHANNEL) {
 			soundManager->GetSoundChannel(trackSingleChannel)->stop();
-			soundManager->GetSoundChannel(trackSingleChannel)->setVolume(1.0 * minmax(abs(physicsCart->getSpeed()) / 260) + 1e-4);
+			soundManager->GetSoundChannel(trackSingleChannel)->setVolume((float)(1.0 * minmax(abs(physicsCart->getSpeed()) / 260) + 1e-4));
 
 		}
 		soundManager->PlaySound(soundIndexes[TRAIN_SINGLE], cartNode, &trackSingleChannel);
-		soundManager->GetSoundChannel(trackSingleChannel)->setVolume(1.0 * minmax(abs(physicsCart->getSpeed()) / 260) + 1e-4);
+		soundManager->GetSoundChannel(trackSingleChannel)->setVolume((float)(1.0 * minmax(abs(physicsCart->getSpeed()) / 260) + 1e-4));
 		distSinceLastTrackSound = 0;
 	}
 
@@ -171,6 +176,8 @@ void SoundEngine::frameStarted(Ogre::SceneNode *listener, Ogre::Real timeElapsed
 		timeSinceLastScream = 0;
 	}
 		//soundManager->GetSoundInstance(1)->fmodSound->
+
+	soundManager->GetSoundChannel(rocketTrusterChannel)->setPaused( (abs(physicsCart->getThrust()) == 0.0) );
 
  	soundManager->FrameStarted(listener, timeElapsed);
 }
