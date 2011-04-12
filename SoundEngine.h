@@ -32,13 +32,14 @@ public:
 		TRAIN_SLOW,
 		TRAIN_FAST,
 		TRAIN_SINGLE,
-		LAUGH1
+		LAUGH1,
+		ROCKETTHRUSTER
 	};
 
 	int addSound(SOUNDCLIP clip, Ogre::SceneNode *node);
 	void frameStarted(Ogre::SceneNode *listener, Ogre::Real timeElapsed);
 	void playBackgroundSounds(bool play);
-	
+		
 private:
 
 	
@@ -51,6 +52,7 @@ private:
 	int wind3Channel;
 	int screamChannel;
 	int trackSingleChannel;
+	int rocketTrusterChannel;
 
 	bool hasScreamed1; 
 	bool hasScreamed2;
