@@ -96,17 +96,18 @@ void PhysicsCart::moveTo(double distance) {
 // a_T will be calculated at the PhysicsCart's current distance.
 double PhysicsCart::calculate_a_T(double deltaDistance) const
 {	
+
 	double new_t = current_t + track->deltaDistanceTodeltaT(deltaDistance, current_t);
 	int direction = 0;
 	/* if (abs(v) > SPEEDCUTOFF_FRICTION )*/
-	if(v != 0){
+	if(abs(v) != 0){
 		direction = (int)(v/abs(v));	// Positive if going forward on track
 	}
 	
 	double a_T = thrustFactor*maxThrust/mass 
 		- direction*brakingFactor*maxBreak
 		+ gvector * track->getTangentVector(new_t)
-		- direction*airResistanceFactor*pow(v, airResistanceExponent);
+		- direction*airResistanceFactor*pow(abs(v), airResistanceExponent);
 
 	return a_T;
 }
@@ -130,7 +131,9 @@ void PhysicsCart::nextStep(double dT)
 }
 
 void PhysicsCart::calculateNextStep(double dT) {
-		
+	if (v < 0.001) {
+		cout << "break";
+	}
 	//cout << toString() << "Moving " << dT << " seconds.\nCurrent distance: " << currentDistance << " / " << track->getTrackLength() << "\n";
 
 	if (isFreefalling) {

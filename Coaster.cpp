@@ -9,7 +9,7 @@ mCurrentObject(0),
 bLMouseDown(false),
 bRMouseDown(false),
 mRotateSpeed(0.1f),
-editorMode(false),
+editorMode(true),
 track(),
 mControllPointCount(0),
 adjustHeight(false),
@@ -22,24 +22,10 @@ objectRotatingLeft(false),
 objectScalingUp(false),
 objectScalingDown(false),
 addNewThing(false),
-max_fuel(5),
-fuel(max_fuel), // 3 seconds of fuel is max,
-mHydrax(0),
-mCurrentSkyBox(0),
-mTextArea(0),
+max_fuel(3),
+fuel(max_fuel), // 3 seconds of fuel is max
 queryFlagMap()
 {
-	mSkyBoxes[0] = "Sky/ClubTropicana";
-	mSkyBoxes[1] = "Sky/EarlyMorning";
-	mSkyBoxes[2] = "Sky/Clouds";
-
-	mSunPosition[0] = Ogre::Vector3(0,10000,0);
-	mSunPosition[1] = Ogre::Vector3(0,10000,90000);
-	mSunPosition[2] = Ogre::Vector3(0,10000,0);
-
-	mSunColor[0] = Ogre::Vector3(1, 0.9, 0.6);
-	mSunColor[1] = Ogre::Vector3(1,0.6,0.4);
-	mSunColor[2] = Ogre::Vector3(0.45,0.45,0.45);
 		
 		//BILLBOARD_MASK = 1<<0,
 		//HYTTE_MASK = 1<<1,
@@ -65,18 +51,16 @@ queryFlagMap()
 	queryFlagMap[1 << 6] = "stone12.mesh";
 	queryFlagMap[1 << 7] = "stone17.mesh";
 	queryFlagMap[1 << 8] = "stone117.mesh";
-	queryFlagMap[1 << 9] = "palm_tree1.mesh";
-	queryFlagMap[1 << 10] = "palm_tree2.mesh";
-	queryFlagMap[1 << 11] = "palm_tree3.mesh";
-	queryFlagMap[1 << 12] = "support_element.mesh";
-	queryFlagMap[1 << 13] = "yellow_sub.mesh";
-	queryFlagMap[1 << 14] = "end_mask";
+	queryFlagMap[1 << 9] = "Palm.mesh";
+	queryFlagMap[1 << 10] = "support_element.mesh";
+	queryFlagMap[1 << 11] = "yellow_sub.mesh";
+	queryFlagMap[1 << 12] = "end_mask";
 }
 //----------------------------------------------------------------------%---------------
 Coaster::~Coaster(void)
 {
 	// Kommentert ut av Per Ivar. Denne linja krasjer
-	if(mSceneMgr && mRayScnQuery) mSceneMgr->destroyQuery(mRayScnQuery);
+	if (mSceneMgr) mSceneMgr->destroyQuery(mRayScnQuery);
 	
 	//delete physicsCart;
 	//delete soundEngine;
@@ -89,7 +73,7 @@ Coaster::~Coaster(void)
 void Coaster::createScene(void)
 {
 	delete physicsCart;
-	physicsCart = new PhysicsCart(); 
+	physicsCart = new PhysicsCart();
 
     railNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("RailsNode", Ogre::Vector3(0, 0, 0));
     //railNode->attachObject(rail);
@@ -114,86 +98,16 @@ void Coaster::createScene(void)
 	Ogre::SceneNode* cameraNode = cartNode->createChildSceneNode("cameraNode", Ogre::Vector3(0, 80, 150));
 	//pCamera->pitch(Ogre::Degree(-5));
 	cameraNode->attachObject(pCamera);
-
-
-
-	// water and island and light
-	// Set default ambient light
-	mSceneMgr->setAmbientLight(Ogre::ColourValue(1, 1, 1));
-
-    // Create the SkyBox
-    mSceneMgr->setSkyBox(true, mSkyBoxes[mCurrentSkyBox], 99999*3, true);
-
-	// Set some camera params
-    mCamera->setFarClipDistance(99999*6);
-    pCamera->setFarClipDistance(99999*6);
-
-	// Light
-	Ogre::Light *mLight = mSceneMgr->createLight("Light0");
-	mLight->setPosition(mSunPosition[mCurrentSkyBox]);
-	mLight->setDiffuseColour(1, 1, 1);
-	mLight->setSpecularColour(mSunColor[mCurrentSkyBox].x,
-			                    mSunColor[mCurrentSkyBox].y,
-								mSunColor[mCurrentSkyBox].z);
-
-	// Hydrax initialization code ---------------------------------------------
-	// ------------------------------------------------------------------------
-
-    // Create Hydrax object
-	mHydrax = new Hydrax::Hydrax(mSceneMgr, pCamera, mWindow->getViewport(0));
-
-	// Create our projected grid module  
-	Hydrax::Module::ProjectedGrid *mModule 
-		= new Hydrax::Module::ProjectedGrid(// Hydrax parent pointer
-			                                mHydrax,
-											// Noise module
-											new Hydrax::Noise::Perlin(/*Generic one*/),
-											// Base plane
-			                                Ogre::Plane(Ogre::Vector3::UNIT_Y, Ogre::Real(0.0f)),
-											// Normal mode
-											Hydrax::MaterialManager::NM_VERTEX,
-											// Projected grid options
-										    Hydrax::Module::ProjectedGrid::Options(/*264 /*Generic one*/));
-
-	// Set our module
-	mHydrax->setModule(static_cast<Hydrax::Module::Module*>(mModule));
-
-	// Load all parameters from config file
-	// Remarks: The config file must be in Hydrax resource group.
-	// All parameters can be set/updated directly by code(Like previous versions),
-	// but due to the high number of customizable parameters, since 0.4 version, Hydrax allows save/load config files.
-	mHydrax->loadCfg("Tropical.hdx");
-
-    // Create water
-    mHydrax->create();
-	
-
-	if(!editorMode){
-		changeViewPoint();
-	}
-
-	// Hydrax initialization code end -----------------------------------------
-	// ------------------------------------------------------------------------
-
-	// Load island
-	mSceneMgr->setWorldGeometry("island.cfg");
-	
-	/*
-	mHydrax->getMaterialManager()->addDepthTechnique
-		(static_cast<Ogre::MaterialPtr>(Ogre::MaterialManager::getSingleton().getByName("Island"))
-		->createTechnique());
-		*/
-
-	// Create palmiers
-	//createPalms(mSceneMgr);
-
-	// Create text area to show skyboxes information
-	//createTextArea();
-		
 	
 	//Scene setup
-	//mSceneMgr->setAmbientLight(Ogre::ColourValue(0.5f, 0.5f, 0.5f));
-	
+	mSceneMgr->setAmbientLight(Ogre::ColourValue(0.5f, 0.5f, 0.5f));
+	mSceneMgr->setSkyDome(true, "Examples/CloudySky", 10, 8);
+ 
+	//world geometry
+	mSceneMgr->setWorldGeometry("island.cfg");
+
+    // Set ambient light
+    mSceneMgr->setAmbientLight(Ogre::ColourValue(0.9f, 0.9f, 0.9f));
  
     // Create a light
     Ogre::Light* l = mSceneMgr->createLight("MainLight");
@@ -202,7 +116,7 @@ void Coaster::createScene(void)
 	//camera change setup
 	mCamera->setPosition(2000, 500, 1000);
 	mCamera->pitch(Ogre::Degree(-15));
-	mCamera->yaw(Ogre::Degree(90));
+	mCamera->yaw(Ogre::Degree(-90));
 	mCamera->setNearClipDistance(0.5f);
  
 	//CEGUI setup
@@ -221,8 +135,6 @@ void Coaster::createScene(void)
 	soundEngine->playBackgroundSounds(true);
 	
 	//soundEngine->addSound(SoundEngine::BLIZZARD01, cartNode);
-
-	debugImport();
 
 }
 
@@ -251,6 +163,7 @@ void Coaster::changeViewPoint(void){
 			}
 		}
 	}
+
 	changeCameraMovement();
 }
  
@@ -274,8 +187,6 @@ bool Coaster::frameRenderingQueued(const Ogre::FrameEvent& arg)
 	//delta time
 	Ogre::Real dt = arg.timeSinceLastFrame;
 
-	mHydrax->update(dt);
-
 	highscore_time += dt;
 	if(physicsCart->getThrust() > 0){
 		// if full thrust (1) then burn full fuel
@@ -295,6 +206,7 @@ bool Coaster::frameRenderingQueued(const Ogre::FrameEvent& arg)
 	//rotation and scaling
 	if(objectRotatingRight){
 		if(physicsCart->hasTrack() && objectToBePlaced==SUPPORT_ELEMENT_MASK){
+			printf("Turn track right\n");
 			track.setTrackRotation(controlPointSelected, track.getTrackRotation(controlPointSelected)+(3.14/128));
 			generateTrack();
 		} else {
@@ -303,6 +215,7 @@ bool Coaster::frameRenderingQueued(const Ogre::FrameEvent& arg)
 	}
 	if(objectRotatingLeft){
 		if(physicsCart->hasTrack() && objectToBePlaced==SUPPORT_ELEMENT_MASK){
+			printf("Turn track left\n");
 			track.setTrackRotation(controlPointSelected, track.getTrackRotation(controlPointSelected)-(3.14/128));
 			generateTrack();
 		} else {
@@ -429,39 +342,6 @@ Ogre::Quaternion Coaster::generateRotationFromDirectionVector(Ogre::Vector3 vDir
 
             return mBasis.extractQuaternion();
         }
-
-// Create text area to show skyboxes information
-void Coaster::createTextArea()
-{
-	// Create a panel
-	Ogre::OverlayContainer* panel = static_cast<Ogre::OverlayContainer*>(
-		Ogre::OverlayManager::getSingleton().createOverlayElement("Panel", "HydraxDemoInformationPanel"));
-	panel->setMetricsMode(Ogre::GMM_PIXELS);
-	panel->setPosition(10, 10);
-	panel->setDimensions(400, 400);
-
-	// Create a text area
-	mTextArea = static_cast<Ogre::TextAreaOverlayElement*>(
-		Ogre::OverlayManager::getSingleton().createOverlayElement("TextArea", "HydraxDemoInformationTextArea"));
-	mTextArea->setMetricsMode(Ogre::GMM_PIXELS);
-	mTextArea->setPosition(0, 0);
-	mTextArea->setDimensions(100, 100);
-	mTextArea->setCharHeight(16);
-	mTextArea->setCaption("Hydrax 0.5.1 demo application\nCurrent water preset: "  + Ogre::StringUtil::split(mSkyBoxes[mCurrentSkyBox],"/")[1] + " (" +Ogre::StringConverter::toString(mCurrentSkyBox+1) + "/3). Press 'm' to switch water presets.");
-	//mTextArea->setFontName("BlueHighway");
-	mTextArea->setColourBottom(Ogre::ColourValue(0.3, 0.5, 0.3));
-	mTextArea->setColourTop(Ogre::ColourValue(0.5, 0.7, 0.5));
-
-	// Create an overlay, and add the panel
-	Ogre::Overlay* overlay = Ogre::OverlayManager::getSingleton().create("OverlayName");
-	overlay->add2D(panel);
-
-	// Add the text area to the panel
-	panel->addChild(mTextArea);
-
-	// Show the overlay
-	overlay->show();
-}
  
 bool Coaster::mouseMoved(const OIS::MouseEvent& arg)
 {
@@ -566,7 +446,7 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 		//then send a raycast straight out from the camera at the mouse's position
 		Ogre::Ray mouseRay = mCamera->getCameraToViewportRay(mousePos.d_x/float(arg.state.width), mousePos.d_y/float(arg.state.height));
 		mRayScnQuery->setRay(mouseRay);
-		mRayScnQuery->setSortByDistance(false);
+		mRayScnQuery->setSortByDistance(true);
 		mRayScnQuery->setQueryMask(objectToBePlaced);	//will return objects with the query mask in the results
  
 		/*
@@ -853,9 +733,6 @@ bool Coaster::keyPressed(const OIS::KeyEvent& arg)
 				objectRotatingRight = true;
 			}
 			break;
-		case OIS::KC_K:
-			changeSkyBox();
-			break;
 		case OIS::KC_R:
 			this->resetRail();
 			break;
@@ -1111,39 +988,6 @@ std::vector<Ogre::SceneNode *> Coaster::importScene(std::istream &in)
 }
 
 
-
-void Coaster::changeSkyBox()
-{
-    // Change skybox
-    mSceneMgr->setSkyBox(true, mSkyBoxes[mCurrentSkyBox], 99999*3, true);
-
-    // Update Hydrax sun position and colour
-    mHydrax->setSunPosition(mSunPosition[mCurrentSkyBox]);
-    mHydrax->setSunColor(mSunColor[mCurrentSkyBox]);
-
-    // Update light 0 light position and colour
-    mSceneMgr->getLight("Light0")->setPosition(mSunPosition[mCurrentSkyBox]);
-    mSceneMgr->getLight("Light0")->setSpecularColour(mSunColor[mCurrentSkyBox].x,mSunColor[mCurrentSkyBox].y,mSunColor[mCurrentSkyBox].z);
-
-	// Update text area
-	mTextArea->setCaption("Hydrax 0.5.1 demo application\nCurrent water preset: "  + Ogre::StringUtil::split(mSkyBoxes[mCurrentSkyBox],"/")[1] + " (" +Ogre::StringConverter::toString(mCurrentSkyBox+1) + "/3). Press 'm' to switch water presets.");
-
-	// Log
-    Ogre::LogManager::getSingleton().logMessage("Skybox " + mSkyBoxes[mCurrentSkyBox] + " selected. ("+Ogre::StringConverter::toString(mCurrentSkyBox+1)+"/"+Ogre::StringConverter::toString(_def_SkyBoxNum)+")");
-}
-
-/** Just to locate palmiers with a pseudo-random algoritm
- */
-
-float rnd_(const float& min, const float& max)
-{
-	float seed_ = 801;
-	seed_ += Ogre::Math::PI*2.8574f + seed_*(0.3424f - 0.12434f + 0.452345f);
-	if (seed_ > 10000000000) seed_ -= 10000000000;
-	return ((max-min)*Ogre::Math::Abs(Ogre::Math::Sin(Ogre::Radian(seed_))) + min);
-}
-
-
 void showWin32Console()
 {
     static const WORD MAX_CONSOLE_LINES = 500;
@@ -1208,7 +1052,7 @@ extern "C" {
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
 			std::cerr << "An exception has occured: " <<
 				e.getFullDescription().c_str() << std::endl;
-			MessageBoxA( NULL, e.getFullDescription().c_str(), "An exception has occured!", MB_OK | MB_ICONERROR | MB_TASKMODAL);
+			//MessageBoxA( NULL, e.getFullDescription().c_str(), "An exception has occured!", MB_OK | MB_ICONERROR | MB_TASKMODAL);
 #else
 			std::cerr << "An exception has occured: " <<
 				e.getFullDescription().c_str() << std::endl;
