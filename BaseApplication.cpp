@@ -35,6 +35,7 @@ BaseApplication::BaseApplication(void)
     mKeyboard(0),
 	mMoveCamera(true)
 {
+	highscore_obj = new Highscore("highscore.txt");
 }
 
 //-------------------------------------------------------------------------------------
@@ -145,12 +146,14 @@ void BaseApplication::createFrameListener(void)
 	 // create a params panel for displaying speed so on
     Ogre::StringVector items2;
     items2.push_back("Speed");
-    items2.push_back("Time");
 
     mDetailsPanel = mTrayMgr->createParamsPanel(OgreBites::TL_BOTTOMRIGHT, "DetailsPanel", 300, items2);
 	mSpeedBar = mTrayMgr->createProgressBar(OgreBites::TL_BOTTOMLEFT, "SpeedoMeter", "Fuel", 300, 100);
-	mSpeedBar->setCaption("Fuel");
-	mSpeedBar->setComment("Fuel");
+	
+	Ogre::StringVector items;
+	items.push_back("Highscore");
+
+    mHighscorePanel = mTrayMgr->createParamsPanel(OgreBites::TL_TOP, "HighScore", 200, items);
 
     mRoot->addFrameListener(this);
 }

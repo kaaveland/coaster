@@ -163,9 +163,6 @@ void Coaster::createScene(void)
     // Create water
     mHydrax->create();
 
-	//start as cart
-	changeViewPoint();
-
 	// Hydrax initialization code end -----------------------------------------
 	// ------------------------------------------------------------------------
 
@@ -328,8 +325,12 @@ bool Coaster::frameRenderingQueued(const Ogre::FrameEvent& arg)
 		}
 
 		double cur_t = physicsCart->getCurrentT();
-		if(cur_t > 0.999){
+		
+		if(cur_t > 0.966){
 			finished = true;
+			highscore_obj->enterScore(highscore_time);
+			physicsCart->setSpeed(0);
+			physicsCart->setBraking(1);
 		}
 
 		// Update sound engine
@@ -345,17 +346,27 @@ bool Coaster::frameRenderingQueued(const Ogre::FrameEvent& arg)
 
 		std::ostringstream strs;
 		strs.precision(1);
-		strs << fixed << physicsCart->getSpeed();
+		strs << fixed << physicsCart->getSpeed() << " km/t";
 		std::string speed = strs.str();
 
 		strs.str("");
 		strs << fixed << highscore_time;
 		std::string time = strs.str();
 
-		mDetailsPanel->setParamValue(0, speed);
-		mDetailsPanel->setParamValue(1, time);
+		mDetailsPanel->setParamValue(0, time);
+
+		mSpeedBar->setComment(speed);
+		mSpeedBar->setCaption("Fuel and Speed");
 		
     }
+
+	if(mHighscorePanel->isVisible()){
+		std::ostringstream strs;
+		strs << highscore_obj->getBest();
+		std::string highscore_str = strs.str();
+
+		mHighscorePanel->setParamValue(0, highscore_str);
+	}
 
 	if(mSpeedBar->isVisible()){
 		mSpeedBar->setProgress(fuel/max_fuel);
@@ -463,7 +474,6 @@ bool Coaster::mouseMoved(const OIS::MouseEvent& arg)
 				} else {
 					mCurrentObject->setPosition(iter->worldFragment->singleIntersection);
 				}
-				}
 
 				if(track.getNumberOfPoints() > 3){
 					for (vector<Ogre::String>::iterator it = placedObjects.begin(); it!=placedObjects.end(); ++it) {
@@ -495,6 +505,7 @@ bool Coaster::mouseMoved(const OIS::MouseEvent& arg)
 					}
 				}
 
+				}
 				
 				break;
 			}	
@@ -932,6 +943,8 @@ void Coaster::resetRail(void){
 	}
 
 	track.initValues();
+
+	finished = false;
 }
 
 

@@ -136,9 +136,9 @@ void PhysicsCart::nextStep(double dT)
 }
 
 void PhysicsCart::calculateNextStep(double dT) {
-	if (v < 0.001) {
-		cout << "break";
-	}
+	//if (v < 0.001) {
+		//cout << "break";
+	//}
 	//cout << toString() << "Moving " << dT << " seconds.\nCurrent distance: " << currentDistance << " / " << track->getTrackLength() << "\n";
 
 	if (isFreefalling) {
