@@ -133,6 +133,7 @@ namespace Hydrax
 
 		mManualGodRays->begin(_def_GodRays_Material_Name, Ogre::RenderOperation::OT_TRIANGLE_LIST);
 		mManualGodRays->setRenderQueueGroup(Ogre::RENDER_QUEUE_9+1);
+		mManualGodRays->setQueryFlags(1<<3);
 
 		for(int k = 0; k < mNumberOfRays; k++)
 		{

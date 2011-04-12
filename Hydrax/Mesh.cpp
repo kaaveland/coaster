@@ -156,6 +156,7 @@ namespace Hydrax
         mEntity->setMaterialName(mMaterialName);
 		mEntity->setCastShadows(false);
 		mEntity->setRenderQueueGroup(Ogre::RENDER_QUEUE_1);
+		mEntity->setQueryFlags(1<<3);
 
 		mSceneNode = mHydrax->getSceneManager()->getRootSceneNode()->createChildSceneNode();
 		mSceneNode->showBoundingBox(false);

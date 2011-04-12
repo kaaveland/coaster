@@ -40,7 +40,8 @@ namespace Hydrax
 		, mVisible(true)
 	{
 		mProjector = new Ogre::Frustum();
-		mProjector->setProjectionType(Ogre::PT_ORTHOGRAPHIC); 
+		mProjector->setProjectionType(Ogre::PT_ORTHOGRAPHIC);
+		mProjector->setQueryFlags(1<<3);
 		
 		mSceneNode = mHydrax->getSceneManager()->getRootSceneNode()->createChildSceneNode();
         mSceneNode->attachObject(mProjector);

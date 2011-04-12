@@ -74,6 +74,7 @@ bool PhysicsCart::hasTrack() const
 void PhysicsCart::moveTo(double distance) {
 	// NOTE: this function does a crude approximation!
 	assert(track != NULL);
+	if(!PhysicsCart::hasTrack()) return;
 	if (distance < 0.0) distance = 0.0;
 	if (distance > track->getTrackLength()) distance = track->getTrackLength();
 

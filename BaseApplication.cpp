@@ -389,8 +389,8 @@ bool BaseApplication::keyReleased( const OIS::KeyEvent &arg )
     return true;
 }
 
-void BaseApplication::changeCameraMovement(){
-	mMoveCamera = !mMoveCamera;
+void BaseApplication::changeCameraMovement(bool value){
+	mMoveCamera = value;
 }
 
 bool BaseApplication::mouseMoved( const OIS::MouseEvent &arg )

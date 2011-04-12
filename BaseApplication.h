@@ -44,7 +44,7 @@ public:
     virtual ~BaseApplication(void);
 
     virtual void go(void);
-	void changeCameraMovement(void);
+	void changeCameraMovement(bool value);
 
 protected:
     virtual bool setup();

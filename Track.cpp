@@ -515,12 +515,14 @@ void Track::read(std::istream &in)
 		} else if (state == POS && input.substr(0, 2) != "R:") {
 			Vector3d parsed;
 			parsed.read(parse);
+			printf("Pos: %f\n", parsed);
 			pos.push_back(parsed);
 		} else if (state == POS && input.substr(0, 2) == "R:") {
 			state = ROT; // Skip this line, but expect data on pos on following lines
 		} else if (state == ROT && input.size() > 0) {
 			double parsed;
 			in >> parsed;
+			printf("Rot: %f\n", parsed);
 			rotations.push_back(parsed);
 		} else if (state == ROT && input.size() < 2) {
 			state = END; // This means we're done

@@ -65,12 +65,10 @@ queryFlagMap()
 	queryFlagMap[1 << 6] = "stone12.mesh";
 	queryFlagMap[1 << 7] = "stone17.mesh";
 	queryFlagMap[1 << 8] = "stone117.mesh";
-	queryFlagMap[1 << 9] = "palm_tree1.mesh";
-	queryFlagMap[1 << 10] = "palm_tree2.mesh";
-	queryFlagMap[1 << 11] = "palm_tree3.mesh";
-	queryFlagMap[1 << 12] = "support_element.mesh";
-	queryFlagMap[1 << 13] = "yellow_sub.mesh";
-	queryFlagMap[1 << 14] = "end_mask";
+	queryFlagMap[1 << 9] = "Palm.mesh";
+	queryFlagMap[1 << 10] = "support_element.mesh";
+	queryFlagMap[1 << 11] = "yellow_sub.mesh";
+	queryFlagMap[1 << 12] = "end_mask";
 }
 //-------------------------------------------------------------------------------------
 Coaster::~Coaster(void)
@@ -111,10 +109,9 @@ void Coaster::createScene(void)
     pCamera = mSceneMgr->createCamera("CartCam");
 	pCamera->setNearClipDistance(0.5f);
 	pCamera->setQueryFlags(CAMERA_MASK);
-	Ogre::SceneNode* cameraNode = cartNode->createChildSceneNode("cameraNode", Ogre::Vector3(0, 80, 150));
+	Ogre::SceneNode* cameraNode = cartNode->createChildSceneNode("cameraNode", Ogre::Vector3(0, 80, 180));
 	//pCamera->pitch(Ogre::Degree(-5));
 	cameraNode->attachObject(pCamera);
-
 
 
 	// water and island and light
@@ -166,11 +163,9 @@ void Coaster::createScene(void)
 
     // Create water
     mHydrax->create();
-	
 
-	if(!editorMode){
-		changeViewPoint();
-	}
+	//start as cart
+	changeViewPoint();
 
 	// Hydrax initialization code end -----------------------------------------
 	// ------------------------------------------------------------------------
@@ -222,13 +217,13 @@ void Coaster::createScene(void)
 	
 	//soundEngine->addSound(SoundEngine::BLIZZARD01, cartNode);
 
-	debugImport();
+	//debugImport();
 
 }
 
 void Coaster::changeViewPoint(void){
 
-	if(cameraName == "PlayerCam"){
+	if(!editorMode){
 		cameraName = "CartCam";
 	} else {
 		cameraName = "PlayerCam";
@@ -247,11 +242,11 @@ void Coaster::changeViewPoint(void){
 
 			//Controll point
 			if(pos != string::npos){
-				mSceneMgr->getSceneNode(*it)->flipVisibility();
+				mSceneMgr->getSceneNode(*it)->setVisible(editorMode);
 			}
 		}
 	}
-	changeCameraMovement();
+	changeCameraMovement(editorMode);
 }
  
 void Coaster::chooseSceneManager(void)
@@ -304,6 +299,7 @@ bool Coaster::frameRenderingQueued(const Ogre::FrameEvent& arg)
 	if(objectRotatingLeft){
 		if(physicsCart->hasTrack() && objectToBePlaced==SUPPORT_ELEMENT_MASK){
 			track.setTrackRotation(controlPointSelected, track.getTrackRotation(controlPointSelected)-(3.14/128));
+			printf("CTrl: %d After rotation: %f\n", controlPointSelected, track.getTrackRotation(controlPointSelected));
 			generateTrack();
 		} else {
 			this->rotateObject(Ogre::Radian(Ogre::Degree(-15*dt)));
@@ -469,7 +465,7 @@ bool Coaster::mouseMoved(const OIS::MouseEvent& arg)
 	CEGUI::System::getSingleton().injectMouseMove(arg.state.X.rel, arg.state.Y.rel);
  
 	//if the left mouse button is held down
-	if(bLMouseDown && mCurrentObject)
+	if(bLMouseDown)
 	{
 		//find the current mouse position
 		CEGUI::Point mousePos = CEGUI::MouseCursor::getSingleton().getPosition();
@@ -487,7 +483,12 @@ bool Coaster::mouseMoved(const OIS::MouseEvent& arg)
 		{
 			if(iter->worldFragment)
 			{
+
+				if(iter->movable) mCurrentObject = iter->movable->getParentSceneNode();
+
 				float mouseHeightDiff = 0;
+
+				if(mCurrentObject){
 				if(adjustHeight){
 					CEGUI::System::getSingleton().injectMouseMove(arg.state.X.rel, arg.state.Y.rel);
 					mouseHeightDiff = (mousePos.d_y - CEGUI::MouseCursor::getSingleton().getPosition().d_y);
@@ -498,6 +499,7 @@ bool Coaster::mouseMoved(const OIS::MouseEvent& arg)
 
 				} else {
 					mCurrentObject->setPosition(iter->worldFragment->singleIntersection);
+				}
 				}
 
 				if(track.getNumberOfPoints() > 3){
@@ -566,9 +568,10 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 		//then send a raycast straight out from the camera at the mouse's position
 		Ogre::Ray mouseRay = mCamera->getCameraToViewportRay(mousePos.d_x/float(arg.state.width), mousePos.d_y/float(arg.state.height));
 		mRayScnQuery->setRay(mouseRay);
-		mRayScnQuery->setSortByDistance(false);
 		mRayScnQuery->setQueryMask(objectToBePlaced);	//will return objects with the query mask in the results
- 
+		mRayScnQuery->setQueryTypeMask(Ogre:: SceneManager::ENTITY_TYPE_MASK);
+		mRayScnQuery->setSortByDistance(true);
+
 		/*
 		This next chunk finds the results of the raycast
 		If the mouse is pointing at world geometry we spawn a robot at that position
@@ -584,6 +587,7 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 			if(iter->movable && iter->movable->getName().substr(0, 5) != "tile[")
 			{
 				mCurrentObject = iter->movable->getParentSceneNode();
+				printf("Mask: %d \n", mCurrentObject->getAttachedObject(0)->getQueryFlags());
 
 				for (vector<Ogre::String>::iterator it = placedObjects.begin(); it!=placedObjects.end(); ++it) {
 					if(*it == mCurrentObject->getName()){
@@ -664,7 +668,11 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 				placedObjects.push_back(std::string(name));
 
 				//lets shrink the object, only because the terrain is pretty small
-				mCurrentObject->setScale(0.1f, 0.1f, 0.1f);
+				if(objectToBePlaced == PALM_TREE_MASK){
+					mCurrentObject->setScale(1.5f, 1.5f, 1.5f);
+				} else {
+					mCurrentObject->setScale(0.1f, 0.1f, 0.1f);
+				}
 				break;
 			}
 		}
@@ -947,7 +955,7 @@ void Coaster::resetRail(void){
 			temp.push_back(*it);
 		}
 	}
-
+	placedObjects.clear();
 	placedObjects = temp;
 
 	if(mCurrentObject)
