@@ -58,7 +58,7 @@ queryFlagMap()
 	queryFlagMap[1 << 13] = "yellow_sub.mesh";
 	queryFlagMap[1 << 14] = "end_mask";
 }
-//-------------------------------------------------------------------------------------
+//----------------------------------------------------------------------%---------------
 Coaster::~Coaster(void)
 {
 	// Kommentert ut av Per Ivar. Denne linja krasjer

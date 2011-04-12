@@ -163,6 +163,7 @@ void PhysicsCart::calculateNextStep(double dT) {
 	v = v + a_T * dT;
 	
 	// Update distance and current t value
+	if (fabs(current_t) == std::numeric_limits<double>::infinity()) assert(false);
 	current_t += track->deltaDistanceTodeltaT(delta_distance_corrected, current_t);
 	currentDistance += delta_distance_corrected;
 	
@@ -185,7 +186,7 @@ void PhysicsCart::calculateNextStep(double dT) {
 		//  center of curvature, the cart will lose traction and fly! Should probably have a tolerance here (vertical attitudes).
 		double asdf = v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector;
 		//printf("Case1: %e\n", v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector);
-		if (v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector < -1.0*gvector.length() ){ //1e-12
+		if (v*v*track->getCurvature(current_t) - track->getNormalVector(current_t)*gvector < -0.1*gvector.length() ){ //1e-12
 			// Disabled for now
 			isFreefalling = true;
 			

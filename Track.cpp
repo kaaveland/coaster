@@ -291,6 +291,7 @@ double Track::deltaDistanceTodeltaT(double ds, double current_t) const
 
 //	assert(distance - arcDistances[searchIndex] >= 0.0);
 	double ds_dt = (getPos(current_t+getSmoothedDelta()) - getPos(current_t)).length() / getSmoothedDelta();
+	assert (ds_dt != 0.0);
 	double dt = ds / ds_dt;
 		//(double)searchIndex / (double)nControlPoints + 
 		//delta_t * (distance-arcDistances[searchIndex]) / (arcDistances[searchIndex+1]-arcDistances[searchIndex]);
