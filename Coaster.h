@@ -27,6 +27,7 @@
 #include "Hydrax/Noise/Perlin/Perlin.h"
 #include "Hydrax/Modules/ProjectedGrid/ProjectedGrid.h"
 
+
 using namespace std;
  
 class Coaster : public BaseApplication
@@ -39,7 +40,7 @@ public:
  
 	enum QueryFlags
 	{
-		BILLBOARD_MASK = 1<<0,
+		IGLO_MASK = 1<<0,
 		HYTTE_MASK = 1<<1,
 		RAIL_MASK  = 1<<2,
 		CART_MASK  = 1<<3,
@@ -79,6 +80,8 @@ public:
 	static float rnd_(const float& min, const float& max);
 	void changeSkyBox();
 	void createTextArea();
+	Ogre::ParticleSystem* jetParticleRight;
+	Ogre::ParticleSystem* jetParticleLeft;
  
 protected:
 	virtual void exportOgreEntity(Ogre::SceneNode *scene, Ogre::Entity *ent, std::ostream &out);

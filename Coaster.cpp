@@ -9,7 +9,7 @@ mCurrentObject(0),
 bLMouseDown(false),
 bRMouseDown(false),
 mRotateSpeed(0.1f),
-editorMode(true),
+editorMode(false),
 track(),
 mControllPointCount(0),
 adjustHeight(false),
@@ -44,7 +44,7 @@ finished(false)
 		//SUPPORT_ELEMENT_MASK = 1<<12,
 		//YELLOW_SUB_MASK = 1<<13,
 		//END_MASK = 1<<14
-	queryFlagMap[1 << 0] = "billboard.mesh";
+	queryFlagMap[1 << 0] = "iglo.mesh";
 	queryFlagMap[1 << 1] = "hytte.mesh";
 	queryFlagMap[1 << 2] = "railMesh.mesh";
 	queryFlagMap[1 << 3] = "cart.mesh";
@@ -101,6 +101,7 @@ void Coaster::createScene(void)
 				  cartEnt->setQueryFlags(CART_MASK);
 	cartNode->attachObject(cartEnt);
 	cartNode->setScale(0.05f, 0.05f, 0.05f);
+
 
 	placedObjects = std::vector<Ogre::String>(0);
 	
@@ -204,6 +205,21 @@ void Coaster::createScene(void)
 	
 	debugImport();
 	changeViewPoint();
+
+	/*
+	jetParticleRight = mSceneMgr->createParticleSystem("fire", "Examples/JetEngine1");
+	jetParticleLeft = mSceneMgr->createParticleSystem("fire2", "Examples/JetEngine1");
+	
+	Ogre::SceneNode* particleNodeRight = cartNode->createChildSceneNode("Particle");
+	particleNodeRight->attachObject(jetParticleRight);
+	particleNodeRight->setScale(0.1, 0.1, 0.1);
+	particleNodeRight->setPosition(0, 5, -5);
+
+	Ogre::SceneNode* particleNodeLeft = cartNode->createChildSceneNode("Particle2");
+	particleNodeLeft->attachObject(jetParticleLeft);
+	particleNodeLeft->setScale(0.1, 0.1, 0.1);
+	particleNodeLeft->setPosition(0, 5, 5);
+	*/
 }
 
 void Coaster::changeViewPoint(void){
@@ -318,6 +334,9 @@ bool Coaster::frameRenderingQueued(const Ogre::FrameEvent& arg)
 		Ogre::Vector3 mRight = mForward.crossProduct(mUp);
 		Ogre::Quaternion tot(mRight, mUp, -mForward);
 		cartNode->setOrientation(tot);		//rotate cart
+
+		//jetParticleRight->getEmitter(0)->setDirection(-mForward);
+		//jetParticleLeft->getEmitter(0)->setDirection(-mForward);
 
 		//next step
 		if(track.getNumberOfPoints() > 3){
@@ -598,10 +617,10 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 							iter->worldFragment->singleIntersection.z), 0);
 						position_added = true;
 						break;
-					case BILLBOARD_MASK:
-						sprintf(name, "Billboard%dNode", mCount++);
-						ent = mSceneMgr->createEntity(name, "billboard.mesh");
-						ent->setQueryFlags(BILLBOARD_MASK);
+					case IGLO_MASK:
+						sprintf(name, "Iglo%dNode", mCount++);
+						ent = mSceneMgr->createEntity(name, "iglo.mesh");
+						ent->setQueryFlags(IGLO_MASK);
 						break;
 					case HYTTE_MASK:
 						sprintf(name, "Hytte%dNode", mCount++);
@@ -643,7 +662,7 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 
 				//lets shrink the object, only because the terrain is pretty small
 				if(objectToBePlaced == PALM_TREE_MASK){
-					mCurrentObject->pitch(Ogre::Degree(90));
+					mCurrentObject->pitch(Ogre::Degree(-90));
 					mCurrentObject->setScale(1.5f, 1.5f, 1.5f);
 				} else {
 					mCurrentObject->setScale(0.1f, 0.1f, 0.1f);
@@ -677,7 +696,7 @@ bool Coaster::mousePressed(const OIS::MouseEvent& arg, OIS::MouseButtonID id)
 void Coaster::nextObject(void){
 	objectToBePlaced = objectToBePlaced<<1;
 	if(objectToBePlaced == END_MASK){
-		objectToBePlaced = BILLBOARD_MASK;
+		objectToBePlaced = IGLO_MASK;
 	}
 	if(objectToBePlaced == RAIL_MASK){
 		nextObject();

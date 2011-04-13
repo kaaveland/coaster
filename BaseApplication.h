@@ -38,6 +38,9 @@ This source file is part of the
 #include "Track.h"
 #include "Highscore.h"
 
+#include "OgreShaderParticleRenderer.h"
+#include "OgreBoxEmitterFactory.h"
+
 class BaseApplication : public Ogre::FrameListener, public Ogre::WindowEventListener, public OIS::KeyListener, public OIS::MouseListener, OgreBites::SdkTrayListener
 {
 public:
@@ -101,6 +104,7 @@ protected:
     OIS::InputManager* mInputManager;
     OIS::Mouse*    mMouse;
     OIS::Keyboard* mKeyboard;
+	
 
 };
 
