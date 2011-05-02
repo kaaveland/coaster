@@ -132,24 +132,7 @@ double Track::getTrackRotation(int index)
 {
 	assert (index >= 0 && index < nControlPoints);
 	return rotations[index];
-		
-	
-	//double t = (double)index/1.0;
-	//Vector3d right = getTangentVector(t).cross(getUp(t));
-	//if (
-	//right /= right.length();
-
-	//up[index] = Vector(0,1,0) + right * sin(radian);
-	
 }
-
-/*void Track::setTrackPoint(double index, Vector3d v)
-{
-	assert(index >= 0 && index < nControlPoints);
-
-	pos[index] = v;
-}*/
-
 
 double Track::getTrackLength() const
 {
@@ -210,9 +193,7 @@ Vector3d Track::Eq(double t, const Vector3d p1, const Vector3d p2, const Vector3
     double b2 = 0.5 * ( 3*t3 - 5*t2 + 2);
     double b3 = 0.5 * (-3*t3 + 4*t2 + t);
     double b4 = 0.5 * (   t3 -   t2    );
-
 	
-
 	//double x = p1.x*b1 + p2.x*b2 + p3.x*b3 + p4.x*b4;
 	//double y = p1.y*b1 + p2.y*b2 + p3.y*b3 + p4.y*b4;
 	//double z = p1.z*b1 + p2.z*b2 + p3.z*b3 + p4.z*b4;
@@ -239,10 +220,6 @@ void Track::addPos(const Vector3d v, double rotation_radians)
 	
 	this->delta_t = 1.0/pos.size();
 	calculateArcDistances();
-
-	//makePlaneUpVectors();
-	//setTrackRotation(nControlPoints-1, rotation_radians);
-
 }
 
 Vector3d Track::getPos(double t) const
@@ -255,8 +232,10 @@ Vector3d Track::getPos(double t) const
     int p1 = p;         BOUNDS(p1);
     int p2 = p + 1;     BOUNDS(p2);
     int p3 = p + 2;     BOUNDS(p3);
-    // Relative (local) time 
+    
+	// Relative (local) time 
 	double lt = (t - delta_t*(double)p) / delta_t;
+	
 	// Interpolate
 	//printf("lt: %f, p: %d, p0:%d, p1:%d, p2:%d, p3:%d \n", lt, p, p0, p1, p2, p3);
 	return Track::Eq(lt, getControlPoint(p0), getControlPoint(p1), getControlPoint(p2), getControlPoint(p3));
@@ -268,33 +247,10 @@ double Track::deltaDistanceTodeltaT(double ds, double current_t) const
 	if (current_t < 0.0) return 0.0;
 	if (current_t > 1.0) return 0.0;
 
-	//bool searchForward = (distance >= arcDistances[lastAccessedTrackIndex]);
-	//int searchIndex = lastAccessedTrackIndex;
-
-	// Find the segment that meters will "land on"
-	/*bool found = false;
-	while (!found) {
-		if (searchForward) {
-			if (arcDistances[searchIndex+1] > distance)
-				found = true;
-			else 
-				searchIndex += searchForward;
-		}
-		else {
-			if (arcDistances[searchIndex-1] < distance)
-				found = true;
-			else
-				searchIndex--;
-			
-		}
-	}*/
-
 //	assert(distance - arcDistances[searchIndex] >= 0.0);
 	double ds_dt = (getPos(current_t+getSmoothedDelta()) - getPos(current_t)).length() / getSmoothedDelta();
 	assert (abs(ds_dt) != 0.0);
 	double dt = ds / ds_dt;
-		//(double)searchIndex / (double)nControlPoints + 
-		//delta_t * (distance-arcDistances[searchIndex]) / (arcDistances[searchIndex+1]-arcDistances[searchIndex]);
 
 	return dt;
 }
@@ -326,7 +282,7 @@ Vector3d Track::getTangentVector(double t) const
 	//printf("GetTangent t: %f \n", t);
 
 	Vector3d pos0, pos1;
-	// Note: We use central estimate now
+	
 	pos0 = getPos(t);
 	pos1 = getPos(t+getSmoothedDelta());
 		
@@ -386,7 +342,6 @@ Vector3d Track::getNonNormalizedNormalVector(double t) const
 
 void Track::generateTrack(void)
 {
-
 	// Generate test track 2
 	// Loop/circle radius 50.0 with center in origo.
 	const int nControlPoints = 1000;
@@ -402,7 +357,6 @@ void Track::generateTrack(void)
 		p += Vector3d(0,100,0);	// move up 100 units
 		pos[i] = p;
 	}
-	
 } 
 
 /*
@@ -465,20 +419,6 @@ void Track::calculateArcDistances()
 	this->trackLength = arcDistances[nControlPoints-1];
 }
 
-//void Track::calculateSections_dS() {
-//	assert (section_dS.size() == nControlPoints);
-//	if (nControlPoints == 4) {
-//		int asd = 0;
-//	}
-//	if (nControlPoints == 0) return;
-//
-//	for (int i=0; i < nControlPoints - 1; i++) {
-//		section_dS[i] = (arcDistances[i+1]-arcDistances[i])/delta_t;
-//	}
-//	section_dS[nControlPoints-1] = 0.0;
-//}
-
-
 double Track::getArcLengthToControlPoint(double t) const
 {
 	if (t < 0.0) t = 0.0;
@@ -486,11 +426,6 @@ double Track::getArcLengthToControlPoint(double t) const
 
 	return arcDistances[(int)(t*nControlPoints)];
 }
-
-/*double Track::getSection_dS(double t) const 
-{
-	return section_dS[(int)(nControlPoints*t)];
-}*/
 
 int Track::getNumberOfPoints(void) const
 {
