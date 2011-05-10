@@ -40,16 +40,12 @@ PhysicsCart::PhysicsCart() : gvector(0,-9.81,0)
 	// Assign initial values
 	v = 0;
 	vVelocity = Vector3d(0,0,0);
-	vAccel = Vector3d(0,0,0);
 	vForward = Vector3d(0,0,0);
 	currentDistance = 0;
 	current_t = 0;
-
-		
+			
 	isFreefalling = false;
 	track = NULL;
-
-	step = 0;
 
 #if _DEBUG
 	std::cout << "PhysicsCart constructed. \n";
@@ -88,8 +84,7 @@ void PhysicsCart::moveTo(double distance) {
 	vVelocity = Vector3d(0,0,0);
 	vForward = track->getTangentVector(t);
 	v = 0;
-	vAccel = Vector3d(0,0,0);
-	
+		
 	isFreefalling = false;
 }
 
@@ -272,7 +267,6 @@ string PhysicsCart::toString() const {
 		"Position = [ " << vPos.x << ", " << vPos.y << ", " << vPos.z << "]\n" <<
 		"Up vecto = [" << vUp.x << ", " << vUp.y << ", " << vUp.z << "]\n" << 
 		"Velocity = [" << vVelocity.x << ", " << vVelocity.y << ", " << vVelocity.z << "], v = " << v << "\n" <<
-		"Accelera = [" << vAccel.x << ", " << vAccel.y << ", " << vAccel.z << "]\n" <<
 		"--Track info current index--\n" <<
 		"Position = [" << track->getPos(current_t).x << ", " << track->getPos(current_t).y << ", " << track->getPos(current_t).z << "]\n" <<
 		"Normal v = [" << track->getNormalVector(current_t).x << ", " << track->getNormalVector(current_t).y << ", " << track->getNormalVector(current_t).z << "]\n" <<
